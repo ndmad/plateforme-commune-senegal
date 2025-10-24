@@ -1,0 +1,27 @@
+.App {
+  text-align: center;
+}
+
+.leaflet-container {
+  height: 100vh;
+  width: 100%;
+}
+
+/* Styles pour les popups de carte */
+.leaflet-popup-content h6 {
+  margin: 0 0 8px 0;
+  color: #2c3e50;
+  font-weight: bold;
+}
+
+.leaflet-popup-content p {
+  margin: 4px 0;
+  font-size: 0.9em;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    height: 40vh !important;
+  }
+}
