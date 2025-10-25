@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Button } from 'react-bootstrap';
+import { Container, Row, Col, Button, Nav } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'leaflet/dist/leaflet.css';
 import './App.css';
@@ -7,16 +7,26 @@ import './App.css';
 import CarteCommunale from './components/CarteCommunale';
 import ListeRessources from './components/ListeRessources';
 import Header from './components/Header';
-import FormulaireRessource from './components/FormulaireRessource'; // ← NOUVEAU
+import FormulaireRessource from './components/FormulaireRessource';
+import Login from './components/Login';
 
 function App() {
   const [ressources, setRessources] = useState([]);
   const [communes, setCommunes] = useState([]);
   const [selectedCommune, setSelectedCommune] = useState(null);
-  const [showFormulaire, setShowFormulaire] = useState(false); // ← NOUVEAU
+  const [showFormulaire, setShowFormulaire] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [user, setUser] = useState(null);
 
-  // Charger les données au démarrage
+  // Vérifier si l'utilisateur est déjà connecté au chargement
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
+    if (token && userData) {
+      setUser(JSON.parse(userData));
+    }
+    
     chargerDonnees();
   }, []);
 
@@ -34,24 +44,66 @@ function App() {
     }
   };
 
-  // ← NOUVEAU : Fonction pour rafraîchir après ajout
   const handleRessourceAdded = () => {
-    chargerDonnees(); // Recharger les données
+    chargerDonnees();
+  };
+
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
   };
 
   return (
     <div className="App">
       <Header />
       
-      {/* ← NOUVEAU : Bouton d'ajout en haut à droite */}
+      {/* Barre d'état de connexion */}
       <div className="position-absolute top-0 end-0 m-3" style={{zIndex: 1000}}>
-        <Button 
-          variant="success" 
-          size="lg"
-          onClick={() => setShowFormulaire(true)}
-        >
-          ➕ Ajouter une Ressource
-        </Button>
+        <div className="d-flex gap-2 align-items-center">
+          {user ? (
+            <>
+              <span className="text-white bg-success px-2 py-1 rounded">
+                👋 {user.nom} ({user.role})
+              </span>
+              <Button 
+                variant="outline-light" 
+                size="sm"
+                onClick={handleLogout}
+              >
+                🚪 Déconnexion
+              </Button>
+              <Button 
+                variant="success" 
+                size="sm"
+                onClick={() => setShowFormulaire(true)}
+              >
+                ➕ Ajouter
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button 
+                variant="outline-light" 
+                size="sm"
+                onClick={() => setShowLogin(true)}
+              >
+                🔐 Connexion
+              </Button>
+              <Button 
+                variant="success" 
+                size="sm"
+                onClick={() => setShowLogin(true)}
+              >
+                ➕ Ajouter
+              </Button>
+            </>
+          )}
+        </div>
       </div>
       
       <Container fluid>
@@ -73,11 +125,16 @@ function App() {
         </Row>
       </Container>
 
-      {/* ← NOUVEAU : Modal du formulaire */}
       <FormulaireRessource 
         show={showFormulaire}
         onHide={() => setShowFormulaire(false)}
         onRessourceAdded={handleRessourceAdded}
+      />
+
+      <Login 
+        show={showLogin}
+        onHide={() => setShowLogin(false)}
+        onLoginSuccess={handleLoginSuccess}
       />
     </div>
   );
