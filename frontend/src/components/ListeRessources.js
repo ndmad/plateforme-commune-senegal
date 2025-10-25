@@ -1,19 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Badge, Row, Col, Button } from 'react-bootstrap';
-
-import EditRessource from './EditRessource'; // ← CET IMPORT DOIT EXISTER
+import EditRessource from './EditRessource';
 
 const ListeRessources = ({ ressources, selectedCommune, onRessourceUpdated }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedRessource, setSelectedRessource] = useState(null);
   const [user, setUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
 
-  // Récupérer l'utilisateur connecté
-  React.useEffect(() => {
+  // Récupérer l'utilisateur connecté au chargement
+  useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) {
-      setUser(JSON.parse(userData));
+      try {
+        const userObj = JSON.parse(userData);
+        setUser(userObj);
+        console.log('👤 Utilisateur chargé:', userObj);
+      } catch (error) {
+        console.error('Erreur parsing user:', error);
+      }
     }
+    setLoadingUser(false);
   }, []);
 
   const getCouleurPotentiel = (potentiel) => {
@@ -87,37 +94,70 @@ const ListeRessources = ({ ressources, selectedCommune, onRessourceUpdated }) =>
   };
 
   // Vérifier si l'utilisateur peut modifier/supprimer une ressource
- // Dans ListeRessources.js, ajoutez des logs de debug
-const canModify = (ressource) => {
-  if (!user) {
-    console.log('❌ Pas d\'utilisateur connecté');
+  const canModify = (ressource) => {
+    if (loadingUser) {
+      return false;
+    }
+    
+    if (!user) {
+      return false;
+    }
+  
+    console.log('=== VÉRIFICATION PERMISSIONS ===');
+    console.log('👤 Utilisateur:', user.nom, `(ID: ${user.id}, Rôle: ${user.role})`);
+    console.log('📝 Ressource:', ressource.nom, `(Créée par: ${ressource.created_by})`);
+    
+    // Consultant ne peut JAMAIS modifier
+    if (user.role === 'consultant') {
+      console.log('❌ CONSULTANT - Accès lecture seule uniquement');
+      return false;
+    }
+    
+    // Admin peut tout modifier
+    if (user.role === 'admin') {
+      console.log('✅ ADMIN - Accès complet à toutes les ressources');
+      return true;
+    }
+    
+    // Éditeur peut modifier seulement SES ressources
+    if (user.role === 'editeur') {
+      if (ressource.created_by === user.id) {
+        console.log('✅ ÉDITEUR - Propriétaire de la ressource');
+        return true;
+      } else {
+        console.log('❌ ÉDITEUR - Pas propriétaire de cette ressource');
+        return false;
+      }
+    }
+    
+    console.log('❌ Rôle inconnu ou sans permissions');
     return false;
-  }
-  
-  console.log('👤 Utilisateur:', user);
-  console.log('📝 Ressource created_by:', ressource.created_by);
-  console.log('🔑 Comparaison:', user.id, '===', ressource.created_by);
-  
-  // Admin peut tout modifier
-  if (user.role === 'admin') {
-    console.log('✅ Admin - accès complet');
-    return true;
-  }
-  
-  // Éditeur peut modifier ses propres ressources
-  if (user.role === 'editeur' && ressource.created_by === user.id) {
-    console.log('✅ Éditeur - propriétaire de la ressource');
-    return true;
-  }
-  
-  console.log('❌ Aucune permission');
-  return false;
-};
+  };
 
-
+  if (loadingUser) {
+    return (
+      <div className="text-center p-4">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Chargement...</span>
+        </div>
+        <p className="mt-2">Chargement des permissions...</p>
+      </div>
+    );
+  }
 
   return (
     <div>
+      {/* Afficher le rôle actuel pour debug */}
+      {user && (
+        <div className="alert alert-info mb-3 py-2">
+          <small>
+            <strong>Rôle actuel:</strong> {user.role} | 
+            <strong> Utilisateur:</strong> {user.nom} |
+            <strong> ID:</strong> {user.id}
+          </small>
+        </div>
+      )}
+      
       <h4 className="mb-4">
         📋 Ressources du Territoire
         <Badge bg="primary" className="ms-2">
@@ -181,7 +221,8 @@ const canModify = (ressource) => {
                   
                   <small className="text-muted d-block mt-1">
                     ID: {ressource.id} • 
-                    Créée le: {new Date(ressource.created_at).toLocaleDateString()}
+                    Créée par: {ressource.created_by} •
+                    Le: {new Date(ressource.created_at).toLocaleDateString()}
                   </small>
                 </Col>
               </Row>
