@@ -4,10 +4,57 @@ const db = require('../config/database');
 const { authMiddleware, requireRole, requireOwnershipOrAdmin } = require('../middleware/auth');
 
 // Route GET pour récupérer toutes les ressources (publique)
+// Route GET pour récupérer toutes les ressources (publique)
 router.get('/', async (req, res) => {
-  // ... (le code existant reste le même)
+  try {
+    const query = `
+      SELECT 
+        r.*, 
+        t.categorie, 
+        t.type, 
+        t.icone, 
+        t.couleur,
+        ST_AsGeoJSON(r.localisation) as localisation_geojson
+      FROM ressources r 
+      LEFT JOIN types_ressources t ON r.type_ressource_id = t.id
+    `;
+    const result = await db.query(query);
+    
+    // Convertir les données pour le frontend
+    const ressourcesFormatees = result.rows.map(ressource => {
+      let localisation = null;
+      
+      if (ressource.localisation_geojson) {
+        try {
+          const geojson = JSON.parse(ressource.localisation_geojson);
+          localisation = {
+            type: geojson.type,
+            coordinates: geojson.coordinates
+          };
+        } catch (error) {
+          console.error('Erreur parsing GeoJSON:', error);
+        }
+      }
+      
+      return {
+        ...ressource,
+        localisation: localisation
+      };
+    });
+    
+    res.json({
+      success: true,
+      data: ressourcesFormatees,
+      count: result.rowCount
+    });
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erreur serveur'
+    });
+  }
 });
-
 // Route POST pour ajouter une ressource - Accessible aux éditeurs et admins
 router.post('/', authMiddleware, requireRole(['editeur', 'admin']), async (req, res) => {
   try {

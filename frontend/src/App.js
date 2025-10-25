@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Button, Nav } from 'react-bootstrap';
+import { Container, Row, Col, Button } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'leaflet/dist/leaflet.css';
 import './App.css';
@@ -17,8 +17,9 @@ function App() {
   const [showFormulaire, setShowFormulaire] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Vérifier si l'utilisateur est déjà connecté au chargement
+  // Vérifier si l'utilisateur est déjà connecté au chargement - UNE SEULE FOIS
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
@@ -28,25 +29,38 @@ function App() {
     }
     
     chargerDonnees();
-  }, []);
+  }, []); // ← ✅ TABLEAU VIDE = exécuté une seule fois
 
   const chargerDonnees = async () => {
     try {
+      setLoading(true);
+      console.log('🔄 Chargement des données...');
+      
       const reponseCommunes = await fetch('http://localhost:5000/api/communes');
       const dataCommunes = await reponseCommunes.json();
+      console.log('🏘️ Communes:', dataCommunes);
       setCommunes(dataCommunes.data || []);
 
       const reponseRessources = await fetch('http://localhost:5000/api/ressources');
       const dataRessources = await reponseRessources.json();
+      console.log('📦 Ressources:', dataRessources);
       setRessources(dataRessources.data || []);
+      
     } catch (erreur) {
-      console.log('API non disponible, utilisation des données de test');
+      console.error('❌ Erreur chargement données:', erreur);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleRessourceAdded = () => {
     chargerDonnees();
   };
+
+  // Ajoutez cette fonction pour les mises à jour
+const handleRessourceUpdated = () => {
+  chargerDonnees(); // Recharger les données après modification/suppression
+};
 
   const handleLoginSuccess = (userData) => {
     setUser(userData);
@@ -120,6 +134,7 @@ function App() {
             <ListeRessources 
               ressources={ressources}
               selectedCommune={selectedCommune}
+              onRessourceUpdated={handleRessourceUpdated}  // ← NOUVEAU
             />
           </Col>
         </Row>
