@@ -39,53 +39,72 @@ const FormulaireRessource = ({ show, onHide, onRessourceAdded }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setMessage('');
-
-        try {
-            const response = await fetch('http://localhost:5000/api/ressources', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    ...formData,
-                    commune_id: 1 // Pour l'instant, commune fixe
-                })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                setMessage('✅ Ressource ajoutée avec succès!');
-                setFormData({
-                    nom: '',
-                    type_ressource_id: '',
-                    description: '',
-                    potentiel: 'moyen',
-                    etat_utilisation: 'sous-utilisé',
-                    contact_nom: '',
-                    contact_tel: '',
-                    latitude: 14.7167,
-                    longitude: -17.4677
-                });
-
-                // Appeler le callback pour actualiser la liste
-                if (onRessourceAdded) {
-                    onRessourceAdded();
-                }
-
-                // Fermer le modal après 2 secondes
-                setTimeout(() => {
-                    onHide();
-                    setMessage('');
-                }, 2000);
-            } else {
-                setMessage('❌ Erreur: ' + result.error);
-            }
-        } catch (error) {
-            setMessage('❌ Erreur de connexion au serveur');
-            console.error('Erreur:', error);
+      
+        // Récupérer le token d'authentification
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+          setMessage('❌ Vous devez être connecté pour ajouter une ressource');
+          return;
         }
-    };
+      
+        try {
+          const response = await fetch('http://localhost:5000/api/ressources', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`  // ← NOUVEAU : envoi du token
+            },
+            body: JSON.stringify({
+              ...formData,
+              commune_id: 1
+            })
+          });
+      
+          console.log('Response status:', response.status);
+          
+          if (response.status === 401) {
+            setMessage('❌ Session expirée. Veuillez vous reconnecter.');
+            return;
+          }
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+      
+          const result = await response.json();
+          console.log('Result:', result);
+      
+          if (result.success) {
+            setMessage('✅ Ressource ajoutée avec succès!');
+            setFormData({
+              nom: '',
+              type_ressource_id: '',
+              description: '',
+              potentiel: 'moyen',
+              etat_utilisation: 'sous-utilisé',
+              contact_nom: '',
+              contact_tel: '',
+              latitude: 14.7167,
+              longitude: -17.4677
+            });
+            
+            if (onRessourceAdded) {
+              onRessourceAdded();
+            }
+            
+            setTimeout(() => {
+              onHide();
+              setMessage('');
+            }, 2000);
+          } else {
+            setMessage('❌ Erreur: ' + (result.error || 'Erreur inconnue'));
+          }
+        } catch (error) {
+          console.error('Erreur complète:', error);
+          setMessage('❌ Erreur: ' + error.message);
+        }
+      };
 
     const handleCarteClick = (e) => {
         // Simuler un clic sur la carte pour récupérer les coordonnées
