@@ -9,6 +9,7 @@ import ListeRessources from './components/ListeRessources';
 import Header from './components/Header';
 import FormulaireRessource from './components/FormulaireRessource';
 import Login from './components/Login';
+import RechercheFiltres from './components/RechercheFiltres'; // ← NOUVEAU
 
 function App() {
   const [ressources, setRessources] = useState([]);
@@ -18,8 +19,13 @@ function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // NOUVEAU : États pour la recherche et filtres
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState({});
+  const [ressourcesFiltrees, setRessourcesFiltrees] = useState([]);
 
-  // Vérifier si l'utilisateur est déjà connecté au chargement - UNE SEULE FOIS
+  // Vérifier si l'utilisateur est déjà connecté au chargement
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
@@ -29,7 +35,12 @@ function App() {
     }
     
     chargerDonnees();
-  }, []); // ← ✅ TABLEAU VIDE = exécuté une seule fois
+  }, []);
+
+  // NOUVEAU : Filtrer les ressources quand la recherche ou les filtres changent
+  useEffect(() => {
+    filtrerRessources();
+  }, [ressources, searchTerm, filters]);
 
   const chargerDonnees = async () => {
     try {
@@ -53,14 +64,47 @@ function App() {
     }
   };
 
-  const handleRessourceAdded = () => {
-    chargerDonnees();
+  // NOUVEAU : Fonction de filtrage
+  const filtrerRessources = () => {
+    let filtered = ressources;
+
+    // Filtre par recherche textuelle
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(ressource =>
+        ressource.nom.toLowerCase().includes(term) ||
+        (ressource.description && ressource.description.toLowerCase().includes(term))
+      );
+    }
+
+    // Filtre par type
+    if (filters.type) {
+      filtered = filtered.filter(ressource => ressource.type === filters.type);
+    }
+
+    // Filtre par potentiel
+    if (filters.potentiel) {
+      filtered = filtered.filter(ressource => ressource.potentiel === filters.potentiel);
+    }
+
+    // Filtre par commune
+    if (filters.commune) {
+      filtered = filtered.filter(ressource => ressource.commune_id === parseInt(filters.commune));
+    }
+
+    // Filtre par état d'utilisation
+    if (filters.etat_utilisation) {
+      filtered = filtered.filter(ressource => ressource.etat_utilisation === filters.etat_utilisation);
+    }
+
+    setRessourcesFiltrees(filtered);
+    console.log(`🔍 ${filtered.length} ressources après filtrage`);
   };
 
-  // Ajoutez cette fonction pour les mises à jour
-const handleRessourceUpdated = () => {
-  chargerDonnees(); // Recharger les données après modification/suppression
-};
+  const handleRessourceAdded = () => {
+    console.log('🔄 Rechargement après ajout...');
+    chargerDonnees();
+  };
 
   const handleLoginSuccess = (userData) => {
     setUser(userData);
@@ -70,6 +114,15 @@ const handleRessourceUpdated = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
+  };
+
+  // NOUVEAU : Gestionnaires de recherche et filtres
+  const handleSearchChange = (term) => {
+    setSearchTerm(term);
+  };
+
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
   };
 
   return (
@@ -123,18 +176,36 @@ const handleRessourceUpdated = () => {
       <Container fluid>
         <Row>
           <Col lg={8} className="p-0">
-            <CarteCommunale 
-              ressources={ressources}
-              communes={communes}
-              onCommuneSelect={setSelectedCommune}
-            />
+            {loading ? (
+              <div className="d-flex justify-content-center align-items-center h-100">
+                <div className="text-center">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Chargement...</span>
+                  </div>
+                  <p className="mt-2">Chargement de la carte...</p>
+                </div>
+              </div>
+            ) : (
+              <CarteCommunale 
+                ressources={ressourcesFiltrees} // ← Utiliser les ressources filtrées
+                communes={communes}
+                onCommuneSelect={setSelectedCommune}
+              />
+            )}
           </Col>
           
           <Col lg={4} className="p-3 bg-light" style={{height: '100vh', overflowY: 'auto'}}>
+            {/* NOUVEAU : Composant de recherche */}
+            <RechercheFiltres 
+              onSearchChange={handleSearchChange}
+              onFilterChange={handleFilterChange}
+              communes={communes}
+            />
+            
             <ListeRessources 
-              ressources={ressources}
+              ressources={ressourcesFiltrees} // ← Utiliser les ressources filtrées
               selectedCommune={selectedCommune}
-              onRessourceUpdated={handleRessourceUpdated}  // ← NOUVEAU
+              onRessourceUpdated={handleRessourceAdded}
             />
           </Col>
         </Row>
