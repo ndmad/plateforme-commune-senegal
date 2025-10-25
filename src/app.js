@@ -9,34 +9,41 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// LOG TEMPORAIRE pour debug
+app.use((req, res, next) => {
+  console.log('📨 Requête:', req.method, req.url);
+  next();
+});
+
 // Route de test
 app.get('/', (req, res) => {
   res.json({ 
-    message: '🚀 API Plateforme Communale Sénégal - Démarrage réussi!',
-    version: '1.0.0',
-    endpoints: [
-      '/api/communes',
-      '/api/ressources', 
-      '/api/auth'
-    ]
+    message: '🚀 API Plateforme Communale Sénégal',
+    version: '1.0.0'
   });
 });
 
-// Import des routes
+// Import et utilisation des routes - CORRECTION : d'abord importer, puis utiliser
 const communesRoutes = require('./routes/communes');
 const ressourcesRoutes = require('./routes/ressources');
 const authRoutes = require('./routes/auth');
+const adminRoutes = require('./routes/admin');
 
+// Routes API
 app.use('/api/communes', communesRoutes);
 app.use('/api/ressources', ressourcesRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 
-// Middleware de gestion des erreurs 404 - CORRIGÉ
+console.log('✅ Routes chargées: /api/communes, /api/ressources, /api/auth, /api/admin');
+
+// Middleware de gestion des erreurs 404
 app.use((req, res) => {
+  console.log('❌ Route non trouvée:', req.method, req.url);
   res.status(404).json({ 
     success: false,
     error: 'Route non trouvée',
-    path: req.path
+    path: req.url
   });
 });
 
