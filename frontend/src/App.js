@@ -13,6 +13,51 @@ import RechercheFiltres from './components/RechercheFiltres';
 import Dashboard from './components/Dashboard';
 import useMobile from './hooks/useMobile';
 
+// Composant Boutons Flottants Mobile - à ajouter dans App.js
+const MobileFloatingButtons = ({ user, onShowLogin, onShowFormulaire, onLogout }) => {
+  return (
+    <div className="mobile-floating-buttons">
+      {user ? (
+        // Utilisateur connecté
+        <>
+          <button 
+            className="floating-btn floating-btn-primary"
+            onClick={onShowFormulaire}
+            title="Ajouter une ressource"
+          >
+            ➕
+          </button>
+          <button 
+            className="floating-btn floating-btn-secondary"
+            onClick={onLogout}
+            title="Déconnexion"
+          >
+            🚪
+          </button>
+        </>
+      ) : (
+        // Utilisateur non connecté
+        <>
+          <button 
+            className="floating-btn floating-btn-primary"
+            onClick={onShowLogin}
+            title="Ajouter une ressource"
+          >
+            ➕
+          </button>
+          <button 
+            className="floating-btn floating-btn-secondary"
+            onClick={onShowLogin}
+            title="Connexion"
+          >
+            🔐
+          </button>
+        </>
+      )}
+    </div>
+  );
+};
+
 function App() {
   const isMobile = useMobile();
   const [ressources, setRessources] = useState([]);
@@ -274,43 +319,50 @@ const renderActiveView = () => {
   );
 };
 
-  return (
-    <div className="App">
-     
-<Header 
-  onViewChange={setActiveView} 
-  activeView={activeView}
-  user={user}
-  onLogout={handleLogout}
-  isMobile={isMobile}
-  onShowLogin={() => setShowLogin(true)}
-  onShowFormulaire={() => setShowFormulaire(true)}
-/>
-      
+return (
+  <div className="App">
+    <Header 
+      onViewChange={setActiveView} 
+      activeView={activeView}
+      user={user}
+      onLogout={handleLogout}
+      isMobile={isMobile}
+      onShowLogin={() => setShowLogin(true)}
+      onShowFormulaire={() => setShowFormulaire(true)}
+    />
     
-
-<div className="main-container">
-  {renderActiveView()}
-</div>
-
-      {/* Navigation mobile */}
-      {isMobile && <MobileNavigation />}
-
-      <FormulaireRessource 
-        show={showFormulaire}
-        onHide={() => setShowFormulaire(false)}
-        onRessourceAdded={handleRessourceAdded}
-        isMobile={isMobile}
-      />
-
-      <Login 
-        show={showLogin}
-        onHide={() => setShowLogin(false)}
-        onLoginSuccess={handleLoginSuccess}
-        isMobile={isMobile}
-      />
+    <div className="main-container">
+      {renderActiveView()}
     </div>
-  );
+
+    {/* Navigation mobile */}
+    {isMobile && <MobileNavigation />}
+
+    {/* Boutons flottants mobile */}
+    {isMobile && (
+      <MobileFloatingButtons 
+        user={user}
+        onShowLogin={() => setShowLogin(true)}
+        onShowFormulaire={() => setShowFormulaire(true)}
+        onLogout={handleLogout}
+      />
+    )}
+
+    <FormulaireRessource 
+      show={showFormulaire}
+      onHide={() => setShowFormulaire(false)}
+      onRessourceAdded={handleRessourceAdded}
+      isMobile={isMobile}
+    />
+
+    <Login 
+      show={showLogin}
+      onHide={() => setShowLogin(false)}
+      onLoginSuccess={handleLoginSuccess}
+      isMobile={isMobile}
+    />
+  </div>
+);
 }
 
 export default App;

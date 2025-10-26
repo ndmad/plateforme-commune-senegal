@@ -4,7 +4,7 @@ import { Navbar, Nav, Container, NavDropdown, Button } from 'react-bootstrap';
 const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowLogin, onShowFormulaire }) => {
   return (
     <Navbar bg="primary" variant="dark" expand="lg" fixed="top">
-      <Container> {/* Container fluid pour utiliser toute la largeur */}
+      <Container>
         {/* Logo/Brand */}
         <Navbar.Brand href="#" className="d-flex align-items-center">
           {isMobile ? '🌍 Plateforme' : '🌍 Plateforme des Ressources Communales'}
@@ -42,69 +42,71 @@ const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowLogi
             )}
           </Nav>
           
-          {/* Boutons de connexion/actions - TOUJOURS VISIBLES */}
-          <Nav className="align-items-center">
-            {user ? (
-              // Utilisateur connecté
-              <>
-                {/* Bouton Ajouter */}
-                <Button 
-                  variant="outline-light" 
-                  size="sm"
-                  onClick={onShowFormulaire}
-                  className="me-2 d-flex align-items-center"
-                >
-                  <span className="me-1">➕</span>
-                  {!isMobile && "Ajouter"}
-                </Button>
-                
-                {/* Menu utilisateur */}
-                <NavDropdown 
-                  title={
-                    <span className="d-flex align-items-center">
-                      <span className="me-1">👋</span>
-                      {user.nom}
-                      {!isMobile && <span className="ms-1">({user.role})</span>}
-                    </span>
-                  } 
-                  id="user-nav-dropdown"
-                  align="end"
-                >
-                  <NavDropdown.ItemText className="small">
-                    <div>Commune: {user.commune || 'Non spécifiée'}</div>
-                    <div>Rôle: <strong>{user.role}</strong></div>
-                  </NavDropdown.ItemText>
-                  <NavDropdown.Divider />
-                  <NavDropdown.Item onClick={onLogout} className="d-flex align-items-center">
-                    <span className="me-2">🚪</span>
-                    Déconnexion
-                  </NavDropdown.Item>
-                </NavDropdown>
-              </>
-            ) : (
-              // Utilisateur non connecté
-              <>
-                <Button 
-                  variant="outline-light" 
-                  size="sm"
-                  onClick={onShowLogin}
-                  className="me-2 d-flex align-items-center"
-                >
-                  <span className="me-1">🔐</span>
-                  {!isMobile && "Connexion"}
-                </Button>
-                <Button 
-                  variant="success" 
-                  size="sm"
-                  onClick={onShowLogin}
-                  className="d-flex align-items-center"
-                >
-                  <span className="me-1">➕</span>
-                  {!isMobile && "Ajouter"}
-                </Button>
-              </>
-            )}
-          </Nav>
+          {/* Boutons de connexion/actions - CACHÉS EN MOBILE */}
+          {!isMobile && (
+            <Nav className="align-items-center">
+              {user ? (
+                // Utilisateur connecté
+                <>
+                  {/* Bouton Ajouter */}
+                  <Button 
+                    variant="outline-light" 
+                    size="sm"
+                    onClick={onShowFormulaire}
+                    className="me-2 d-flex align-items-center"
+                  >
+                    <span className="me-1">➕</span>
+                    Ajouter
+                  </Button>
+                  
+                  {/* Menu utilisateur */}
+                  <NavDropdown 
+                    title={
+                      <span className="d-flex align-items-center">
+                        <span className="me-1">👋</span>
+                        {user.nom}
+                        <span className="ms-1">({user.role})</span>
+                      </span>
+                    } 
+                    id="user-nav-dropdown"
+                    align="end"
+                  >
+                    <NavDropdown.ItemText className="small">
+                      <div>Commune: {user.commune || 'Non spécifiée'}</div>
+                      <div>Rôle: <strong>{user.role}</strong></div>
+                    </NavDropdown.ItemText>
+                    <NavDropdown.Divider />
+                    <NavDropdown.Item onClick={onLogout} className="d-flex align-items-center">
+                      <span className="me-2">🚪</span>
+                      Déconnexion
+                    </NavDropdown.Item>
+                  </NavDropdown>
+                </>
+              ) : (
+                // Utilisateur non connecté
+                <>
+                  <Button 
+                    variant="outline-light" 
+                    size="sm"
+                    onClick={onShowLogin}
+                    className="me-2 d-flex align-items-center"
+                  >
+                    <span className="me-1">🔐</span>
+                    Connexion
+                  </Button>
+                  <Button 
+                    variant="success" 
+                    size="sm"
+                    onClick={onShowLogin}
+                    className="d-flex align-items-center"
+                  >
+                    <span className="me-1">➕</span>
+                    Ajouter
+                  </Button>
+                </>
+              )}
+            </Nav>
+          )}
         </Navbar.Collapse>
       </Container>
     </Navbar>
