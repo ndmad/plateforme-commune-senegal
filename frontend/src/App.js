@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Button } from 'react-bootstrap';
+import { Container, Row, Col, Button, Badge } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'leaflet/dist/leaflet.css';
 import './App.css';
@@ -9,9 +9,12 @@ import ListeRessources from './components/ListeRessources';
 import Header from './components/Header';
 import FormulaireRessource from './components/FormulaireRessource';
 import Login from './components/Login';
-import RechercheFiltres from './components/RechercheFiltres'; // ← NOUVEAU
+import RechercheFiltres from './components/RechercheFiltres';
+import Dashboard from './components/Dashboard';
+import useMobile from './hooks/useMobile';
 
 function App() {
+  const isMobile = useMobile();
   const [ressources, setRessources] = useState([]);
   const [communes, setCommunes] = useState([]);
   const [selectedCommune, setSelectedCommune] = useState(null);
@@ -19,11 +22,14 @@ function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  
-  // NOUVEAU : États pour la recherche et filtres
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({});
   const [ressourcesFiltrees, setRessourcesFiltrees] = useState([]);
+  
+  // États pour la navigation mobile
+  const [activeView, setActiveView] = useState('carte');
+  const [showFilters, setShowFilters] = useState(false);
+  const [showList, setShowList] = useState(false);
 
   // Vérifier si l'utilisateur est déjà connecté au chargement
   useEffect(() => {
@@ -37,7 +43,7 @@ function App() {
     chargerDonnees();
   }, []);
 
-  // NOUVEAU : Filtrer les ressources quand la recherche ou les filtres changent
+  // Filtrer les ressources quand la recherche ou les filtres changent
   useEffect(() => {
     filtrerRessources();
   }, [ressources, searchTerm, filters]);
@@ -45,16 +51,13 @@ function App() {
   const chargerDonnees = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Chargement des données...');
       
       const reponseCommunes = await fetch('http://localhost:5000/api/communes');
       const dataCommunes = await reponseCommunes.json();
-      console.log('🏘️ Communes:', dataCommunes);
       setCommunes(dataCommunes.data || []);
 
       const reponseRessources = await fetch('http://localhost:5000/api/ressources');
       const dataRessources = await reponseRessources.json();
-      console.log('📦 Ressources:', dataRessources);
       setRessources(dataRessources.data || []);
       
     } catch (erreur) {
@@ -64,11 +67,9 @@ function App() {
     }
   };
 
-  // NOUVEAU : Fonction de filtrage
   const filtrerRessources = () => {
     let filtered = ressources;
 
-    // Filtre par recherche textuelle
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(ressource =>
@@ -77,32 +78,26 @@ function App() {
       );
     }
 
-    // Filtre par type
     if (filters.type) {
       filtered = filtered.filter(ressource => ressource.type === filters.type);
     }
 
-    // Filtre par potentiel
     if (filters.potentiel) {
       filtered = filtered.filter(ressource => ressource.potentiel === filters.potentiel);
     }
 
-    // Filtre par commune
     if (filters.commune) {
       filtered = filtered.filter(ressource => ressource.commune_id === parseInt(filters.commune));
     }
 
-    // Filtre par état d'utilisation
     if (filters.etat_utilisation) {
       filtered = filtered.filter(ressource => ressource.etat_utilisation === filters.etat_utilisation);
     }
 
     setRessourcesFiltrees(filtered);
-    console.log(`🔍 ${filtered.length} ressources après filtrage`);
   };
 
   const handleRessourceAdded = () => {
-    console.log('🔄 Rechargement après ajout...');
     chargerDonnees();
   };
 
@@ -116,7 +111,6 @@ function App() {
     setUser(null);
   };
 
-  // NOUVEAU : Gestionnaires de recherche et filtres
   const handleSearchChange = (term) => {
     setSearchTerm(term);
   };
@@ -125,102 +119,195 @@ function App() {
     setFilters(newFilters);
   };
 
-  return (
-    <div className="App">
-      <Header />
-      
-      {/* Barre d'état de connexion */}
-      <div className="position-absolute top-0 end-0 m-3" style={{zIndex: 1000}}>
-        <div className="d-flex gap-2 align-items-center">
-          {user ? (
-            <>
-              <span className="text-white bg-success px-2 py-1 rounded">
-                👋 {user.nom} ({user.role})
-              </span>
-              <Button 
-                variant="outline-light" 
-                size="sm"
-                onClick={handleLogout}
-              >
-                🚪 Déconnexion
-              </Button>
-              <Button 
-                variant="success" 
-                size="sm"
-                onClick={() => setShowFormulaire(true)}
-              >
-                ➕ Ajouter
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button 
-                variant="outline-light" 
-                size="sm"
-                onClick={() => setShowLogin(true)}
-              >
-                🔐 Connexion
-              </Button>
-              <Button 
-                variant="success" 
-                size="sm"
-                onClick={() => setShowLogin(true)}
-              >
-                ➕ Ajouter
-              </Button>
-            </>
+  // Navigation mobile
+  const MobileNavigation = () => (
+    <div className="mobile-nav-bottom">
+      <div className="mobile-nav-tabs">
+        <button 
+          className={`mobile-nav-tab ${activeView === 'carte' ? 'active' : ''}`}
+          onClick={() => setActiveView('carte')}
+        >
+          🗺️
+          <span>Carte</span>
+        </button>
+        <button 
+          className={`mobile-nav-tab ${activeView === 'dashboard' ? 'active' : ''}`}
+          onClick={() => setActiveView('dashboard')}
+        >
+          📊
+          <span>Stats</span>
+        </button>
+        <button 
+          className="mobile-nav-tab mobile-nav-add"
+          onClick={() => setShowFormulaire(true)}
+        >
+          ➕
+          <span>Ajouter</span>
+        </button>
+        <button 
+          className={`mobile-nav-tab ${showFilters ? 'active' : ''}`}
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          🔍
+          <span>Filtres</span>
+          {Object.keys(filters).filter(key => filters[key]).length > 0 && (
+            <Badge bg="danger" className="filter-badge">
+              {Object.keys(filters).filter(key => filters[key]).length}
+            </Badge>
           )}
-        </div>
+        </button>
+        <button 
+          className={`mobile-nav-tab ${showList ? 'active' : ''}`}
+          onClick={() => setShowList(!showList)}
+        >
+          📋
+          <span>Liste</span>
+          <Badge bg="primary" className="filter-badge">
+            {ressourcesFiltrees.length}
+          </Badge>
+        </button>
       </div>
-      
-      <Container fluid>
-        <Row>
-          <Col lg={8} className="p-0">
-            {loading ? (
-              <div className="d-flex justify-content-center align-items-center h-100">
-                <div className="text-center">
-                  <div className="spinner-border text-primary" role="status">
-                    <span className="visually-hidden">Chargement...</span>
-                  </div>
-                  <p className="mt-2">Chargement de la carte...</p>
-                </div>
-              </div>
-            ) : (
-              <CarteCommunale 
-                ressources={ressourcesFiltrees} // ← Utiliser les ressources filtrées
-                communes={communes}
-                onCommuneSelect={setSelectedCommune}
-              />
-            )}
-          </Col>
-          
-          <Col lg={4} className="p-3 bg-light" style={{height: '100vh', overflowY: 'auto'}}>
-            {/* NOUVEAU : Composant de recherche */}
-            <RechercheFiltres 
-              onSearchChange={handleSearchChange}
-              onFilterChange={handleFilterChange}
-              communes={communes}
-            />
-            
+    </div>
+  );
+
+  // Render la vue active
+// NOUVELLE version COMPLÈTE de renderActiveView
+const renderActiveView = () => {
+  if (activeView === 'dashboard') {
+    return <Dashboard ressources={ressources} communes={communes} />;
+  }
+
+  // Vue Carte
+  return (
+    <div className="main-content-wrapper">
+      {/* Filtres mobiles */}
+      {isMobile && showFilters && (
+        <div className="mobile-filters-panel">
+          <div className="mobile-filters-header">
+            <h6>🔍 Recherche et Filtres</h6>
+            <Button 
+              variant="outline-secondary" 
+              size="sm"
+              onClick={() => setShowFilters(false)}
+            >
+              ✕
+            </Button>
+          </div>
+          <RechercheFiltres 
+            onSearchChange={handleSearchChange}
+            onFilterChange={handleFilterChange}
+            communes={communes}
+            isMobile={isMobile}
+          />
+        </div>
+      )}
+
+      {/* Liste mobile */}
+      {isMobile && showList && (
+        <div className="mobile-list-panel">
+          <div className="mobile-list-header">
+            <h6>📋 Ressources ({ressourcesFiltrees.length})</h6>
+            <Button 
+              variant="outline-secondary" 
+              size="sm"
+              onClick={() => setShowList(false)}
+            >
+              ✕
+            </Button>
+          </div>
+          <div className="mobile-list-content">
             <ListeRessources 
-              ressources={ressourcesFiltrees} // ← Utiliser les ressources filtrées
+              ressources={ressourcesFiltrees}
               selectedCommune={selectedCommune}
               onRessourceUpdated={handleRessourceAdded}
+              isMobile={isMobile}
             />
-          </Col>
-        </Row>
-      </Container>
+          </div>
+        </div>
+      )}
+
+      {/* LAYOUT PRINCIPAL CORRIGÉ - SANS ESPACE BLANC */}
+      <div className="main-layout-container">
+        {/* Section carte - DOIT PRENDRE TOUT L'ESPACE DISPO */}
+        <div className={`carte-section ${!isMobile ? 'with-sidebar' : 'full-width'}`}>
+          {loading ? (
+            <div className="loading-container">
+              <div className="text-center">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Chargement...</span>
+                </div>
+                <p className="mt-2">Chargement de la carte...</p>
+              </div>
+            </div>
+          ) : (
+            <CarteCommunale 
+              ressources={ressourcesFiltrees}
+              communes={communes}
+              onCommuneSelect={setSelectedCommune}
+              isMobile={isMobile}
+            />
+          )}
+        </div>
+        
+        {/* Sidebar desktop - FIXE À DROITE */}
+        {!isMobile && (
+          <div className="sidebar-section">
+            <div className="sidebar-inner">
+              <RechercheFiltres 
+                onSearchChange={handleSearchChange}
+                onFilterChange={handleFilterChange}
+                communes={communes}
+                isMobile={isMobile}
+              />
+              
+              <ListeRessources 
+                ressources={ressourcesFiltrees}
+                selectedCommune={selectedCommune}
+                onRessourceUpdated={handleRessourceAdded}
+                isMobile={isMobile}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+  return (
+    <div className="App">
+     
+<Header 
+  onViewChange={setActiveView} 
+  activeView={activeView}
+  user={user}
+  onLogout={handleLogout}
+  isMobile={isMobile}
+  onShowLogin={() => setShowLogin(true)}
+  onShowFormulaire={() => setShowFormulaire(true)}
+/>
+      
+    
+
+<div className="main-container">
+  {renderActiveView()}
+</div>
+
+      {/* Navigation mobile */}
+      {isMobile && <MobileNavigation />}
 
       <FormulaireRessource 
         show={showFormulaire}
         onHide={() => setShowFormulaire(false)}
         onRessourceAdded={handleRessourceAdded}
+        isMobile={isMobile}
       />
 
       <Login 
         show={showLogin}
         onHide={() => setShowLogin(false)}
         onLoginSuccess={handleLoginSuccess}
+        isMobile={isMobile}
       />
     </div>
   );
