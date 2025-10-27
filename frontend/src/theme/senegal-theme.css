@@ -1,0 +1,35 @@
+/* === DESIGN SYSTEM SÉNÉGALAIS === */
+:root {
+    /* Couleurs du drapeau sénégalais */
+    --vert-senegal: #00853f;
+    --jaune-senegal: #fdef42; 
+    --rouge-senegal: #e31b23;
+    
+    /* Palette étendue inspirée du Sénégal */
+    --bleu-ocean: #1e73be;
+    --sable-dakar: #f5e8c8;
+    --terre-sahel: #d4a574;
+    --vert-savane: #4a7c59;
+    --orange-soleil: #ff6b35;
+    
+    /* Neutres */
+    --noir-rich: #1a1a1a;
+    --gris-charcoal: #2d3748;
+    --gris-light: #f7fafc;
+    --blanc-pure: #ffffff;
+  }
+  
+  /* Typographie moderne */
+  .senegal-title {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--vert-senegal), var(--bleu-ocean));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .senegal-subtitle {
+    color: var(--gris-charcoal);
+    font-weight: 500;
+  }

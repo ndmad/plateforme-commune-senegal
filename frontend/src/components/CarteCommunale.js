@@ -64,10 +64,175 @@ const MapController = ({ isMobile }) => {
   return null;
 };
 
+// Composant de localisation automatique - CORRIGÉ POUR DESKTOP/MOBILE
+const LocateControl = ({ isMobile }) => {
+  const map = useMap();
+
+  const locateUser = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          map.setView([latitude, longitude], 15);
+          
+          L.marker([latitude, longitude])
+            .addTo(map)
+            .bindPopup('📍 Votre position actuelle')
+            .openPopup();
+        },
+        (error) => {
+          console.error('Erreur de géolocalisation:', error);
+          alert('Impossible de obtenir votre position');
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
+        }
+      );
+    } else {
+      alert('La géolocalisation n\'est pas supportée par votre navigateur');
+    }
+  };
+
+  useEffect(() => {
+    // Position différente selon mobile/desktop
+    const position = isMobile ? 'topleft' : 'topleft';
+    
+    const LocateControl = L.Control.extend({
+      onAdd: function(map) {
+        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+        
+        // Style différent selon mobile/desktop
+        const buttonStyle = isMobile ? 
+          `width: 45px; height: 45px; font-size: 18px; border-radius: 50%;` :
+          `width: 30px; height: 30px; font-size: 14px; border-radius: 4px;`;
+        
+        container.innerHTML = `
+          <a href="#" title="Localiser ma position" style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            ${buttonStyle}
+            background: white;
+            border: 2px solid rgba(0,0,0,0.2);
+            text-decoration: none;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+          ">📍</a>
+        `;
+        
+        container.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          locateUser();
+        };
+        
+        return container;
+      }
+    });
+
+    const locateControl = new LocateControl({ position });
+    locateControl.addTo(map);
+
+    return () => {
+      map.removeControl(locateControl);
+    };
+  }, [map, isMobile]);
+
+  return null;
+};
+
+// Définition des basemaps
+const BASEMAPS = {
+  osm: {
+    name: 'OpenStreetMap',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  },
+  satellite: {
+    name: 'Satellite',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; <a href="https://www.arcgis.com/">ArcGIS</a>'
+  },
+  topo: {
+    name: 'Topographique',
+    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="https://opentopomap.org/">OpenTopoMap</a>'
+  },
+  dark: {
+    name: 'Sombre',
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  }
+};
+
+// Composant pour changer le basemap
+const BasemapController = ({ onBasemapChange }) => {
+  const [basemap, setBasemap] = useState('osm');
+
+  const handleBasemapChange = (newBasemap) => {
+    setBasemap(newBasemap);
+    if (onBasemapChange) {
+      onBasemapChange(newBasemap);
+    }
+  };
+
+  return (
+    <div className="basemap-selector">
+      <select 
+        onChange={(e) => handleBasemapChange(e.target.value)}
+        value={basemap}
+        style={{
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          zIndex: 1000, // CORRIGÉ
+          padding: '8px 12px',
+          borderRadius: '8px',
+          border: '2px solid #00853f',
+          background: 'white',
+          fontSize: '14px',
+          fontWeight: '500',
+          color: '#333',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+          cursor: 'pointer'
+        }}
+      >
+        <option value="osm">🗺️ OpenStreetMap</option>
+        <option value="satellite">🛰️ Satellite</option>
+        <option value="topo">🏔️ Topographique</option>
+        <option value="dark">🌙 Sombre</option>
+      </select>
+    </div>
+  );
+};
+
+// Composant TileLayer dynamique
+const DynamicTileLayer = ({ basemap }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    // Recentrer la carte quand le basemap change
+    map.invalidateSize();
+  }, [basemap, map]);
+
+  const currentBasemap = BASEMAPS[basemap] || BASEMAPS.osm;
+
+  return (
+    <TileLayer
+      attribution={currentBasemap.attribution}
+      url={currentBasemap.url}
+    />
+  );
+};
+
 const CarteCommunale = ({ ressources, communes, onCommuneSelect, isMobile }) => {
   const positionDefaut = [14.7167, -17.4677]; // Dakar
   const mapRef = useRef();
   const [cartePrete, setCartePrete] = useState(false);
+  const [currentBasemap, setCurrentBasemap] = useState('osm');
 
   // Fonction pour obtenir les coordonnées d'une ressource
   const obtenirCoordonnees = (ressource) => {
@@ -110,6 +275,11 @@ const CarteCommunale = ({ ressources, communes, onCommuneSelect, isMobile }) => 
   }) : [];
 
   console.log(`🗺️ ${ressourcesAvecCoordonnees.length}/${ressources ? ressources.length : 0} ressources affichées`);
+
+  const handleBasemapChange = (newBasemap) => {
+    console.log(`🔄 Changement de basemap: ${newBasemap}`);
+    setCurrentBasemap(newBasemap);
+  };
 
   // Popup optimisé mobile
   const MobilePopup = ({ ressource }) => (
@@ -170,17 +340,11 @@ const CarteCommunale = ({ ressources, communes, onCommuneSelect, isMobile }) => 
         }}
       >
         <MapController isMobile={isMobile} />
+        <BasemapController onBasemapChange={handleBasemapChange} />
+        <LocateControl isMobile={isMobile} />
         
-        {/* TileLayer avec fallback */}
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          eventHandlers={{
-            loading: () => console.log('🔄 Chargement des tuiles...'),
-            load: () => console.log('✅ Tuiles chargées !'),
-            error: () => console.error('❌ Erreur chargement tuiles')
-          }}
-        />
+        {/* TileLayer dynamique qui change avec le basemap */}
+        <DynamicTileLayer basemap={currentBasemap} />
         
         {/* Marqueurs des ressources */}
         {cartePrete && ressourcesAvecCoordonnees.map((ressource) => {
@@ -249,7 +413,7 @@ const CarteCommunale = ({ ressources, communes, onCommuneSelect, isMobile }) => 
 
       {/* Indicateur de statut */}
       <div className="position-absolute bottom-0 start-0 m-2 bg-dark text-white px-2 py-1 rounded small" style={{zIndex: 1000}}>
-        🗺️ {ressourcesAvecCoordonnees.length} ressources
+        🗺️ {ressourcesAvecCoordonnees.length} ressources | {BASEMAPS[currentBasemap].name}
       </div>
     </div>
   );

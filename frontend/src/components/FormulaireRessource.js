@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Button, Form, Row, Col, Alert } from 'react-bootstrap';
 // Ajoutez cet import en haut du fichier
 import MiniCarteLocalisation from './MiniCarteLocalisation';
-
+import { API_BASE_URL } from '../config'; // ← AJOUT
 
 const FormulaireRessource = ({ show, onHide, onRessourceAdded }) => {
     const [formData, setFormData] = useState({
@@ -49,7 +49,7 @@ const FormulaireRessource = ({ show, onHide, onRessourceAdded }) => {
         }
       
         try {
-          const response = await fetch('http://localhost:5000/api/ressources', {
+            const response = await fetch(`${API_BASE_URL}/ressources`, { // ← MODIFIÉ
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

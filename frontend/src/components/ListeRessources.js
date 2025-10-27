@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Badge, Row, Col, Button } from 'react-bootstrap';
 import EditRessource from './EditRessource';
+import { API_BASE_URL } from '../config'; // ← AJOUT
 
 const ListeRessources = ({ ressources, selectedCommune, onRessourceUpdated }) => {
   const [showEditModal, setShowEditModal] = useState(false);
@@ -61,7 +62,7 @@ const ListeRessources = ({ ressources, selectedCommune, onRessourceUpdated }) =>
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/ressources/${ressource.id}`, {
+      const response = await fetch(`${API_BASE_URL}/ressources/${ressource.id}`, { // ← MODIFIÉ
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

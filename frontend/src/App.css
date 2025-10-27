@@ -5,10 +5,19 @@
   padding: 0;
 }
 
+:root {
+  --vert-senegal: #00853f;
+  --jaune-senegal: #fdef42;
+  --rouge-senegal: #e31b23;
+  --bleu-ocean: #1e73be;
+  --sable-dakar: #f5e8c8;
+}
+
 html, body, #root {
   height: 100%;
   width: 100%;
   overflow: hidden;
+  font-family: 'Segoe UI', system-ui, sans-serif;
 }
 
 .App {
@@ -16,6 +25,7 @@ html, body, #root {
   width: 100vw;
   display: flex;
   flex-direction: column;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 }
 
 /* === HEADER FIXE === */
@@ -26,18 +36,19 @@ html, body, #root {
   right: 0;
   z-index: 1030;
   flex-shrink: 0;
+  height: 56px;
 }
 
-/* === CONTENU PRINCIPAL - SANS ESPACE BLANC === */
+/* === CONTENU PRINCIPAL === */
 .main-container {
-  margin-top: 56px; /* Compensation header */
+  margin-top: 56px;
   height: calc(100vh - 56px);
   width: 100vw;
   overflow: hidden;
   flex: 1;
 }
 
-/* === LAYOUT DESKTOP - FLEX SANS ESPACE === */
+/* === LAYOUT DESKTOP === */
 .main-content-wrapper {
   height: 100%;
   width: 100%;
@@ -52,7 +63,6 @@ html, body, #root {
   padding: 0;
 }
 
-/* Section carte - PREND TOUT L'ESPACE RESTANT */
 .carte-section {
   flex: 1;
   height: 100%;
@@ -64,7 +74,6 @@ html, body, #root {
   width: calc(100% - 400px);
 }
 
-/* Section sidebar - FIXE À DROITE */
 .sidebar-section {
   width: 400px;
   height: 100%;
@@ -80,7 +89,7 @@ html, body, #root {
   padding: 1rem;
 }
 
-/* === CARTE - REMPLIT TOUT L'ESPACE === */
+/* === CARTE LEAFLET === */
 .carte-container {
   height: 100% !important;
   width: 100% !important;
@@ -101,7 +110,6 @@ html, body, #root {
   z-index: 1;
 }
 
-/* Styles pour les popups */
 .leaflet-popup-content {
   margin: 8px 12px;
   min-width: 200px;
@@ -121,16 +129,15 @@ html, body, #root {
   padding-bottom: 0.5rem;
 }
 
-/* Correction tuiles */
 .leaflet-tile-container img {
   width: 256px !important;
   height: 256px !important;
 }
 
-/* Contrôles carte */
 .leaflet-control-zoom {
   border: 2px solid rgba(0,0,0,0.2) !important;
   border-radius: 4px !important;
+  margin-top: 70px !important;
 }
 
 .leaflet-control-zoom a {
@@ -143,10 +150,20 @@ html, body, #root {
   background-color: #f4f4f4 !important;
 }
 
-/* === OPTIMISATIONS MOBILE === */
+.leaflet-control {
+  z-index: 500 !important;
+}
+
+.leaflet-popup {
+  z-index: 1010 !important;
+}
+
+/* === INTERFACE MOBILE === */
 @media (max-width: 768px) {
   .main-container {
-    height: calc(100vh - 56px - 60px); /* Header + nav mobile */
+    margin-top: 0 !important;
+    height: calc(100vh - 60px) !important;
+    padding-bottom: 60px !important;
   }
   
   .carte-section {
@@ -156,19 +173,184 @@ html, body, #root {
   .sidebar-section {
     display: none !important;
   }
+  
+  .carte-section.full-width {
+    height: 100% !important;
+  }
+  
+  .carte-container .leaflet-container {
+    height: 100% !important;
+  }
 }
 
-/* Navigation mobile bottom */
+/* === BOUTON AJOUTER FLOTTANT MOBILE - TAILLE CORRIGÉE === */
+.mobile-add-floating-btn {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: 1040;
+  filter: drop-shadow(0 4px 12px rgba(0, 133, 63, 0.4));
+}
+
+.floating-add-btn {
+  width: 50px;  /* TAILLE RÉDUITE */
+  height: 50px; /* TAILLE RÉDUITE */
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--vert-senegal), var(--bleu-ocean));
+  color: white;
+  font-size: 1.4rem; /* TAILLE RÉDUITE */
+  box-shadow: 
+    0 4px 15px rgba(0, 133, 63, 0.5),
+    0 0 0 2px rgba(253, 239, 66, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.floating-add-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  transition: left 0.6s;
+}
+
+.floating-add-btn:hover::before {
+  left: 100%;
+}
+
+.floating-add-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 
+    0 6px 20px rgba(0, 133, 63, 0.6),
+    0 0 0 2px rgba(253, 239, 66, 0.4);
+}
+
+@keyframes pulse-senegal {
+  0% {
+    box-shadow: 0 4px 15px rgba(0, 133, 63, 0.5);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(0, 133, 63, 0.7);
+  }
+  100% {
+    box-shadow: 0 4px 15px rgba(0, 133, 63, 0.5);
+  }
+}
+
+.floating-add-btn {
+  animation: pulse-senegal 3s infinite;
+}
+
+/* === BOUTON LOCALISATION - ALIGNÉ VERTICALEMENT === */
+.leaflet-control-custom {
+  position: absolute !important;
+  top: 15px !important;  /* MÊME HAUTEUR QUE BOUTON AJOUTER */
+  left: 75px !important; /* ESPACE APRÈS BOUTON AJOUTER */
+  z-index: 1035 !important;
+  margin: 0 !important;
+}
+
+.leaflet-control-custom a {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 50px !important;  /* MÊME TAILLE QUE BOUTON AJOUTER */
+  height: 50px !important; /* MÊME TAILLE QUE BOUTON AJOUTER */
+  background: white !important;
+  border: 2px solid rgba(0,0,0,0.2) !important;
+  border-radius: 50% !important;
+  font-size: 1.4rem !important; /* MÊME TAILLE QUE BOUTON AJOUTER */
+  text-decoration: none !important;
+  color: #333 !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
+  transition: all 0.3s ease !important;
+}
+
+.leaflet-control-custom a:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+/* Ajustement mobile */
+@media (max-width: 768px) {
+  .mobile-add-floating-btn {
+    top: 10px;
+    left: 10px;
+  }
+  
+  .floating-add-btn {
+    width: 45px;
+    height: 45px;
+    font-size: 1.3rem;
+  }
+  
+  .leaflet-control-custom {
+    top: 10px !important;
+    left: 65px !important;
+  }
+  
+  .leaflet-control-custom a {
+    width: 45px !important;
+    height: 45px !important;
+    font-size: 1.3rem !important;
+  }
+}
+
+/* === CONTRÔLES ZOOM MOBILE === */
+.mobile-map-controls {
+  position: fixed;
+  bottom: 80px;
+  right: 15px;
+  z-index: 1035;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.map-control-btn {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: none;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+}
+
+.map-control-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+
+.map-control-btn:active {
+  transform: scale(0.95);
+}
+
+/* === NAVIGATION MOBILE - VERSION EXCLUSIVE === */
 .mobile-nav-bottom {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
-  border-top: 2px solid #dee2e6;
-  padding: 0.5rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-top: 3px solid var(--vert-senegal);
+  padding: 0.8rem 0.5rem;
   z-index: 1030;
-  box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
 }
 
 .mobile-nav-tabs {
@@ -184,34 +366,39 @@ html, body, #root {
   align-items: center;
   background: none;
   border: none;
-  padding: 0.5rem 0.3rem;
-  font-size: 0.7rem;
+  padding: 0.6rem 0.3rem;
+  font-size: 0.75rem;
   color: #6c757d;
   flex: 1;
   transition: all 0.3s ease;
-  border-radius: 8px;
+  border-radius: 12px;
   position: relative;
-  min-height: 50px;
+  min-height: 55px;
 }
 
+/* ÉTAT ACTIF - Un seul bouton peut être actif */
 .mobile-nav-tab.active {
-  color: #198754;
-  background: rgba(25, 135, 84, 0.1);
+  background: linear-gradient(135deg, var(--vert-senegal), var(--bleu-ocean));
+  color: white !important;
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px rgba(0, 133, 63, 0.4);
+}
+
+/* ÉTAT INACTIF quand un autre est actif */
+.mobile-nav-tabs .mobile-nav-tab:not(.active) {
+  opacity: 0.7;
+  transform: scale(0.95);
+}
+
+.mobile-nav-tab:not(.active):hover {
+  background: rgba(0, 133, 63, 0.1);
+  color: var(--vert-senegal);
 }
 
 .mobile-nav-tab span {
-  margin-top: 0.2rem;
-  font-weight: 500;
-}
-
-.mobile-nav-add {
-  background: #198754 !important;
-  color: white !important;
-  border-radius: 12px;
-  margin: -0.3rem;
-  padding: 0.8rem 0.5rem;
-  flex: 0 0 auto;
-  min-width: 60px;
+  margin-top: 0.3rem;
+  font-weight: 600;
+  font-size: 0.7rem;
 }
 
 .filter-badge {
@@ -220,9 +407,24 @@ html, body, #root {
   right: 2px;
   font-size: 0.6rem;
   padding: 0.1rem 0.3rem;
+  background: #dc3545;
+  color: white;
+  border-radius: 10px;
+  min-width: 16px;
+  text-align: center;
+  font-weight: bold;
 }
 
-/* Panels mobiles */
+.mobile-nav-logout {
+  background: rgba(220, 53, 69, 0.1) !important;
+  color: #dc3545 !important;
+}
+
+.mobile-nav-logout:active {
+  background: rgba(220, 53, 69, 0.2) !important;
+}
+
+/* === PANNELS MOBILES === */
 .mobile-filters-panel {
   position: absolute;
   top: 0;
@@ -275,31 +477,6 @@ html, body, #root {
   padding: 1rem;
 }
 
-/* Contrôles carte mobile */
-.mobile-map-controls {
-  position: absolute;
-  bottom: 80px;
-  right: 10px;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.map-control-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: none;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-}
-
-/* === ANIMATIONS === */
 @keyframes slideDown {
   from {
     transform: translateY(-100%);
@@ -311,6 +488,74 @@ html, body, #root {
   }
 }
 
+/* === HEADER DESKTOP === */
+.navbar-custom {
+  background: linear-gradient(135deg, var(--vert-senegal) 0%, var(--bleu-ocean) 100%) !important;
+  border-bottom: 3px solid var(--jaune-senegal);
+  box-shadow: 0 4px 20px rgba(0, 133, 63, 0.3);
+  padding: 0.5rem 0;
+}
+
+.navbar-container.container-fluid {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+}
+
+.navbar-brand-custom {
+  font-weight: 700;
+  font-size: 1.3rem;
+  background: linear-gradient(45deg, var(--jaune-senegal), #ffffff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  padding-left: 1rem !important;
+  margin-right: 2rem !important;
+}
+
+.navbar-collapse-custom {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+.navbar-buttons-custom {
+  padding-right: 0.5rem !important;
+}
+
+.nav-link-custom {
+  padding: 0.5rem 1rem !important;
+}
+
+.nav-dropdown-custom {
+  margin: 0 !important;
+}
+
+.add-btn-custom {
+  margin-right: 0.5rem !important;
+  white-space: nowrap;
+}
+
+.user-dropdown-custom {
+  margin-left: 0 !important;
+}
+
+.navbar-dark .navbar-nav .nav-link.active {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.navbar-nav .nav-link {
+  transition: all 0.2s ease;
+}
+
+.navbar-nav .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
 /* === LOADING STATES === */
 .loading-container {
   display: flex;
@@ -318,6 +563,21 @@ html, body, #root {
   align-items: center;
   height: 100%;
   background: rgba(255,255,255,0.9);
+}
+
+.loading-fullscreen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.loading-fullscreen .spinner-border {
+  width: 3rem;
+  height: 3rem;
 }
 
 /* === SCROLLBARS === */
@@ -338,86 +598,90 @@ html, body, #root {
   background: #a8a8a8;
 }
 
-/* === HEADER STYLES === */
-.navbar-brand {
-  font-weight: 600;
-}
-
-.navbar .btn {
-  white-space: nowrap;
-}
-
-.navbar .dropdown-menu {
-  min-width: 200px;
-}
-
-/* Navigation active state */
-.navbar-dark .navbar-nav .nav-link.active {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-}
-
-.navbar-nav .nav-link {
-  transition: all 0.2s ease;
-}
-
-.navbar-nav .nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-}
-
-/* === ACCESSIBILITÉ TACTILE === */
-.btn-mobile {
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.75rem 1rem;
-}
-
-.form-control-mobile {
-  font-size: 16px !important;
-  min-height: 44px;
-  padding: 0.75rem;
-}
-
 /* === SUPPORT PWA === */
 @media (display-mode: standalone) {
-  .main-container {
-    height: calc(100vh - 56px - env(safe-area-inset-bottom));
+  .mobile-add-floating-btn {
+    top: calc(15px + env(safe-area-inset-top));
+    left: calc(15px + env(safe-area-inset-left));
+  }
+  
+  .leaflet-control-custom {
+    top: calc(15px + env(safe-area-inset-top)) !important;
+    left: calc(75px + env(safe-area-inset-left)) !important;
+  }
+  
+  .mobile-map-controls {
+    bottom: calc(80px + env(safe-area-inset-bottom));
+    right: calc(15px + env(safe-area-inset-right));
   }
   
   .mobile-nav-bottom {
-    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(0.8rem + env(safe-area-inset-bottom));
   }
 }
 
 /* === RESPONSIVE AMÉLIORÉ === */
 @media (max-width: 992px) {
-  .carte-section.with-sidebar {
-    width: 100% !important;
+  .navbar-collapse-custom {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  
+  .navbar-buttons-custom {
+    padding: 1rem !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 1rem;
+  }
+  
+  .add-btn-custom {
+    margin-right: 0 !important;
+    margin-bottom: 0.5rem;
+    width: 100%;
   }
 }
 
-@media (max-width: 576px) {
-  .navbar .btn {
-    font-size: 0.8rem;
-    padding: 0.25rem 0.5rem;
+@media (max-width: 380px) {
+  .mobile-add-floating-btn {
+    top: 8px;
+    left: 8px;
   }
   
-  .navbar-brand {
-    font-size: 0.9rem;
+  .floating-add-btn {
+    width: 42px;
+    height: 42px;
+    font-size: 1.2rem;
+  }
+  
+  .leaflet-control-custom {
+    top: 8px !important;
+    left: 60px !important;
+  }
+  
+  .leaflet-control-custom a {
+    width: 42px !important;
+    height: 42px !important;
+    font-size: 1.2rem !important;
+  }
+  
+  .mobile-map-controls {
+    bottom: 70px;
+    right: 8px;
+  }
+  
+  .map-control-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
   }
   
   .mobile-nav-tab {
     min-height: 45px;
-    padding: 0.4rem 0.2rem;
+    padding: 0.4rem 0.1rem;
+    font-size: 0.65rem;
   }
 }
 
-/* === CORRECTIONS SPÉCIFIQUES POUR VOTRE APP === */
-
-/* Assurer que Bootstrap ne crée pas d'espaces */
+/* === CORRECTIONS BOOTSTRAP === */
 .container-fluid {
   padding-left: 0 !important;
   padding-right: 0 !important;
@@ -439,109 +703,134 @@ html, body, #root {
   padding-right: 0 !important;
 }
 
-/* === BOUTONS FLOTTANTS MOBILE === */
-
-.mobile-floating-buttons {
-  position: fixed;
-  top: 70px;
-  left: 10px;
-  z-index: 1010;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.floating-btn {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  border: none;
+/* === ACCESSIBILITÉ === */
+.btn-mobile {
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  transition: all 0.3s ease;
-  cursor: pointer;
+  padding: 0.75rem 1rem;
 }
 
-.floating-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+.form-control-mobile {
+  font-size: 16px !important;
+  min-height: 44px;
+  padding: 0.75rem;
 }
 
-.floating-btn:active {
-  transform: scale(0.95);
-}
-
-.floating-btn-primary {
-  background: #198754;
-  color: white;
-}
-
-.floating-btn-secondary {
-  background: #6c757d;
-  color: white;
-}
-
-/* Animation d'apparition */
-.mobile-floating-buttons {
-  animation: slideInLeft 0.3s ease-out;
-}
-
-@keyframes slideInLeft {
+/* === ANIMATIONS FLUIDES === */
+@keyframes slideInUp {
   from {
-    transform: translateX(-100%);
     opacity: 0;
+    transform: translateY(30px);
   }
   to {
-    transform: translateX(0);
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Responsive pour très petits écrans */
-@media (max-width: 380px) {
-  .mobile-floating-buttons {
-    top: 60px;
-    left: 8px;
+.card, .list-group-item {
+  animation: slideInUp 0.5s ease-out;
+}
+
+/* === SCROLLBAR DESIGN === */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--vert-senegal), var(--bleu-ocean));
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--bleu-ocean), var(--vert-senegal));
+}
+
+/* === CORRECTION NAVIGATION EXCLUSIVE === */
+.mobile-nav-tab.active {
+  background: linear-gradient(135deg, var(--vert-senegal), var(--bleu-ocean)) !important;
+  color: white !important;
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px rgba(0, 133, 63, 0.4);
+}
+
+/* S'assurer qu'un seul bouton est actif à la fois */
+.mobile-nav-tabs .mobile-nav-tab:not(.active) {
+  opacity: 0.7;
+  transform: scale(0.95);
+  background: transparent !important;
+  color: #6c757d !important;
+}
+
+/* Éviter que Filtres/Liste restent actifs quand on change de vue principale */
+.mobile-nav-tab:not([class*="active"]):hover {
+  background: rgba(0, 133, 63, 0.1) !important;
+  color: var(--vert-senegal) !important;
+}
+
+/* === POSITIONNEMENT BOUTON LOCALISATION DESKTOP === */
+
+/* Mobile - bouton sous le bouton ajouter */
+@media (max-width: 768px) {
+  .leaflet-control-custom {
+    position: absolute !important;
+    top: 80px !important;
+    left: 12px !important;
+    z-index: 1035 !important;
+    margin: 0 !important;
   }
   
-  .floating-btn {
-    width: 45px;
-    height: 45px;
-    font-size: 1.2rem;
+  .leaflet-control-custom a {
+    width: 45px !important;
+    height: 45px !important;
+    font-size: 18px !important;
+    border-radius: 50% !important;
   }
 }
 
-/* Support PWA - safe areas */
-@media (display-mode: standalone) {
-  .mobile-floating-buttons {
-    top: calc(70px + env(safe-area-inset-top));
-    left: calc(10px + env(safe-area-inset-left));
+/* Desktop - bouton sous les contrôles de zoom */
+@media (min-width: 769px) {
+  .leaflet-control-custom {
+    position: absolute !important;
+    top: 110px !important; /* Sous les boutons zoom */
+    left: 10px !important;
+    z-index: 1035 !important;
+    margin: 0 !important;
+  }
+  
+  .leaflet-control-custom a {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 14px !important;
+    border-radius: 4px !important;
+  }
+  
+  .leaflet-control-zoom {
+    margin-top: 10px !important;
   }
 }
 
-/* État loading pour les boutons */
-.floating-btn:disabled {
-  opacity: 0.6;
-  transform: scale(0.9);
-  cursor: not-allowed;
+/* Style commun pour les deux */
+.leaflet-control-custom a {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: white !important;
+  border: 2px solid rgba(0,0,0,0.2) !important;
+  text-decoration: none !important;
+  color: #333 !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+  transition: all 0.3s ease !important;
 }
 
-/* Effet de pulse pour le bouton principal */
-.floating-btn-primary {
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.4);
-  }
-  50% {
-    box-shadow: 0 4px 20px rgba(25, 135, 84, 0.8);
-  }
-  100% {
-    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.4);
-  }
+.leaflet-control-custom a:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
