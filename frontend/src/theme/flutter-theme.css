@@ -363,3 +363,90 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* === CORRECTIONS SPÉCIFIQUES === */
+
+/* Correction pour les cartes d'export - désactiver overflow */
+.export-container .flutter-card,
+.export-container .flutter-card.elevated {
+  overflow: visible !important;
+  min-height: auto !important;
+  height: auto !important;
+}
+
+/* Correction spécifique pour le composant ExportDonnees */
+.export-donnees-container {
+  overflow: visible !important;
+  min-height: auto !important;
+}
+
+/* Assurer que le contenu des cartes d'export est visible */
+.flutter-card .export-content {
+  overflow: visible !important;
+}
+
+
+
+/* === ANIMATIONS POUR LES NOTIFICATIONS === */
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Classes d'animation pour les notifications */
+.notification-slide-in {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.notification-slide-out {
+  animation: slideOutRight 0.3s ease-out;
+}
+
+.notification-fade-up {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.notification-pulse {
+  animation: pulse 0.5s ease-in-out;
+}

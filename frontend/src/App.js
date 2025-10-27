@@ -12,10 +12,13 @@ import LoginPage from './components/LoginPage';
 import RechercheFiltres from './components/RechercheFiltres';
 import Dashboard from './components/Dashboard';
 import useMobile from './hooks/useMobile';
-import { API_BASE_URL } from './config'; // ← IMPORT AJOUTÉ
+import { API_BASE_URL } from './config';
+import ExportDonnees from './components/ExportDonnees';
 
-/// Dans App.js - REMPLACEZ le composant MobileNavigation
-// Dans App.js - REMPLACEZ le composant MobileNavigation
+// Import des notifications
+import { NotificationProvider, useNotifications } from './components/Notifications';
+
+// Composant MobileNavigation
 const MobileNavigation = ({ 
   activeView, 
   setActiveView, 
@@ -114,9 +117,7 @@ const MobileNavigation = ({
   );
 };
 
-
-
-
+// Composant App principal
 function App() {
   const isMobile = useMobile();
   const [user, setUser] = useState(null);
@@ -134,14 +135,26 @@ function App() {
   const [showFilters, setShowFilters] = useState(false);
   const [showList, setShowList] = useState(false);
 
+  // Utilisation des notifications
+  const { success, error, warning, info } = useNotifications();
+
   // Vérifier la connexion au chargement
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
     
     if (token && userData) {
-      setUser(JSON.parse(userData));
-      chargerDonnees();
+      try {
+        const userObj = JSON.parse(userData);
+        setUser(userObj);
+        info(`Bienvenue de retour ${userObj.nom} !`);
+        chargerDonnees();
+      } catch (e) {
+        console.error('Erreur parsing user data:', e);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setLoading(false);
+      }
     } else {
       setLoading(false);
     }
@@ -157,8 +170,8 @@ function App() {
   const chargerDonnees = async () => {
     try {
       setLoading(true);
+      info('Chargement des données...');
       
-      // ✅ CORRIGÉ : Utilise API_BASE_URL au lieu de localhost
       const reponseCommunes = await fetch(`${API_BASE_URL}/communes`);
       const dataCommunes = await reponseCommunes.json();
       setCommunes(dataCommunes.data || []);
@@ -167,8 +180,11 @@ function App() {
       const dataRessources = await reponseRessources.json();
       setRessources(dataRessources.data || []);
       
+      success('Données chargées avec succès !');
+      
     } catch (erreur) {
       console.error('❌ Erreur chargement données:', erreur);
+      error('Erreur lors du chargement des données');
     } finally {
       setLoading(false);
     }
@@ -205,10 +221,12 @@ function App() {
   };
 
   const handleRessourceAdded = () => {
+    success('✅ Ressource ajoutée avec succès !');
     chargerDonnees();
   };
 
   const handleLoginSuccess = (userData) => {
+    success(`👋 Bienvenue ${userData.nom} !`);
     setUser(userData);
     chargerDonnees();
   };
@@ -219,6 +237,7 @@ function App() {
     setUser(null);
     setRessources([]);
     setCommunes([]);
+    info('👋 Vous avez été déconnecté');
   };
 
   const handleSearchChange = (term) => {
@@ -227,6 +246,14 @@ function App() {
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
+  };
+
+  const handleExport = (successExport, format, errorMsg) => {
+    if (successExport) {
+      success(`✅ Export ${format} réussi !`);
+    } else {
+      error(`❌ Erreur export ${format}: ${errorMsg}`);
+    }
   };
 
   // Si pas connecté, afficher la page de connexion
@@ -249,95 +276,51 @@ function App() {
   }
 
   // Render la vue active (seulement si connecté)
-// Render la vue active (seulement si connecté)
-const renderActiveView = () => {
-  console.log('🔄 Vue active:', activeView); // Debug
-  
-  // Si on est sur le dashboard, on retourne seulement le dashboard
-  if (activeView === 'dashboard') {
-    return <Dashboard ressources={ressources} communes={communes} />;
-  }
+  const renderActiveView = () => {
+    console.log('🔄 Vue active:', activeView);
+    
+    // Si on est sur le dashboard, on retourne seulement le dashboard
+    if (activeView === 'dashboard') {
+      return <Dashboard ressources={ressources} communes={communes} />;
+    }
 
-  // Sinon, on retourne la vue carte avec ses panneaux
-  return (
-    <div className="main-content-wrapper">
-      {/* Filtres mobiles */}
-      {isMobile && showFilters && (
-        <div className="mobile-filters-panel">
-          <div className="mobile-filters-header">
-            <h6>🔍 Recherche et Filtres</h6>
-            <button 
-              className="btn btn-outline-secondary btn-sm"
-              onClick={() => setShowFilters(false)}
-            >
-              ✕
-            </button>
-          </div>
-          <RechercheFiltres 
-            onSearchChange={handleSearchChange}
-            onFilterChange={handleFilterChange}
-            communes={communes}
-            isMobile={isMobile}
-          />
-        </div>
-      )}
-
-      {/* Liste mobile */}
-      {isMobile && showList && (
-        <div className="mobile-list-panel">
-          <div className="mobile-list-header">
-            <h6>📋 Ressources ({ressourcesFiltrees.length})</h6>
-            <button 
-              className="btn btn-outline-secondary btn-sm"
-              onClick={() => setShowList(false)}
-            >
-              ✕
-            </button>
-          </div>
-          <div className="mobile-list-content">
-            <ListeRessources 
-              ressources={ressourcesFiltrees}
-              selectedCommune={selectedCommune}
-              onRessourceUpdated={handleRessourceAdded}
-              isMobile={isMobile}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Layout principal */}
-      <div className="main-layout-container">
-        <div className={`carte-section ${!isMobile ? 'with-sidebar' : 'full-width'}`}>
-          {loading ? (
-            <div className="loading-container">
-              <div className="text-center">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">Chargement...</span>
-                </div>
-                <p className="mt-2">Chargement de la carte...</p>
-              </div>
+    // Sinon, on retourne la vue carte avec ses panneaux
+    return (
+      <div className="main-content-wrapper">
+        {/* Filtres mobiles */}
+        {isMobile && showFilters && (
+          <div className="mobile-filters-panel">
+            <div className="mobile-filters-header">
+              <h6>🔍 Recherche et Filtres</h6>
+              <button 
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => setShowFilters(false)}
+              >
+                ✕
+              </button>
             </div>
-          ) : (
-            <CarteCommunale 
-              ressources={ressourcesFiltrees}
+            <RechercheFiltres 
+              onSearchChange={handleSearchChange}
+              onFilterChange={handleFilterChange}
               communes={communes}
-              onCommuneSelect={setSelectedCommune}
               isMobile={isMobile}
             />
-          )}
-        </div>
-        
-        {/* Sidebar desktop */}
-        {!isMobile && (
-          <div className="sidebar-section">
-            <div className="sidebar-inner">
-              <RechercheFiltres 
-                onSearchChange={handleSearchChange}
-                onFilterChange={handleFilterChange}
-                communes={communes}
-                isMobile={isMobile}
-              />
-              
+          </div>
+        )}
+
+        {/* Liste mobile */}
+        {isMobile && showList && (
+          <div className="mobile-list-panel">
+            <div className="mobile-list-header">
+              <h6>📋 Ressources ({ressourcesFiltrees.length})</h6>
+              <button 
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => setShowList(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="mobile-list-content">
               <ListeRessources 
                 ressources={ressourcesFiltrees}
                 selectedCommune={selectedCommune}
@@ -347,10 +330,60 @@ const renderActiveView = () => {
             </div>
           </div>
         )}
+
+        {/* Layout principal */}
+        <div className="main-layout-container">
+          <div className={`carte-section ${!isMobile ? 'with-sidebar' : 'full-width'}`}>
+            {loading ? (
+              <div className="loading-container">
+                <div className="text-center">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Chargement...</span>
+                  </div>
+                  <p className="mt-2">Chargement de la carte...</p>
+                </div>
+              </div>
+            ) : (
+              <CarteCommunale 
+                ressources={ressourcesFiltrees}
+                communes={communes}
+                onCommuneSelect={setSelectedCommune}
+                isMobile={isMobile}
+              />
+            )}
+          </div>
+          
+          {/* Sidebar desktop */}
+          {!isMobile && (
+            <div className="sidebar-section">
+              <div className="sidebar-inner">
+                <RechercheFiltres 
+                  onSearchChange={handleSearchChange}
+                  onFilterChange={handleFilterChange}
+                  communes={communes}
+                  isMobile={isMobile}
+                />
+                
+                {/* Section Export */}
+                <ExportDonnees 
+                  ressources={ressourcesFiltrees}
+                  onExportComplete={handleExport}
+                  isMobile={isMobile}
+                />
+                
+                <ListeRessources 
+                  ressources={ressourcesFiltrees}
+                  selectedCommune={selectedCommune}
+                  onRessourceUpdated={handleRessourceAdded}
+                  isMobile={isMobile}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
   return (
     <div className="App">
@@ -387,7 +420,7 @@ const renderActiveView = () => {
         />
       )}
   
-      {/* ✅ BOUTON AJOUTER FLOTTANT MOBILE - CORRIGÉ */}
+      {/* Bouton ajouter mobile */}
       {isMobile && user && user.role !== 'consultant' && (
         <div className="mobile-add-floating-btn">
           <button className="floating-add-btn" onClick={() => setShowFormulaire(true)}>
@@ -406,4 +439,13 @@ const renderActiveView = () => {
   );
 }
 
-export default App;
+// Wrapper avec le provider de notifications
+function AppWithNotifications() {
+  return (
+    <NotificationProvider>
+      <App />
+    </NotificationProvider>
+  );
+}
+
+export default AppWithNotifications;

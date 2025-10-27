@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Nav } from 'react-bootstrap';
+import { Container } from 'react-bootstrap';
+import ExportDonnees from './ExportDonnees';
 import { Bar, Pie, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -27,6 +28,211 @@ const Dashboard = ({ ressources, communes }) => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('general');
+  const [chartKey, setChartKey] = useState(0);
+
+  // Options pour les graphiques en barres AVEC ANIMATIONS
+  const optionsBar = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          usePointStyle: true,
+          padding: 20,
+          font: {
+            size: 12
+          }
+        }
+      },
+      title: {
+        display: true,
+        text: 'Répartition des ressources',
+        font: {
+          size: 16,
+          weight: '600',
+          family: "'Inter', sans-serif"
+        },
+        padding: 20,
+        color: 'var(--on-surface)'
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleFont: {
+          size: 13,
+          weight: '600'
+        },
+        bodyFont: {
+          size: 12
+        },
+        padding: 12,
+        cornerRadius: 8,
+        displayColors: true,
+        callbacks: {
+          label: function(context) {
+            return `${context.dataset.label}: ${context.parsed.y}`;
+          }
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)'
+        },
+        ticks: {
+          font: {
+            size: 11
+          },
+          stepSize: 1
+        }
+      },
+      x: {
+        grid: {
+          display: false
+        },
+        ticks: {
+          font: {
+            size: 11
+          }
+        }
+      }
+    },
+    // ANIMATIONS POUR LES BARRES
+    animation: {
+      duration: 1200,
+      easing: 'easeOutQuart'
+    },
+    hover: {
+      animationDuration: 300
+    },
+    transitions: {
+      show: {
+        animations: {
+          x: {
+            from: 0,
+            duration: 800,
+            easing: 'easeOutBack'
+          },
+          y: {
+            from: 0,
+            duration: 800,
+            easing: 'easeOutBack'
+          }
+        }
+      }
+    },
+    // STYLE DES BARRES
+    elements: {
+      bar: {
+        borderRadius: {
+          topLeft: 8,
+          topRight: 8,
+          bottomLeft: 0,
+          bottomRight: 0
+        },
+        borderWidth: 0,
+        borderSkipped: false,
+        backgroundColor: function(context) {
+          const index = context.dataIndex;
+          const colors = [
+            '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+            '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#64748b'
+          ];
+          return colors[index % colors.length];
+        },
+        hoverBackgroundColor: function(context) {
+          const index = context.dataIndex;
+          const colors = [
+            '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+            '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#64748b'
+          ];
+          return colors[index % colors.length] + 'CC';
+        },
+        hoverBorderWidth: 2,
+        hoverBorderColor: '#fff'
+      }
+    }
+  };
+
+  const optionsPie = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          usePointStyle: true,
+          padding: 20,
+          font: {
+            size: 11
+          },
+          color: 'var(--on-surface)'
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleFont: {
+          size: 13
+        },
+        bodyFont: {
+          size: 12
+        },
+        padding: 10,
+        cornerRadius: 8
+      }
+    },
+    cutout: '50%',
+    // ANIMATIONS PIE
+    animation: {
+      animateScale: true,
+      animateRotate: true,
+      duration: 1500,
+      easing: 'easeOutBounce'
+    },
+    hover: {
+      animationDuration: 400
+    }
+  };
+
+  const optionsDoughnut = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          usePointStyle: true,
+          padding: 15,
+          font: {
+            size: 11
+          },
+          color: 'var(--on-surface)'
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        callbacks: {
+          label: function(context) {
+            const label = context.label || '';
+            const value = context.parsed;
+            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+            const percentage = Math.round((value / total) * 100);
+            return `${label}: ${value} (${percentage}%)`;
+          }
+        }
+      }
+    },
+    cutout: '60%',
+    // ANIMATIONS DOUGHNUT
+    animation: {
+      animateScale: true,
+      animateRotate: true,
+      duration: 1800,
+      easing: 'easeInOutCirc'
+    },
+    hover: {
+      animationDuration: 500
+    }
+  };
 
   // Calculer les statistiques
   useEffect(() => {
@@ -34,6 +240,11 @@ const Dashboard = ({ ressources, communes }) => {
       calculerStatistiques();
     }
   }, [ressources, communes]);
+
+  // Forcer le re-render des graphiques quand on change d'onglet
+  useEffect(() => {
+    setChartKey(prev => prev + 1);
+  }, [activeTab]);
 
   const calculerStatistiques = () => {
     if (!ressources || !communes) return;
@@ -63,6 +274,46 @@ const Dashboard = ({ ressources, communes }) => {
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, 5);
 
+    // Préparer les données pour les graphiques
+    const typesData = {
+      labels: Object.keys(typesRepartition),
+      datasets: [
+        {
+          label: 'Nombre de ressources',
+          data: Object.values(typesRepartition),
+          backgroundColor: [
+            '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+            '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#64748b'
+          ],
+          borderWidth: 0,
+          borderRadius: 8,
+          borderColor: '#fff',
+          hoverBorderWidth: 2,
+          hoverBorderColor: '#fff'
+        }
+      ]
+    };
+
+    const potentielsData = {
+      labels: Object.keys(potentielRepartition),
+      datasets: [
+        {
+          label: 'Nombre de ressources',
+          data: Object.values(potentielRepartition),
+          backgroundColor: [
+            '#10b981',  // Élevé - Vert
+            '#f59e0b',  // Moyen - Jaune
+            '#64748b',   // Faible - Gris
+            '#ef4444'   // Autre - Rouge
+          ],
+          borderWidth: 0,
+          borderColor: '#fff',
+          hoverBorderWidth: 2,
+          hoverBorderColor: '#fff'
+        }
+      ]
+    };
+
     setStats({
       general: {
         totalRessources,
@@ -72,108 +323,14 @@ const Dashboard = ({ ressources, communes }) => {
       },
       types: typesRepartition,
       potentiels: potentielRepartition,
-      topRessources
+      topRessources,
+      chartData: {
+        types: typesData,
+        potentiels: potentielsData
+      }
     });
     
     setLoading(false);
-  };
-
-  // Fonction d'export PDF simplifiée
-  const exportPDF = () => {
-    alert('📄 Fonction PDF à implémenter');
-  };
-
-  // Fonction d'export Excel simplifiée
-  const exportExcel = () => {
-    alert('📊 Fonction Excel à implémenter');
-  };
-
-  // Fonction de rapport complet simplifiée
-  const genererRapportComplet = () => {
-    alert('📋 Fonction Rapport à implémenter');
-  };
-
-  // Données pour le graphique des types
-  const dataTypes = {
-    labels: stats ? Object.keys(stats.types) : [],
-    datasets: [
-      {
-        label: 'Nombre de ressources',
-        data: stats ? Object.values(stats.types) : [],
-        backgroundColor: [
-          '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-          '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#64748b'
-        ],
-        borderWidth: 0,
-        borderRadius: 8
-      }
-    ]
-  };
-
-  // Données pour le graphique des potentiels
-  const dataPotentiels = {
-    labels: stats ? Object.keys(stats.potentiels) : [],
-    datasets: [
-      {
-        label: 'Répartition par potentiel',
-        data: stats ? Object.values(stats.potentiels) : [],
-        backgroundColor: [
-          '#10b981',  // Élevé - Vert
-          '#f59e0b',  // Moyen - Jaune
-          '#64748b'   // Faible - Gris
-        ],
-        borderWidth: 0
-      }
-    ]
-  };
-
-  const optionsBar = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          usePointStyle: true,
-          padding: 20
-        }
-      },
-      title: {
-        display: true,
-        text: 'Répartition des ressources',
-        font: {
-          size: 16,
-          weight: '600'
-        },
-        padding: 20
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: {
-          color: 'rgba(0, 0, 0, 0.05)'
-        }
-      },
-      x: {
-        grid: {
-          display: false
-        }
-      }
-    }
-  };
-
-  const optionsPie = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          usePointStyle: true,
-          padding: 20
-        }
-      },
-    },
-    cutout: '50%'
   };
 
   if (loading) {
@@ -194,7 +351,7 @@ const Dashboard = ({ ressources, communes }) => {
   }
 
   return (
-    <Container style={{ padding: '24px 16px' }}>
+    <Container style={{ padding: '24px 16px', minHeight: '100vh' }}>
       {/* En-tête du dashboard */}
       <div style={{ marginBottom: '32px' }}>
         <h1 style={{ 
@@ -312,20 +469,31 @@ const Dashboard = ({ ressources, communes }) => {
         <div style={{ 
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '24px'
+          gap: '24px',
+          marginBottom: '32px'
         }}>
           <div className="flutter-card elevated" style={{ padding: '24px' }}>
             <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
               📈 Répartition par Type
             </h3>
-            <Doughnut data={dataTypes} options={optionsPie} />
+            <Doughnut 
+              key={`doughnut-${chartKey}`}
+              data={stats.chartData.types} 
+              options={optionsDoughnut} 
+              style={{ maxHeight: '300px' }}
+            />
           </div>
 
           <div className="flutter-card elevated" style={{ padding: '24px' }}>
             <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
               📊 Répartition par Potentiel
             </h3>
-            <Pie data={dataPotentiels} options={optionsPie} />
+            <Pie 
+              key={`pie-${chartKey}`}
+              data={stats.chartData.potentiels} 
+              options={optionsPie}
+              style={{ maxHeight: '300px' }}
+            />
           </div>
         </div>
       )}
@@ -334,13 +502,19 @@ const Dashboard = ({ ressources, communes }) => {
         <div style={{ 
           display: 'grid',
           gridTemplateColumns: '2fr 1fr',
-          gap: '24px'
+          gap: '24px',
+          marginBottom: '32px'
         }}>
           <div className="flutter-card elevated" style={{ padding: '24px' }}>
             <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
               📊 Répartition par Type de Ressource
             </h3>
-            <Bar data={dataTypes} options={optionsBar} />
+            <Bar 
+              key={`bar-types-${chartKey}`}
+              data={stats.chartData.types} 
+              options={optionsBar}
+              style={{ maxHeight: '400px' }}
+            />
           </div>
 
           <div className="flutter-card elevated" style={{ padding: '24px' }}>
@@ -355,7 +529,8 @@ const Dashboard = ({ ressources, communes }) => {
                   alignItems: 'center',
                   padding: '12px',
                   background: 'var(--background)',
-                  borderRadius: 'var(--radius-md)'
+                  borderRadius: 'var(--radius-md)',
+                  transition: 'all 0.3s ease'
                 }}>
                   <span style={{ fontSize: '14px', fontWeight: '500' }}>{type}</span>
                   <span className="flutter-chip">{count}</span>
@@ -370,13 +545,19 @@ const Dashboard = ({ ressources, communes }) => {
         <div style={{ 
           display: 'grid',
           gridTemplateColumns: '2fr 1fr',
-          gap: '24px'
+          gap: '24px',
+          marginBottom: '32px'
         }}>
           <div className="flutter-card elevated" style={{ padding: '24px' }}>
             <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
               🎯 Répartition par Potentiel de Valorisation
             </h3>
-            <Bar data={dataPotentiels} options={optionsBar} />
+            <Bar 
+              key={`bar-potentiels-${chartKey}`}
+              data={stats.chartData.potentiels} 
+              options={optionsBar}
+              style={{ maxHeight: '400px' }}
+            />
           </div>
 
           <div className="flutter-card elevated" style={{ padding: '24px' }}>
@@ -389,7 +570,17 @@ const Dashboard = ({ ressources, communes }) => {
                   padding: '16px',
                   background: 'var(--background)',
                   borderRadius: 'var(--radius-md)',
-                  border: '1px solid #f1f5f9'
+                  border: '1px solid #f1f5f9',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = 'var(--elevation-3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'var(--elevation-1)';
                 }}>
                   <div style={{ 
                     display: 'flex', 
@@ -442,45 +633,30 @@ const Dashboard = ({ ressources, communes }) => {
         </div>
       )}
 
-      {/* Section export */}
-      <div className="flutter-card elevated" style={{ marginTop: '32px', padding: '24px' }}>
-        <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
-          📤 Export des Données
-        </h3>
-        <p style={{ color: 'var(--on-background)', marginBottom: '20px' }}>
-          Exportez les données statistiques pour vos rapports :
-        </p>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <button 
-            className="flutter-btn secondary"
-            onClick={exportPDF}
-            style={{ fontSize: '14px' }}
-          >
-            📄 Export PDF
-          </button>
-          <button 
-            className="flutter-btn secondary"
-            onClick={exportExcel}
-            style={{ fontSize: '14px' }}
-          >
-            📊 Export Excel
-          </button>
-          <button 
-            className="flutter-btn secondary"
-            onClick={genererRapportComplet}
-            style={{ fontSize: '14px' }}
-          >
-            📋 Rapport Complet
-          </button>
-        </div>
-        
-        <div style={{ marginTop: '16px' }}>
-          <small style={{ color: 'var(--on-background)' }}>
-            <strong>PDF:</strong> Capture du tableau de bord • 
-            <strong> Excel:</strong> Données brutes • 
-            <strong> Rapport:</strong> Analyse détaillée
-          </small>
-        </div>
+      {/* SECTION EXPORT - CORRIGÉE */}
+      <div style={{ 
+        width: '100%',
+        minHeight: 'auto',
+        display: 'block'
+      }}>
+        {stats && (
+          <ExportDonnees 
+            ressources={ressources}
+            stats={stats}
+            type="dashboard"
+            onExportStart={(format) => {
+              console.log(`🚀 Début export ${format}...`);
+            }}
+            onExportComplete={(success, format, error) => {
+              if (success) {
+                alert(`✅ Export ${format} réussi !`);
+              } else {
+                alert(`❌ Erreur export ${format}: ${error}`);
+              }
+            }}
+            isMobile={false}
+          />
+        )}
       </div>
     </Container>
   );
