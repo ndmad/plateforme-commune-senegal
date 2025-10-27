@@ -1,9 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Badge, Row, Col, Button } from 'react-bootstrap';
 import EditRessource from './EditRessource';
-import { API_BASE_URL } from '../config'; // ← AJOUT
+import { API_BASE_URL } from '../config';
 
-const ListeRessources = ({ ressources, selectedCommune, onRessourceUpdated }) => {
+// Styles Flutter-like pour les cartes
+const resourceCardStyle = {
+  background: 'var(--surface)',
+  borderRadius: 'var(--radius-lg)',
+  padding: '16px',
+  marginBottom: '12px',
+  boxShadow: 'var(--elevation-1)',
+  border: '1px solid #f1f5f9',
+  transition: 'all var(--transition-normal)',
+  cursor: 'pointer'
+};
+
+const resourceCardHoverStyle = {
+  boxShadow: 'var(--elevation-3)',
+  transform: 'translateY(-2px)'
+};
+
+const ListeRessources = ({ ressources, selectedCommune, onRessourceUpdated, isMobile }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedRessource, setSelectedRessource] = useState(null);
   const [user, setUser] = useState(null);
@@ -62,7 +79,7 @@ const ListeRessources = ({ ressources, selectedCommune, onRessourceUpdated }) =>
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/ressources/${ressource.id}`, { // ← MODIFIÉ
+      const response = await fetch(`${API_BASE_URL}/ressources/${ressource.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -137,11 +154,16 @@ const ListeRessources = ({ ressources, selectedCommune, onRessourceUpdated }) =>
 
   if (loadingUser) {
     return (
-      <div className="text-center p-4">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Chargement...</span>
-        </div>
-        <p className="mt-2">Chargement des permissions...</p>
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center', 
+        justifyContent: 'center',
+        padding: '40px 20px',
+        color: 'var(--on-background)'
+      }}>
+        <div className="flutter-spinner" style={{ marginBottom: '16px' }}></div>
+        <p>Chargement des permissions...</p>
       </div>
     );
   }
@@ -150,8 +172,13 @@ const ListeRessources = ({ ressources, selectedCommune, onRessourceUpdated }) =>
     <div>
       {/* Afficher le rôle actuel pour debug */}
       {user && (
-        <div className="alert alert-info mb-3 py-2">
-          <small>
+        <div className="flutter-card" style={{ 
+          background: 'var(--primary-50)',
+          border: '1px solid var(--primary-200)',
+          marginBottom: '16px',
+          padding: '12px 16px'
+        }}>
+          <small style={{ color: 'var(--primary-700)' }}>
             <strong>Rôle actuel:</strong> {user.role} | 
             <strong> Utilisateur:</strong> {user.nom} |
             <strong> ID:</strong> {user.id}
@@ -159,76 +186,136 @@ const ListeRessources = ({ ressources, selectedCommune, onRessourceUpdated }) =>
         </div>
       )}
       
-      <h4 className="mb-4">
-        📋 Ressources du Territoire
-        <Badge bg="primary" className="ms-2">
+      <h4 style={{ 
+        marginBottom: '20px',
+        color: 'var(--on-surface)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px'
+      }}>
+        <span>📋</span>
+        Ressources du Territoire
+        <span className="flutter-chip" style={{ marginLeft: '8px' }}>
           {ressources ? ressources.length : 0}
-        </Badge>
+        </span>
       </h4>
 
+      {/* CORRECTION ICI : "ressources" au lieu de "ressources" */}
       {!ressources || ressources.length === 0 ? (
-        <Card className="text-center p-4">
-          <Card.Text>
-            Aucune ressource trouvée. 
-            <br />
-            <small className="text-muted">
-              Ajoutez des ressources via le bouton "➕ Ajouter".
-            </small>
-          </Card.Text>
-        </Card>
+        <div 
+          className="flutter-card" 
+          style={{ 
+            textAlign: 'center', 
+            padding: '40px 20px',
+            color: 'var(--on-background)'
+          }}
+        >
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🗺️</div>
+          <p style={{ marginBottom: '8px', fontWeight: '600' }}>
+            Aucune ressource trouvée
+          </p>
+          <small style={{ color: 'var(--on-background)' }}>
+            Ajoutez des ressources via le bouton "➕ Ajouter"
+          </small>
+        </div>
       ) : (
         ressources.map((ressource) => (
-          <Card key={ressource.id} className="mb-3 shadow-sm">
-            <Card.Body>
-              <Row>
-                <Col xs={2}>
-                  <span style={{ fontSize: '1.5em' }}>
-                    {getIcône(ressource.type)}
+          <div 
+            key={ressource.id}
+            style={resourceCardStyle}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = resourceCardHoverStyle.boxShadow;
+              e.currentTarget.style.transform = resourceCardHoverStyle.transform;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = resourceCardStyle.boxShadow;
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                background: 'linear-gradient(135deg, var(--primary-100), var(--primary-50))',
+                borderRadius: 'var(--radius-md)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '18px',
+                flexShrink: 0
+              }}>
+                {getIcône(ressource.type)}
+              </div>
+              
+              <div style={{ flex: 1 }}>
+                <h3 style={{ 
+                  fontSize: '16px', 
+                  fontWeight: '600',
+                  color: 'var(--on-surface)',
+                  marginBottom: '4px'
+                }}>
+                  {ressource.nom}
+                </h3>
+                
+                <p style={{ 
+                  fontSize: '14px',
+                  color: 'var(--on-background)',
+                  marginBottom: '8px',
+                  lineHeight: '1.4'
+                }}>
+                  {ressource.description}
+                </p>
+                
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <span className="flutter-chip">
+                    {ressource.type}
                   </span>
-                </Col>
-                <Col xs={10}>
-                  <Card.Title className="h6">{ressource.nom}</Card.Title>
-                  <Card.Text className="text-muted small mb-1">
-                    {ressource.description}
-                  </Card.Text>
-                  <div className="d-flex justify-content-between align-items-center mb-2">
-                    <Badge bg="outline-primary" text="dark">
-                      {ressource.type}
-                    </Badge>
-                    <Badge bg={getCouleurPotentiel(ressource.potentiel)}>
-                      Potentiel: {ressource.potentiel}
-                    </Badge>
+                  <span className="flutter-chip" style={{
+                    background: ressource.potentiel === 'élevé' ? '#dcfce7' : 
+                               ressource.potentiel === 'moyen' ? '#fef9c3' : '#f3f4f6',
+                    color: ressource.potentiel === 'élevé' ? '#166534' : 
+                          ressource.potentiel === 'moyen' ? '#854d0e' : '#4b5563'
+                  }}>
+                    Potentiel: {ressource.potentiel}
+                  </span>
+                </div>
+                
+                {/* Boutons d'action */}
+                {canModify(ressource) && (
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                    <button 
+                      className="flutter-btn tertiary"
+                      onClick={() => handleEdit(ressource)}
+                      style={{ fontSize: '12px', padding: '6px 12px' }}
+                    >
+                      ✏️ Modifier
+                    </button>
+                    <button 
+                      className="flutter-btn tertiary"
+                      onClick={() => handleDelete(ressource)}
+                      style={{ 
+                        fontSize: '12px', 
+                        padding: '6px 12px',
+                        color: '#dc2626'
+                      }}
+                    >
+                      🗑️ Supprimer
+                    </button>
                   </div>
-                  
-                  {/* Boutons d'action */}
-                  {canModify(ressource) && (
-                    <div className="d-flex gap-2 mt-2">
-                      <Button 
-                        variant="outline-primary" 
-                        size="sm"
-                        onClick={() => handleEdit(ressource)}
-                      >
-                        ✏️ Modifier
-                      </Button>
-                      <Button 
-                        variant="outline-danger" 
-                        size="sm"
-                        onClick={() => handleDelete(ressource)}
-                      >
-                        🗑️ Supprimer
-                      </Button>
-                    </div>
-                  )}
-                  
-                  <small className="text-muted d-block mt-1">
-                    ID: {ressource.id} • 
-                    Créée par: {ressource.created_by} •
-                    Le: {new Date(ressource.created_at).toLocaleDateString()}
-                  </small>
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
+                )}
+                
+                <small style={{ 
+                  display: 'block',
+                  marginTop: '8px',
+                  color: 'var(--on-background)',
+                  fontSize: '11px'
+                }}>
+                  ID: {ressource.id} • Créée par: {ressource.created_by} • 
+                  Le: {new Date(ressource.created_at).toLocaleDateString()}
+                </small>
+              </div>
+            </div>
+          </div>
         ))
       )}
 

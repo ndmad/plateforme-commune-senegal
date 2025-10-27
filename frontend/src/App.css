@@ -834,3 +834,33 @@ html, body, #root {
   transform: scale(1.1);
   box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
+
+/* === SUPPRESSION DES ANCIENS STYLES AU PROFIT DU DESIGN FLUTTER === */
+
+/* Désactiver les anciens styles de navigation */
+.mobile-nav-bottom {
+  display: none !important;
+}
+
+.mobile-add-floating-btn .floating-add-btn {
+  width: 56px !important;
+  height: 56px !important;
+  background: linear-gradient(135deg, var(--senegal-green), var(--primary-600)) !important;
+  box-shadow: var(--elevation-3) !important;
+  font-size: 1.4rem !important;
+}
+
+/* Adapter les panels mobiles au nouveau design */
+.mobile-filters-panel,
+.mobile-list-panel {
+  background: var(--surface) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--elevation-4) !important;
+  border: 1px solid #f1f5f9 !important;
+}
+
+.mobile-filters-header,
+.mobile-list-header {
+  background: var(--background) !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}

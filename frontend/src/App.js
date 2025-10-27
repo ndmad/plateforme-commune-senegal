@@ -14,8 +14,8 @@ import Dashboard from './components/Dashboard';
 import useMobile from './hooks/useMobile';
 import { API_BASE_URL } from './config'; // ← IMPORT AJOUTÉ
 
-// MobileNavigation CORRIGÉ avec navigation exclusive
-// Dans App.js - MobileNavigation CORRIGÉ
+/// Dans App.js - REMPLACEZ le composant MobileNavigation
+// Dans App.js - REMPLACEZ le composant MobileNavigation
 const MobileNavigation = ({ 
   activeView, 
   setActiveView, 
@@ -29,7 +29,6 @@ const MobileNavigation = ({
   user
 }) => {
   
-  // Gestion robuste de la navigation
   const handleCartePress = () => {
     setActiveView('carte');
     setShowFilters(false);
@@ -45,78 +44,78 @@ const MobileNavigation = ({
   const handleFiltersPress = () => {
     const newShowFilters = !showFilters;
     setShowFilters(newShowFilters);
-    // Si on active les filtres, on désactive la liste et on reste sur la vue carte
     if (newShowFilters) {
       setShowList(false);
-      setActiveView('carte'); // ← IMPORTANT: On reste sur carte quand on ouvre les filtres
+      setActiveView('carte');
     }
   };
 
   const handleListPress = () => {
     const newShowList = !showList;
     setShowList(newShowList);
-    // Si on active la liste, on désactive les filtres et on reste sur la vue carte
     if (newShowList) {
       setShowFilters(false);
-      setActiveView('carte'); // ← IMPORTANT: On reste sur carte quand on ouvre la liste
+      setActiveView('carte');
     }
   };
 
   return (
-    <div className="mobile-nav-bottom">
-      <div className="mobile-nav-tabs">
-        <button 
-          className={`mobile-nav-tab ${activeView === 'carte' ? 'active' : ''}`}
-          onClick={handleCartePress}
-        >
-          🗺️
-          <span>Carte</span>
-        </button>
-        
-        <button 
-          className={`mobile-nav-tab ${activeView === 'dashboard' ? 'active' : ''}`}
-          onClick={handleDashboardPress}
-        >
-          📊
-          <span>Stats</span>
-        </button>
-        
-        <button 
-          className={`mobile-nav-tab ${showFilters ? 'active' : ''}`}
-          onClick={handleFiltersPress}
-        >
-          🔍
-          <span>Filtres</span>
-          {Object.keys(filters).filter(key => filters[key]).length > 0 && (
-            <span className="filter-badge">
-              {Object.keys(filters).filter(key => filters[key]).length}
-            </span>
-          )}
-        </button>
-        
-        <button 
-          className={`mobile-nav-tab ${showList ? 'active' : ''}`}
-          onClick={handleListPress}
-        >
-          📋
-          <span>Liste</span>
-          <span className="filter-badge">
-            {ressourcesFiltrees.length}
+    <div className="flutter-bottom-nav">
+      <button 
+        className={`flutter-nav-item ${activeView === 'carte' ? 'active' : ''}`}
+        onClick={handleCartePress}
+      >
+        <span className="icon">🗺️</span>
+        <span className="label">Carte</span>
+      </button>
+      
+      <button 
+        className={`flutter-nav-item ${activeView === 'dashboard' ? 'active' : ''}`}
+        onClick={handleDashboardPress}
+      >
+        <span className="icon">📊</span>
+        <span className="label">Stats</span>
+      </button>
+      
+      <button 
+        className={`flutter-nav-item ${showFilters ? 'active' : ''}`}
+        onClick={handleFiltersPress}
+      >
+        <span className="icon">🔍</span>
+        <span className="label">Filtres</span>
+        {Object.keys(filters).filter(key => filters[key]).length > 0 && (
+          <span className="flutter-badge">
+            {Object.keys(filters).filter(key => filters[key]).length}
           </span>
-        </button>
-        
-        <button 
-          className="mobile-nav-tab mobile-nav-logout"
-          onClick={onLogout}
-          title="Déconnexion"
-        >
-          🚪
-          <span>Déco</span>
-        </button>
-      </div>
+        )}
+      </button>
+      
+      <button 
+        className={`flutter-nav-item ${showList ? 'active' : ''}`}
+        onClick={handleListPress}
+      >
+        <span className="icon">📋</span>
+        <span className="label">Liste</span>
+        <span className="flutter-badge" style={{ background: 'var(--primary-600)' }}>
+          {ressourcesFiltrees.length}
+        </span>
+      </button>
+      
+      <button 
+        className="flutter-nav-item"
+        onClick={onLogout}
+        title="Déconnexion"
+        style={{ color: '#dc2626' }}
+      >
+        <span className="icon">🚪</span>
+        <span className="label">Déco</span>
+      </button>
     </div>
   );
 };
+
+
+
 
 function App() {
   const isMobile = useMobile();

@@ -8,79 +8,151 @@ const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowForm
   }
 
   return (
-    <Navbar bg="primary" variant="dark" expand="lg" fixed="top" className="navbar-custom">
-      <Container fluid className="navbar-container">
+    <Navbar expand="lg" fixed="top" className="flutter-app-bar">
+      <Container fluid style={{ padding: '0 16px' }}>
         {/* Logo/Brand */}
-        <Navbar.Brand href="#" className="navbar-brand-custom">
-          🌍 Plateforme des Ressources Communales
+        <Navbar.Brand 
+          href="#" 
+          style={{
+            fontWeight: '700',
+            fontSize: '1.3rem',
+            background: 'linear-gradient(45deg, var(--senegal-yellow), #ffffff)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+            marginRight: '2rem'
+          }}
+        >
+          🌍 Plateforme Communale
         </Navbar.Brand>
-
+        
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav" className="navbar-collapse-custom">
+        <Navbar.Collapse id="basic-navbar-nav">
           {/* Navigation principale */}
           <Nav className="me-auto">
-            <Nav.Link
+            <Nav.Link 
               href="#carte"
-              active={activeView === 'carte'}
               onClick={() => onViewChange('carte')}
-              className="nav-link-custom"
+              style={{
+                padding: '8px 16px',
+                margin: '0 4px',
+                borderRadius: 'var(--radius-md)',
+                color: activeView === 'carte' ? 'white' : 'rgba(255,255,255,0.8)',
+                background: activeView === 'carte' ? 'rgba(255,255,255,0.15)' : 'transparent',
+                fontWeight: '500',
+                transition: 'all var(--transition-fast)'
+              }}
             >
               🗺️ Carte
             </Nav.Link>
-            <Nav.Link
+            <Nav.Link 
               href="#dashboard"
-              active={activeView === 'dashboard'}
               onClick={() => onViewChange('dashboard')}
-              className="nav-link-custom"
+              style={{
+                padding: '8px 16px',
+                margin: '0 4px',
+                borderRadius: 'var(--radius-md)',
+                color: activeView === 'dashboard' ? 'white' : 'rgba(255,255,255,0.8)',
+                background: activeView === 'dashboard' ? 'rgba(255,255,255,0.15)' : 'transparent',
+                fontWeight: '500',
+                transition: 'all var(--transition-fast)'
+              }}
             >
               📊 Dashboard
             </Nav.Link>
             {user?.role === 'admin' && (
-              <NavDropdown title="⚙️ Administration" id="admin-nav-dropdown" className="nav-dropdown-custom">
-                <NavDropdown.Item href="#utilisateurs">
+              <NavDropdown 
+                title={
+                  <span style={{ 
+                    color: 'rgba(255,255,255,0.9)',
+                    fontWeight: '500'
+                  }}>
+                    ⚙️ Administration
+                  </span>
+                } 
+                id="admin-nav-dropdown"
+                style={{
+                  margin: '0 4px'
+                }}
+              >
+                <NavDropdown.Item 
+                  href="#utilisateurs"
+                  style={{ padding: '12px 16px' }}
+                >
                   👥 Gestion Utilisateurs
                 </NavDropdown.Item>
-                <NavDropdown.Item href="#statistiques">
+                <NavDropdown.Item 
+                  href="#statistiques"
+                  style={{ padding: '12px 16px' }}
+                >
                   📈 Statistiques Avancées
                 </NavDropdown.Item>
               </NavDropdown>
             )}
           </Nav>
-
+          
           {/* Boutons utilisateur connecté */}
-          <Nav className="navbar-buttons-custom">
+          <Nav style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {/* Bouton Ajouter */}
             {user?.role !== 'consultant' && (
-              <Button
-                variant="outline-light"
-                size="sm"
+              <Button 
                 onClick={onShowFormulaire}
-                className="add-btn-custom"
+                className="flutter-btn primary"
+                style={{ 
+                  padding: '8px 16px',
+                  fontSize: '14px'
+                }}
               >
-                <span className="me-1">➕</span>
+                <span style={{ marginRight: '6px' }}>➕</span>
                 Ajouter
               </Button>
             )}
-
+            
             {/* Menu utilisateur */}
-            <NavDropdown
+            <NavDropdown 
               title={
-                <span className="d-flex align-items-center">
-                  <span className="me-1">👋</span>
+                <span style={{ 
+                  display: 'flex', 
+                  alignItems: 'center',
+                  color: 'white',
+                  fontWeight: '500'
+                }}>
+                  <span style={{ marginRight: '8px' }}>👋</span>
                   {user.nom}
-                  <span className="ms-1">({user.role})</span>
+                  <span style={{ 
+                    marginLeft: '8px',
+                    fontSize: '12px',
+                    opacity: '0.9'
+                  }}>
+                    ({user.role})
+                  </span>
                 </span>
-              }
+              } 
               id="user-nav-dropdown"
               align="end"
-              className="user-dropdown-custom"
             >
-              <NavDropdown.ItemText className="small">
+              <NavDropdown.ItemText 
+                style={{ 
+                  padding: '12px 16px',
+                  fontSize: '14px',
+                  color: 'var(--on-background)'
+                }}
+              >
                 <div>Commune: {user.commune || 'Non spécifiée'}</div>
                 <div>Rôle: <strong>{user.role}</strong></div>
               </NavDropdown.ItemText>
               <NavDropdown.Divider />
-              <NavDropdown.Item onClick={onLogout} className="d-flex align-items-center">
-                <span className="me-2">🚪</span>
+              <NavDropdown.Item 
+                onClick={onLogout} 
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center',
+                  padding: '12px 16px',
+                  color: '#dc2626'
+                }}
+              >
+                <span style={{ marginRight: '8px' }}>🚪</span>
                 Déconnexion
               </NavDropdown.Item>
             </NavDropdown>

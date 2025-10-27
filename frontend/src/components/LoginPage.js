@@ -1,7 +1,7 @@
+// Dans LoginPage.js - Version Flutter-like
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import './LoginPage.css';
-import { API_BASE_URL } from '../config'; // ← AJOUT
 
 const LoginPage = ({ onLoginSuccess }) => {
   const [formData, setFormData] = useState({
@@ -24,24 +24,22 @@ const LoginPage = ({ onLoginSuccess }) => {
     setMessage('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, { // ← MODIFIÉ
+      const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData)
       });
-      
+
       const result = await response.json();
 
       if (result.success) {
         setMessage('✅ Connexion réussie! Redirection...');
         
-        // Sauvegarder le token et les infos utilisateur
         localStorage.setItem('token', result.data.token);
         localStorage.setItem('user', JSON.stringify(result.data.user));
         
-        // Appeler le callback de succès après un délai
         setTimeout(() => {
           if (onLoginSuccess) {
             onLoginSuccess(result.data.user);
@@ -59,118 +57,158 @@ const LoginPage = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="login-page-dark">
-      {/* Background animé */}
-      <div className="login-background">
-        <div className="login-background-shapes">
-          <div className="shape shape-1"></div>
-          <div className="shape shape-2"></div>
-          <div className="shape shape-3"></div>
-          <div className="shape shape-4"></div>
-        </div>
-      </div>
-
-      <Container fluid className="login-container-dark">
-        <Row className="justify-content-center align-items-center min-vh-100">
-          <Col xs={12} sm={10} md={8} lg={6} xl={4}>
-            {/* Carte de connexion centrée */}
-            <div className="login-card-wrapper">
-            
-<Card className="login-card-dark">
-  <Card.Body className="p-4"> {/* Changé de p-5 à p-4 */}
-    {/* En-tête */}
-    <div className="text-center mb-4">
-      <div className="login-logo-dark">
-        <span className="logo-icon-dark">🌍</span>
-      </div>
-      <h2 className="login-title-dark">Plateforme Communale</h2>
-      <p className="login-subtitle">Sénégal - Gestion Territoriale</p>
-    </div>
-
-    {/* Message d'alerte */}
-    {message && (
-      <Alert 
-        variant={message.includes('✅') ? 'success' : 'danger'} 
-        className="login-alert mb-3"
-      >
-        {message}
-      </Alert>
-    )}
-
-    {/* Formulaire */}
-    <Form onSubmit={handleSubmit}>
-      <Form.Group className="mb-3">
-        <Form.Label className="login-label">Email</Form.Label>
-        <Form.Control
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          placeholder="votre@email.com"
-          required
-          className="login-input-dark"
-          disabled={isLoading}
-        />
-      </Form.Group>
-
-      <Form.Group className="mb-4">
-        <Form.Label className="login-label">Mot de passe</Form.Label>
-        <Form.Control
-          type="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          placeholder="Votre mot de passe"
-          required
-          className="login-input-dark"
-          disabled={isLoading}
-        />
-      </Form.Group>
-
-      <Button 
-        variant="primary" 
-        type="submit"
-        disabled={isLoading}
-        className="login-btn-dark w-100"
-        size="lg"
-      >
-        {isLoading ? (
-          <>
-            <Spinner
-              as="span"
-              animation="border"
-              size="sm"
-              role="status"
-              aria-hidden="true"
-              className="me-2"
-            />
-            Connexion en cours...
-          </>
-        ) : (
-          <>
-            <span className="btn-icon">🔐</span>
-            Se connecter
-          </>
-        )}
-      </Button>
-    </Form>
-
-    {/* Footer */}
-    <div className="text-center mt-4">
-      <small className="login-footer-text">
-        Accès réservé aux agents communaux autorisés
-      </small>
-    </div>
-  </Card.Body>
-</Card>
+    <div className="login-page-flutter" style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, var(--primary-50) 0%, var(--background) 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px'
+    }}>
+      <div className="flutter-scale-in" style={{ width: '100%', maxWidth: '400px' }}>
+        {/* Carte de connexion Flutter-like */}
+        <div className="flutter-card elevated" style={{ 
+          padding: '40px 32px',
+          textAlign: 'center'
+        }}>
+          {/* Logo */}
+          <div style={{ marginBottom: '32px' }}>
+            <div style={{
+              width: '80px',
+              height: '80px',
+              background: 'linear-gradient(135deg, var(--senegal-green), var(--primary-600))',
+              borderRadius: 'var(--radius-xl)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px',
+              fontSize: '32px',
+              color: 'white',
+              boxShadow: 'var(--elevation-2)'
+            }}>
+              🌍
             </div>
-          </Col>
-        </Row>
-      </Container>
+            <h1 style={{ 
+              fontSize: '24px', 
+              fontWeight: '700',
+              color: 'var(--on-surface)',
+              marginBottom: '8px'
+            }}>
+              Plateforme Communale
+            </h1>
+            <p style={{ 
+              color: 'var(--on-background)',
+              fontSize: '14px'
+            }}>
+              Sénégal - Gestion Territoriale
+            </p>
+          </div>
 
-      {/* Footer global */}
-      <div className="login-global-footer">
-        <p>&copy; 2024 Plateforme des Ressources Communales - Sénégal</p>
+          {/* Message d'alerte */}
+          {message && (
+            <div className={`flutter-fade-in ${message.includes('✅') ? 'alert-success' : 'alert-error'}`} style={{
+              padding: '12px 16px',
+              borderRadius: 'var(--radius-md)',
+              marginBottom: '24px',
+              fontSize: '14px',
+              background: message.includes('✅') ? 'var(--primary-50)' : '#fef2f2',
+              color: message.includes('✅') ? 'var(--primary-700)' : '#dc2626',
+              border: `1px solid ${message.includes('✅') ? 'var(--primary-200)' : '#fecaca'}`
+            }}>
+              {message}
+            </div>
+          )}
+
+          {/* Formulaire */}
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '20px', textAlign: 'left' }}>
+              <label style={{
+                display: 'block',
+                marginBottom: '8px',
+                fontWeight: '600',
+                color: 'var(--on-surface)',
+                fontSize: '14px'
+              }}>
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="votre@email.com"
+                required
+                disabled={isLoading}
+                className="flutter-input"
+              />
+            </div>
+
+            <div style={{ marginBottom: '32px', textAlign: 'left' }}>
+              <label style={{
+                display: 'block',
+                marginBottom: '8px',
+                fontWeight: '600',
+                color: 'var(--on-surface)',
+                fontSize: '14px'
+              }}>
+                Mot de passe
+              </label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Votre mot de passe"
+                required
+                disabled={isLoading}
+                className="flutter-input"
+              />
+            </div>
+
+            <button 
+              type="submit"
+              disabled={isLoading}
+              className="flutter-btn primary"
+              style={{ width: '100%' }}
+            >
+              {isLoading ? (
+                <>
+                  <div className="flutter-spinner" style={{ 
+                    width: '16px', 
+                    height: '16px',
+                    borderWidth: '2px'
+                  }}></div>
+                  Connexion en cours...
+                </>
+              ) : (
+                <>
+                  <span>🔐</span>
+                  Se connecter
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Footer */}
+          <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #f1f5f9' }}>
+            <small style={{ 
+              color: 'var(--on-background)',
+              fontSize: '12px'
+            }}>
+              Accès réservé aux agents communaux autorisés
+            </small>
+          </div>
+        </div>
+
+        {/* Footer global */}
+        <div style={{ 
+          textAlign: 'center', 
+          marginTop: '24px',
+          color: 'var(--on-background)',
+          fontSize: '12px'
+        }}>
+          <p>&copy; 2024 Plateforme des Ressources Communales - Sénégal</p>
+        </div>
       </div>
     </div>
   );

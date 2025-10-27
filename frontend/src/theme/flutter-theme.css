@@ -1,0 +1,365 @@
+/* === DESIGN SYSTEM FLUTTER-LIKE === */
+:root {
+    /* Couleurs primaires inspirées de Flutter/Material */
+    --primary-50: #f0f9ff;
+    --primary-100: #e0f2fe;
+    --primary-500: #0ea5e9;
+    --primary-600: #0284c7;
+    --primary-900: #0c4a6e;
+    
+    /* Couleurs sénégalaises adaptées */
+    --senegal-green: #00853f;
+    --senegal-yellow: #fdef42;
+    --senegal-red: #e31b23;
+    
+    /* Neutres Material */
+    --surface: #ffffff;
+    --background: #f8fafc;
+    --on-surface: #1e293b;
+    --on-background: #64748b;
+    
+    /* Élévations (ombres) */
+    --elevation-1: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --elevation-2: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --elevation-3: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --elevation-4: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    
+    /* Bordures arrondies */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --radius-full: 9999px;
+    
+    /* Animations */
+    --transition-fast: 150ms ease;
+    --transition-normal: 300ms ease;
+    --transition-slow: 500ms ease;
+  }
+  
+  /* === RÉINITIALISATION AVEC STYLE FLUTTER === */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  html, body, #root {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: var(--background);
+    color: var(--on-surface);
+  }
+  
+  .App {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    background: var(--background);
+  }
+  
+  /* === COMPOSANTS FLUTTER-LIKE === */
+  
+  /* Cartes Material */
+  .flutter-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--elevation-1);
+    border: none;
+    transition: all var(--transition-normal);
+    overflow: hidden;
+  }
+  
+  .flutter-card:hover {
+    box-shadow: var(--elevation-3);
+    transform: translateY(-2px);
+  }
+  
+  .flutter-card.elevated {
+    box-shadow: var(--elevation-2);
+  }
+  
+  /* Boutons Flutter-like */
+  .flutter-btn {
+    border: none;
+    border-radius: var(--radius-full);
+    padding: 12px 24px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .flutter-btn:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left var(--transition-slow);
+  }
+  
+  .flutter-btn:hover:before {
+    left: 100%;
+  }
+  
+  .flutter-btn.primary {
+    background: linear-gradient(135deg, var(--senegal-green), var(--primary-600));
+    color: white;
+    box-shadow: var(--elevation-2);
+  }
+  
+  .flutter-btn.primary:hover {
+    box-shadow: var(--elevation-3);
+    transform: translateY(-1px);
+  }
+  
+  .flutter-btn.secondary {
+    background: var(--surface);
+    color: var(--primary-600);
+    border: 1.5px solid var(--primary-200);
+    box-shadow: var(--elevation-1);
+  }
+  
+  .flutter-btn.tertiary {
+    background: transparent;
+    color: var(--primary-600);
+    padding: 8px 16px;
+  }
+  
+  /* Champs de formulaire Material */
+  .flutter-input {
+    width: 100%;
+    padding: 16px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    font-size: 16px;
+    transition: all var(--transition-fast);
+    color: var(--on-surface);
+  }
+  
+  .flutter-input:focus {
+    outline: none;
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+  }
+  
+  .flutter-input:hover {
+    border-color: #cbd5e1;
+  }
+  
+  /* Navigation bottom bar Flutter-like */
+  .flutter-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-top: 1px solid #f1f5f9;
+    padding: 8px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1030;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  }
+  
+  .flutter-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: none;
+    border: none;
+    padding: 12px 16px;
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-fast);
+    color: var(--on-background);
+    flex: 1;
+    max-width: 80px;
+    position: relative;
+  }
+  
+  .flutter-nav-item.active {
+    color: var(--primary-600);
+    background: rgba(14, 165, 233, 0.08);
+  }
+  
+  .flutter-nav-item .icon {
+    font-size: 20px;
+    margin-bottom: 4px;
+    transition: transform var(--transition-fast);
+  }
+  
+  .flutter-nav-item.active .icon {
+    transform: scale(1.1);
+  }
+  
+  .flutter-nav-item .label {
+    font-size: 11px;
+    font-weight: 500;
+  }
+  
+  /* Badge Material */
+  .flutter-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--senegal-red);
+    color: white;
+    border-radius: var(--radius-full);
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 16px;
+    text-align: center;
+    box-shadow: var(--elevation-1);
+  }
+  
+  /* App Bar Material */
+  .flutter-app-bar {
+    background: linear-gradient(135deg, var(--senegal-green), var(--primary-600));
+    color: white;
+    box-shadow: var(--elevation-2);
+    border: none;
+  }
+  
+  /* Loading spinner Flutter-like */
+  .flutter-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f1f5f9;
+    border-top: 3px solid var(--primary-500);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* Chip Material */
+  .flutter-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    background: var(--primary-50);
+    color: var(--primary-700);
+    border-radius: var(--radius-full);
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid var(--primary-100);
+  }
+  
+  /* === ANIMATIONS FLUTTER === */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  
+  .flutter-fade-in {
+    animation: fadeIn var(--transition-normal);
+  }
+  
+  .flutter-slide-in {
+    animation: slideInRight var(--transition-normal);
+  }
+  
+  .flutter-scale-in {
+    animation: scaleIn var(--transition-normal);
+  }
+  
+  /* === RESPONSIVE === */
+  @media (max-width: 768px) {
+    .flutter-card {
+      border-radius: var(--radius-md);
+      margin: 8px;
+    }
+    
+    .flutter-btn {
+      padding: 14px 20px;
+    }
+  }
+  
+  /* Support PWA */
+  @media (display-mode: standalone) {
+    .flutter-bottom-nav {
+      padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    }
+  }
+
+  /* === COMPLÉMENT POUR LES MODALS ET FORMULAIRES === */
+
+/* Modal Flutter-like */
+.modal-content {
+  border: none !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--elevation-4) !important;
+  background: var(--surface) !important;
+}
+
+.modal-header {
+  border-bottom: 1px solid #f1f5f9 !important;
+  padding: 24px 24px 16px !important;
+}
+
+.modal-body {
+  padding: 24px !important;
+}
+
+.modal-footer {
+  border-top: 1px solid #f1f5f9 !important;
+  padding: 16px 24px 24px !important;
+}
+
+/* Select personnalisé */
+.flutter-input[type="select"] {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23666' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 8px 10px;
+}
+
+/* Textarea */
+.flutter-input[type="textarea"] {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+/* Grid layout pour formulaires */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
