@@ -80,12 +80,12 @@ export const NotificationProvider = ({ children }) => {
   return (
     <NotificationContext.Provider value={value}>
       {children}
-      <NotificationContainer />
+      {/* SUPPRIMER l'appel direct à NotificationContainer ici */}
     </NotificationContext.Provider>
   );
 };
 
-// Conteneur des notifications
+// Conteneur des notifications - CORRIGÉ
 const NotificationContainer = () => {
   const { notifications, removeNotification } = useNotifications();
 
@@ -245,4 +245,5 @@ const NotificationToast = ({ notification, onClose }) => {
   );
 };
 
+// Export unique du conteneur
 export default NotificationContainer;

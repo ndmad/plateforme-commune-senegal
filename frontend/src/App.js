@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Container } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'leaflet/dist/leaflet.css';
@@ -16,13 +16,13 @@ import { API_BASE_URL } from './config';
 import ExportDonnees from './components/ExportDonnees';
 
 // Ajouter ces imports
-
 import GraphiquesInteractifs from './components/GraphiquesInteractifs';
 import CarteThermique from './components/CarteThermique';
 import LanguageSwitcher from './components/LanguageSwitcher';
 
-// Import des notifications
+// Import des notifications - CORRIGÉ
 import { NotificationProvider, useNotifications } from './components/Notifications';
+import NotificationContainer from './components/Notifications';
 import { TranslationProvider } from './hooks/useTranslation';
 
 // Composant MobileNavigation
@@ -124,8 +124,8 @@ const MobileNavigation = ({
   );
 };
 
-// Composant App principal
-function App() {
+// Composant App principal - SÉPARÉ du wrapper
+const AppContent = () => {
   const isMobile = useMobile();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -142,6 +142,13 @@ function App() {
   const [showFilters, setShowFilters] = useState(false);
   const [showList, setShowList] = useState(false);
 
+  // Références pour éviter les déclenchements multiples de notifications
+  const notificationsShown = useRef({
+    welcome: false,
+    loading: false,
+    success: false
+  });
+
   // Utilisation des notifications
   const { success, error, warning, info } = useNotifications();
 
@@ -154,7 +161,13 @@ function App() {
       try {
         const userObj = JSON.parse(userData);
         setUser(userObj);
-        info(`Bienvenue de retour ${userObj.nom} !`);
+        
+        // Éviter les notifications multiples
+        if (!notificationsShown.current.welcome) {
+          info(`Bienvenue de retour ${userObj.nom} !`);
+          notificationsShown.current.welcome = true;
+        }
+        
         chargerDonnees();
       } catch (e) {
         console.error('Erreur parsing user data:', e);
@@ -177,7 +190,12 @@ function App() {
   const chargerDonnees = async () => {
     try {
       setLoading(true);
-      info('Chargement des données...');
+      
+      // Éviter les notifications multiples - CORRECTION ICI
+      if (!notificationsShown.current.loading) {
+        info('Chargement des données...');
+        notificationsShown.current.loading = true;
+      }
       
       const reponseCommunes = await fetch(`${API_BASE_URL}/communes`);
       const dataCommunes = await reponseCommunes.json();
@@ -187,11 +205,18 @@ function App() {
       const dataRessources = await reponseRessources.json();
       setRessources(dataRessources.data || []);
       
-      success('Données chargées avec succès !');
+      // Éviter les notifications multiples - CORRECTION ICI
+      if (!notificationsShown.current.success) {
+        success('Données chargées avec succès !');
+        notificationsShown.current.success = true;
+      }
       
     } catch (erreur) {
       console.error('❌ Erreur chargement données:', erreur);
       error('Erreur lors du chargement des données');
+      
+      // Réinitialiser l'état de chargement en cas d'erreur
+      notificationsShown.current.loading = false;
     } finally {
       setLoading(false);
     }
@@ -233,12 +258,26 @@ function App() {
   };
 
   const handleLoginSuccess = (userData) => {
+    // Réinitialiser les références pour une nouvelle connexion
+    notificationsShown.current = {
+      welcome: true,
+      loading: false,
+      success: false
+    };
+    
     success(`👋 Bienvenue ${userData.nom} !`);
     setUser(userData);
     chargerDonnees();
   };
 
   const handleLogout = () => {
+    // Réinitialiser complètement les références
+    notificationsShown.current = {
+      welcome: false,
+      loading: false,
+      success: false
+    };
+    
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
@@ -444,15 +483,16 @@ function App() {
       />
     </div>
   );
-}
+};
 
 // Wrapper avec le provider de notifications
-
 function AppWithNotifications() {
   return (
     <TranslationProvider>
       <NotificationProvider>
-        <App />
+        <AppContent />
+        {/* UN SEUL NotificationContainer à la racine */}
+        <NotificationContainer />
       </NotificationProvider>
     </TranslationProvider>
   );
