@@ -4,9 +4,19 @@ import LanguageSwitcher from './LanguageSwitcher';
 
 const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowFormulaire }) => {
   // ❌ CACHER COMPLÈTEMENT LE HEADER EN MOBILE
-  if (isMobile) {
-    return null;
-  }
+ 
+if (isMobile) {
+  return (
+    <div style={{ 
+      height: '0px', 
+      overflow: 'hidden',
+      position: 'absolute',
+      top: '-100px'
+    }}>
+      {/* Header caché mais présent pour éviter les erreurs */}
+    </div>
+  );
+}
 
   return (
     <Navbar expand="lg" fixed="top" className="flutter-app-bar">

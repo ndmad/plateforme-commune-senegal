@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import { communesSenegal } from '../data/communesSenegal';
 
 // Correction CRITIQUE des icônes Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -9,6 +10,250 @@ L.Icon.Default.mergeOptions({
   iconUrl: require('leaflet/dist/images/marker-icon.png'),
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
+
+// COMPOSANT BARRE DE RECHERCHE DES COMMUNES
+const SearchBarCommunes = ({ onCommuneSelect, isMobile }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [results, setResults] = useState([]);
+  const [showResults, setShowResults] = useState(false);
+
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+    
+    if (!term.trim()) {
+      setResults([]);
+      setShowResults(false);
+      return;
+    }
+
+    // Recherche dans les communes
+    const filteredCommunes = communesSenegal.filter(commune =>
+      commune.nom.toLowerCase().includes(term.toLowerCase()) ||
+      commune.region.toLowerCase().includes(term.toLowerCase())
+    );
+
+    setResults(filteredCommunes.slice(0, 8));
+    setShowResults(true);
+  };
+
+  const handleSelectCommune = (commune) => {
+    if (onCommuneSelect) {
+      onCommuneSelect(commune);
+    }
+    setShowResults(false);
+    setSearchTerm('');
+  };
+
+  return (
+    <div style={{
+      position: 'absolute',
+      top: '10px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: 1000,
+      width: isMobile ? '90%' : '400px'
+    }}>
+      <div className="search-container">
+        <input
+          type="text"
+          placeholder="🔍 Rechercher une commune..."
+          value={searchTerm}
+          onChange={(e) => handleSearch(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '12px 16px',
+            borderRadius: '25px',
+            border: '2px solid #00853f',
+            fontSize: '14px',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+            outline: 'none',
+            background: 'white'
+          }}
+        />
+        
+        {showResults && results.length > 0 && (
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            marginTop: '8px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            maxHeight: '300px',
+            overflowY: 'auto',
+            border: '1px solid #e0e0e0'
+          }}>
+            {results.map((commune, index) => (
+              <div
+                key={commune.id}
+                onClick={() => handleSelectCommune(commune)}
+                style={{
+                  padding: '12px 16px',
+                  borderBottom: '1px solid #f0f0f0',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px'
+                }}
+                onMouseEnter={(e) => e.target.style.background = '#f8f9fa'}
+                onMouseLeave={(e) => e.target.style.background = 'white'}
+              >
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #00853f, #00a651)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                  color: 'white',
+                  fontWeight: 'bold'
+                }}>
+                  🏛️
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: '600', fontSize: '14px', color: '#333' }}>
+                    {commune.nom}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#666' }}>
+                    Région: {commune.region}
+                  </div>
+                </div>
+                <div style={{
+                  fontSize: '11px',
+                  color: '#00853f',
+                  background: '#e8f5e8',
+                  padding: '4px 8px',
+                  borderRadius: '12px',
+                  fontWeight: '600'
+                }}>
+                  Aller
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {showResults && searchTerm && results.length === 0 && (
+          <div style={{
+            background: 'white',
+            padding: '16px',
+            borderRadius: '12px',
+            marginTop: '8px',
+            textAlign: 'center',
+            color: '#666',
+            fontSize: '14px',
+            border: '1px solid #e0e0e0'
+          }}>
+            Aucune commune trouvée pour "{searchTerm}"
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// COMPOSANT BARRE D'OUTILS AMÉLIORÉ
+const ToolsBarCarte = ({ onMeasure, onDraw, onPrint, isMobile }) => {
+  return (
+    <div style={{
+      position: 'absolute',
+      top: isMobile ? '80px' : '80px',
+      right: '10px',
+      zIndex: 1000,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '8px'
+    }}>
+      <button
+        onClick={onMeasure}
+        title="Mesurer une distance"
+        style={{
+          width: isMobile ? '45px' : '40px',
+          height: isMobile ? '45px' : '40px',
+          borderRadius: '50%',
+          border: '2px solid #00853f',
+          background: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: isMobile ? '18px' : '16px',
+          cursor: 'pointer',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          transition: 'all 0.3s ease'
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.background = '#00853f';
+          e.target.style.transform = 'scale(1.1)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.background = 'white';
+          e.target.style.transform = 'scale(1)';
+        }}
+      >
+        📏
+      </button>
+
+      <button
+        onClick={onDraw}
+        title="Dessiner une zone"
+        style={{
+          width: isMobile ? '45px' : '40px',
+          height: isMobile ? '45px' : '40px',
+          borderRadius: '50%',
+          border: '2px solid #00853f',
+          background: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: isMobile ? '18px' : '16px',
+          cursor: 'pointer',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          transition: 'all 0.3s ease'
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.background = '#00853f';
+          e.target.style.transform = 'scale(1.1)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.background = 'white';
+          e.target.style.transform = 'scale(1)';
+        }}
+      >
+        🖊️
+      </button>
+
+      <button
+        onClick={onPrint}
+        title="Imprimer la carte"
+        style={{
+          width: isMobile ? '45px' : '40px',
+          height: isMobile ? '45px' : '40px',
+          borderRadius: '50%',
+          border: '2px solid #00853f',
+          background: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: isMobile ? '18px' : '16px',
+          cursor: 'pointer',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          transition: 'all 0.3s ease'
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.background = '#00853f';
+          e.target.style.transform = 'scale(1.1)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.background = 'white';
+          e.target.style.transform = 'scale(1)';
+        }}
+      >
+        🖨️
+      </button>
+    </div>
+  );
+};
 
 // Création des icônes personnalisées
 const creerIcone = (couleur) => {
@@ -64,7 +309,7 @@ const MapController = ({ isMobile }) => {
   return null;
 };
 
-// Composant de localisation automatique - CORRIGÉ POUR DESKTOP/MOBILE
+// Composant de localisation automatique
 const LocateControl = ({ isMobile }) => {
   const map = useMap();
 
@@ -96,14 +341,12 @@ const LocateControl = ({ isMobile }) => {
   };
 
   useEffect(() => {
-    // Position différente selon mobile/desktop
     const position = isMobile ? 'topleft' : 'topleft';
     
     const LocateControl = L.Control.extend({
       onAdd: function(map) {
         const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
         
-        // Style différent selon mobile/desktop
         const buttonStyle = isMobile ? 
           `width: 45px; height: 45px; font-size: 18px; border-radius: 50%;` :
           `width: 30px; height: 30px; font-size: 14px; border-radius: 4px;`;
@@ -188,7 +431,7 @@ const BasemapController = ({ onBasemapChange }) => {
           position: 'absolute',
           top: '10px',
           right: '10px',
-          zIndex: 1000, // CORRIGÉ
+          zIndex: 1000,
           padding: '8px 12px',
           borderRadius: '8px',
           border: '2px solid #00853f',
@@ -214,7 +457,6 @@ const DynamicTileLayer = ({ basemap }) => {
   const map = useMap();
   
   useEffect(() => {
-    // Recentrer la carte quand le basemap change
     map.invalidateSize();
   }, [basemap, map]);
 
@@ -228,35 +470,92 @@ const DynamicTileLayer = ({ basemap }) => {
   );
 };
 
+// COMPOSANT PRINCIPAL AMÉLIORÉ
 const CarteCommunale = ({ ressources, communes, onCommuneSelect, isMobile }) => {
   const positionDefaut = [14.7167, -17.4677]; // Dakar
   const mapRef = useRef();
   const [cartePrete, setCartePrete] = useState(false);
   const [currentBasemap, setCurrentBasemap] = useState('osm');
+  const [selectedCommune, setSelectedCommune] = useState(null);
 
-  // Fonction pour obtenir les coordonnées d'une ressource
-  const obtenirCoordonnees = (ressource) => {
-    // ESSAYER DIFFÉRENTES SOURCES DE COORDONNÉES
+  // ✅ Gestion de la sélection d'une commune depuis la recherche
+  const handleCommuneSelect = (commune) => {
+    setSelectedCommune(commune);
     
-    // 1. Si GeoJSON PostGIS (format [lng, lat])
+    if (mapRef.current) {
+      const newPosition = [parseFloat(commune.latitude), parseFloat(commune.longitude)];
+      mapRef.current.setView(newPosition, 13);
+      
+      // Ajouter un marqueur temporaire pour la commune sélectionnée
+      if (window.communeMarker) {
+        mapRef.current.removeLayer(window.communeMarker);
+      }
+      
+      window.communeMarker = L.marker(newPosition)
+        .addTo(mapRef.current)
+        .bindPopup(`
+          <div style="padding: 8px; text-align: center;">
+            <strong>🏛️ ${commune.nom}</strong>
+            <br/>
+            <small>Région: ${commune.region}</small>
+            <br/>
+            <button onclick="window.closeCommunePopup()" style="
+              margin-top: 8px;
+              padding: 4px 12px;
+              background: #00853f;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+              font-size: 12px;
+            ">Fermer</button>
+          </div>
+        `)
+        .openPopup();
+    }
+
+    if (onCommuneSelect) {
+      onCommuneSelect(commune);
+    }
+  };
+
+  // Fonction pour fermer le popup de la commune
+  useEffect(() => {
+    window.closeCommunePopup = () => {
+      if (window.communeMarker) {
+        window.communeMarker.closePopup();
+      }
+    };
+  }, []);
+
+  // ✅ Gestion des outils
+  const handleMeasureDistance = () => {
+    alert('📏 Fonctionnalité de mesure en développement...');
+  };
+
+  const handleDrawPolygon = () => {
+    alert('🖊️ Fonctionnalité de dessin en développement...');
+  };
+
+  const handlePrintMap = () => {
+    window.print();
+  };
+
+  // ✅ FONCTION EXISTANTE QUI FONCTIONNE BIEN
+  const obtenirCoordonnees = (ressource) => {
     if (ressource.localisation && ressource.localisation.coordinates) {
       const [lng, lat] = ressource.localisation.coordinates;
-      console.log(`📍 ${ressource.nom}: GeoJSON [${lng}, ${lat}]`);
       return [lat, lng];
     }
     
-    // 2. Si champs latitude/longitude séparés
     if (ressource.latitude && ressource.longitude) {
       const lat = parseFloat(ressource.latitude);
       const lng = parseFloat(ressource.longitude);
       if (!isNaN(lat) && !isNaN(lng)) {
-        console.log(`📍 ${ressource.nom}: Champs séparés [${lat}, ${lng}]`);
         return [lat, lng];
       }
     }
     
-    // 3. Coordonnées par défaut si rien ne fonctionne
-    console.warn(`❌ ${ressource.nom}: Aucune coordonnée valide, utilisation défaut`);
     return positionDefaut;
   };
 
@@ -267,17 +566,12 @@ const CarteCommunale = ({ ressources, communes, onCommuneSelect, isMobile }) => 
   // Filtrer les ressources avec coordonnées valides
   const ressourcesAvecCoordonnees = ressources ? ressources.filter(ressource => {
     const coords = obtenirCoordonnees(ressource);
-    const estValide = coords && coords[0] !== positionDefaut[0] && coords[1] !== positionDefaut[1];
-    if (!estValide) {
-      console.warn(`🚫 ${ressource.nom} ignorée - coordonnées invalides`);
-    }
-    return estValide;
+    return coords && coords[0] !== positionDefaut[0] && coords[1] !== positionDefaut[1];
   }) : [];
 
   console.log(`🗺️ ${ressourcesAvecCoordonnees.length}/${ressources ? ressources.length : 0} ressources affichées`);
 
   const handleBasemapChange = (newBasemap) => {
-    console.log(`🔄 Changement de basemap: ${newBasemap}`);
     setCurrentBasemap(newBasemap);
   };
 
@@ -324,6 +618,20 @@ const CarteCommunale = ({ ressources, communes, onCommuneSelect, isMobile }) => 
   return (
     <div className={`carte-container ${isMobile ? 'mobile' : 'desktop'}`}>
       <DebugComponent ressources={ressources} />
+      
+      {/* BARRE DE RECHERCHE DES COMMUNES */}
+      <SearchBarCommunes 
+        onCommuneSelect={handleCommuneSelect}
+        isMobile={isMobile}
+      />
+      
+      {/* BARRE D'OUTILS */}
+      <ToolsBarCarte 
+        onMeasure={handleMeasureDistance}
+        onDraw={handleDrawPolygon}
+        onPrint={handlePrintMap}
+        isMobile={isMobile}
+      />
       
       <MapContainer 
         center={positionDefaut} 
@@ -414,6 +722,7 @@ const CarteCommunale = ({ ressources, communes, onCommuneSelect, isMobile }) => 
       {/* Indicateur de statut */}
       <div className="position-absolute bottom-0 start-0 m-2 bg-dark text-white px-2 py-1 rounded small" style={{zIndex: 1000}}>
         🗺️ {ressourcesAvecCoordonnees.length} ressources | {BASEMAPS[currentBasemap].name}
+        {selectedCommune && ` | 📍 ${selectedCommune.nom}`}
       </div>
     </div>
   );

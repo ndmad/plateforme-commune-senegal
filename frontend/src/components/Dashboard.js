@@ -38,222 +38,80 @@ const Dashboard = ({ ressources, communes }) => {
   const [animationEnabled, setAnimationEnabled] = useState(true);
 
   // Options pour les graphiques en barres AVEC ANIMATIONS AMÉLIORÉES
-  const optionsBar = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          usePointStyle: true,
-          padding: 20,
-          font: {
-            size: 12
-          }
-        }
+ // Options pour les graphiques en barres - ANIMATIONS SIMPLES MAIS EFFICACES
+const optionsBar = {
+  responsive: true,
+  plugins: {
+    legend: {
+      position: 'top',
+    },
+    title: {
+      display: true,
+      text: 'Répartition des ressources',
+      font: {
+        size: 16,
+        weight: '600'
       },
-      title: {
-        display: true,
-        text: 'Répartition des ressources',
-        font: {
-          size: 16,
-          weight: '600',
-          family: "'Inter', sans-serif"
-        },
-        padding: 20,
-        color: 'var(--on-surface)'
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleFont: {
-          size: 13,
-          weight: '600'
-        },
-        bodyFont: {
-          size: 12
-        },
-        padding: 12,
-        cornerRadius: 8,
-        displayColors: true,
-        callbacks: {
-          label: function(context) {
-            return `${context.dataset.label}: ${context.parsed.y}`;
-          }
-        }
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: {
-          color: 'rgba(0, 0, 0, 0.05)'
-        },
-        ticks: {
-          font: {
-            size: 11
-          },
-          stepSize: 1
-        }
-      },
-      x: {
-        grid: {
-          display: false
-        },
-        ticks: {
-          font: {
-            size: 11
-          }
-        }
-      }
-    },
-    // ✅ ANIMATIONS AMÉLIORÉES
-    animation: {
-      duration: 1500,
-      easing: 'easeOutElastic',
-      delay: (context) => {
-        return context.dataIndex * 100;
-      }
-    },
-    transitions: {
-      active: {
-        animation: {
-          duration: 1000
-        }
-      }
-    },
-    // STYLE DES BARRES
-    elements: {
-      bar: {
-        borderRadius: {
-          topLeft: 8,
-          topRight: 8,
-          bottomLeft: 0,
-          bottomRight: 0
-        },
-        borderWidth: 0,
-        borderSkipped: false,
-        backgroundColor: function(context) {
-          const index = context.dataIndex;
-          const colors = [
-            '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-            '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#64748b'
-          ];
-          return colors[index % colors.length];
-        },
-        hoverBackgroundColor: function(context) {
-          const index = context.dataIndex;
-          const colors = [
-            '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-            '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#64748b'
-          ];
-          return colors[index % colors.length] + 'CC';
-        },
-        hoverBorderWidth: 2,
-        hoverBorderColor: '#fff'
-      }
+      padding: 20,
     }
-  };
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+    }
+  },
+  // ANIMATIONS BASIQUES MAIS FIABLES
+  animation: {
+    duration: 2000,
+    easing: 'easeOutQuart'
+  }
+};
 
-  const optionsPie = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          usePointStyle: true,
-          padding: 20,
-          font: {
-            size: 11
-          },
-          color: 'var(--on-surface)'
-        }
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleFont: {
-          size: 13
-        },
-        bodyFont: {
-          size: 12
-        },
-        padding: 10,
-        cornerRadius: 8
-      }
-    },
-    cutout: '50%',
-    // ✅ ANIMATIONS AMÉLIORÉES PIE
-    animation: {
-      animateScale: true,
-      animateRotate: true,
-      duration: 1800,
-      easing: 'easeOutBounce',
-      delay: 300
-    },
-    hover: {
-      animationDuration: 400
+const optionsPie = {
+  responsive: true,
+  plugins: {
+    legend: {
+      position: 'bottom',
     }
-  };
+  },
+  // ANIMATIONS PIE SIMPLES
+  animation: {
+    animateScale: true,
+    animateRotate: true,
+    duration: 2000,
+    easing: 'easeOutBounce'
+  }
+};
 
-  const optionsDoughnut = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          usePointStyle: true,
-          padding: 15,
-          font: {
-            size: 11
-          },
-          color: 'var(--on-surface)'
-        }
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        callbacks: {
-          label: function(context) {
-            const label = context.label || '';
-            const value = context.parsed;
-            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-            const percentage = Math.round((value / total) * 100);
-            return `${label}: ${value} (${percentage}%)`;
-          }
-        }
-      }
-    },
-    cutout: '60%',
-    // ✅ ANIMATIONS AMÉLIORÉES DOUGHNUT
-    animation: {
-      animateScale: true,
-      animateRotate: true,
-      duration: 2000,
-      easing: 'easeInOutCirc',
-      delay: 500
-    },
-    hover: {
-      animationDuration: 500
+const optionsDoughnut = {
+  responsive: true,
+  plugins: {
+    legend: {
+      position: 'bottom',
     }
-  };
+  },
+  cutout: '60%',
+  // ANIMATIONS DOUGHNUT SIMPLES
+  animation: {
+    animateScale: true,
+    animateRotate: true,
+    duration: 2000,
+    easing: 'easeOutCirc'
+  }
+};
 
   // Calculer les statistiques
-  useEffect(() => {
-    if (ressources && communes) {
-      calculerStatistiques();
-    }
-  }, [ressources, communes]);
+ // Calculer les statistiques
+useEffect(() => {
+  if (ressources && communes) {
+    calculerStatistiques();
+  }
+}, [ressources, communes]);
 
-  // ✅ CORRIGÉ : Gérer les animations lors du changement d'onglet
-  useEffect(() => {
-    // Désactiver temporairement les animations pour forcer un re-render
-    setAnimationEnabled(false);
-    
-    // Réactiver les animations après un court délai
-    const timer = setTimeout(() => {
-      setAnimationEnabled(true);
-      setChartKey(prev => prev + 1);
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, [activeTab]);
+// ✅ SOLUTION SIMPLE : Réinitialiser la clé à chaque changement d'onglet
+useEffect(() => {
+  setChartKey(prev => prev + 1);
+}, [activeTab]);
 
   // Options avec animations conditionnelles
   const getAnimatedOptions = (baseOptions, type) => {
