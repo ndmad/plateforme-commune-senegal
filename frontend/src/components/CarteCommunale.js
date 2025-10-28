@@ -41,7 +41,7 @@ const CoordinatesDisplay = ({ isMobile }) => {
   return (
     <div style={{
       position: 'absolute',
-      bottom: '50px',
+      bottom: '80px',  // Position au-dessus de l'échelle
       right: '10px',
       background: 'rgba(255, 255, 255, 0.9)',
       color: '#333',
@@ -76,12 +76,13 @@ const CustomScaleControl = ({ isMobile }) => {
       imperial={false}
       metric={true}
       style={{
-        marginBottom: isMobile ? '80px' : '90px', // ← Encore plus d'espace
+        marginBottom: isMobile ? '50px' : '40px',
         marginRight: '10px'
       }}
     />
   );
 };
+
 // COMPOSANT INFO STATUT (NOMBRE DE RESSOURCES + COMMUNE)
 const StatusInfo = ({ ressourcesCount, selectedCommune, currentBasemap, isMobile }) => {
   return (
@@ -112,6 +113,196 @@ const StatusInfo = ({ ressourcesCount, selectedCommune, currentBasemap, isMobile
       </div>
     </div>
   );
+};
+
+// COMPOSANT DE LOCALISATION AUTOMATIQUE - VERSION MODERNE
+const LocateControl = ({ isMobile }) => {
+  const map = useMap();
+  const [isLocating, setIsLocating] = useState(false);
+
+  const locateUser = () => {
+    if (navigator.geolocation) {
+      setIsLocating(true);
+      
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          map.setView([latitude, longitude], 15);
+          
+          // Supprimer l'ancien marqueur s'il existe
+          if (window.currentLocationMarker) {
+            map.removeLayer(window.currentLocationMarker);
+          }
+          
+          // Créer un marqueur moderne avec animation
+          window.currentLocationMarker = L.marker([latitude, longitude], {
+            icon: L.divIcon({
+              html: `
+                <div style="
+                  position: relative;
+                  width: 24px;
+                  height: 24px;
+                ">
+                  <!-- Effet de vague -->
+                  <div style="
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 24px;
+                    height: 24px;
+                    background: rgba(0, 133, 63, 0.3);
+                    border-radius: 50%;
+                    animation: ripple 2s infinite;
+                  "></div>
+                  <!-- Point central -->
+                  <div style="
+                    position: absolute;
+                    top: 4px;
+                    left: 4px;
+                    width: 16px;
+                    height: 16px;
+                    background: #00853f;
+                    border: 2px solid white;
+                    border-radius: 50%;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                  "></div>
+                </div>
+              `,
+              className: 'modern-location-marker',
+              iconSize: [24, 24],
+              iconAnchor: [12, 12],
+            })
+          })
+            .addTo(map)
+            .bindPopup(`
+              <div style="text-align: center; padding: 8px;">
+                <strong>📍 Votre position actuelle</strong>
+                <br>
+                <small>Lat: ${latitude.toFixed(4)}°</small>
+                <br>
+                <small>Lng: ${longitude.toFixed(4)}°</small>
+              </div>
+            `)
+            .openPopup();
+
+          setIsLocating(false);
+        },
+        (error) => {
+          console.error('Erreur de géolocalisation:', error);
+          setIsLocating(false);
+          
+          let errorMessage = 'Impossible d\'obtenir votre position';
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = 'Permission de géolocalisation refusée';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = 'Position indisponible';
+              break;
+            case error.TIMEOUT:
+              errorMessage = 'Délai de localisation dépassé';
+              break;
+          }
+          
+          // Notification moderne au lieu d'alert
+          L.popup()
+            .setLatLng(map.getCenter())
+            .setContent(`
+              <div style="text-align: center; padding: 12px;">
+                <div style="font-size: 24px; margin-bottom: 8px;">❌</div>
+                <strong style="color: #dc2626;">${errorMessage}</strong>
+                <br>
+                <small>Vérifiez les permissions de votre navigateur</small>
+              </div>
+            `)
+            .openOn(map);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
+        }
+      );
+    } else {
+      L.popup()
+        .setLatLng(map.getCenter())
+        .setContent(`
+          <div style="text-align: center; padding: 12px;">
+            <div style="font-size: 24px; margin-bottom: 8px;">⚠️</div>
+            <strong>Géolocalisation non supportée</strong>
+            <br>
+            <small>Votre navigateur ne supporte pas la géolocalisation</small>
+          </div>
+        `)
+        .openOn(map);
+    }
+  };
+
+  useEffect(() => {
+    const position = isMobile ? 'topleft' : 'topleft';
+    
+    const LocateControl = L.Control.extend({
+      onAdd: function(map) {
+        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+        
+        const buttonStyle = isMobile ? 
+          `width: 50px; height: 50px; font-size: 20px; border-radius: 50%;` :
+          `width: 45px; height: 45px; font-size: 18px; border-radius: 50%;`;
+        
+        container.innerHTML = `
+          <button 
+            title="Localiser ma position" 
+            style="
+              ${buttonStyle}
+              background: ${isLocating ? '#f59e0b' : '#00853f'};
+              border: 3px solid white;
+              color: white;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+              transition: all 0.3s ease;
+              animation: ${isLocating ? 'pulse 1.5s infinite' : 'none'};
+              outline: none;
+            "
+          >
+            ${isLocating ? '⏳' : '📍'}
+          </button>
+        `;
+        
+        const button = container.querySelector('button');
+        
+        // Gestion des événements de souris
+        button.addEventListener('mouseenter', function() {
+          this.style.transform = 'scale(1.1)';
+          this.style.background = isLocating ? '#d97706' : '#006b33';
+        });
+        
+        button.addEventListener('mouseleave', function() {
+          this.style.transform = 'scale(1)';
+          this.style.background = isLocating ? '#f59e0b' : '#00853f';
+        });
+        
+        button.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          locateUser();
+        };
+        
+        return container;
+      }
+    });
+
+    const locateControl = new LocateControl({ position });
+    locateControl.addTo(map);
+
+    return () => {
+      map.removeControl(locateControl);
+    };
+  }, [map, isMobile, isLocating]);
+
+  return null;
 };
 
 // COMPOSANT MESURE DE DISTANCE
@@ -643,83 +834,6 @@ const MapController = ({ isMobile }) => {
   return null;
 };
 
-const LocateControl = ({ isMobile }) => {
-  const map = useMap();
-
-  const locateUser = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          map.setView([latitude, longitude], 15);
-          
-          L.marker([latitude, longitude])
-            .addTo(map)
-            .bindPopup('📍 Votre position actuelle')
-            .openPopup();
-        },
-        (error) => {
-          console.error('Erreur de géolocalisation:', error);
-          alert('Impossible de obtenir votre position');
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000
-        }
-      );
-    } else {
-      alert('La géolocalisation n\'est pas supportée par votre navigateur');
-    }
-  };
-
-  useEffect(() => {
-    const position = isMobile ? 'topleft' : 'topleft';
-    
-    const LocateControl = L.Control.extend({
-      onAdd: function(map) {
-        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
-        
-        const buttonStyle = isMobile ? 
-          `width: 45px; height: 45px; font-size: 18px; border-radius: 50%;` :
-          `width: 30px; height: 30px; font-size: 14px; border-radius: 4px;`;
-        
-        container.innerHTML = `
-          <a href="#" title="Localiser ma position" style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            ${buttonStyle}
-            background: white;
-            border: 2px solid rgba(0,0,0,0.2);
-            text-decoration: none;
-            color: #333;
-            boxShadow: 0 2px 5px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-          ">📍</a>
-        `;
-        
-        container.onclick = (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          locateUser();
-        };
-        
-        return container;
-      }
-    });
-
-    const locateControl = new LocateControl({ position });
-    locateControl.addTo(map);
-
-    return () => {
-      map.removeControl(locateControl);
-    };
-  }, [map, isMobile]);
-
-  return null;
-};
-
 const BASEMAPS = {
   osm: {
     name: 'OpenStreetMap',
@@ -980,6 +1094,8 @@ const CarteCommunale = ({ ressources, communes, onCommuneSelect, isMobile }) => 
         
         <MapController isMobile={isMobile} />
         <BasemapController onBasemapChange={setCurrentBasemap} />
+        
+        {/* BOUTON DE LOCALISATION MODERNE */}
         <LocateControl isMobile={isMobile} />
         
         {/* ÉCHELLE (en bas à droite) */}
@@ -1037,9 +1153,13 @@ const CarteCommunale = ({ ressources, communes, onCommuneSelect, isMobile }) => 
             to { opacity: 1; transform: translateY(0); }
           }
           @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            0% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+            50% { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+            100% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+          }
+          @keyframes ripple {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
           }
         `}
       </style>
