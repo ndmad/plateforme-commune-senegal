@@ -13,6 +13,10 @@ import {
   ArcElement,
 } from 'chart.js';
 
+// Import des nouveaux composants
+import GraphiquesInteractifs from './GraphiquesInteractifs';
+import CarteThermique from './CarteThermique';
+
 // Enregistrer les composants Chart.js
 ChartJS.register(
   CategoryScale,
@@ -29,8 +33,11 @@ const Dashboard = ({ ressources, communes }) => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('general');
   const [chartKey, setChartKey] = useState(0);
+  
+  // ✅ NOUVEL ÉTAT POUR LES ANIMATIONS
+  const [animationEnabled, setAnimationEnabled] = useState(true);
 
-  // Options pour les graphiques en barres AVEC ANIMATIONS
+  // Options pour les graphiques en barres AVEC ANIMATIONS AMÉLIORÉES
   const optionsBar = {
     responsive: true,
     plugins: {
@@ -98,27 +105,18 @@ const Dashboard = ({ ressources, communes }) => {
         }
       }
     },
-    // ANIMATIONS POUR LES BARRES
+    // ✅ ANIMATIONS AMÉLIORÉES
     animation: {
-      duration: 1200,
-      easing: 'easeOutQuart'
-    },
-    hover: {
-      animationDuration: 300
+      duration: 1500,
+      easing: 'easeOutElastic',
+      delay: (context) => {
+        return context.dataIndex * 100;
+      }
     },
     transitions: {
-      show: {
-        animations: {
-          x: {
-            from: 0,
-            duration: 800,
-            easing: 'easeOutBack'
-          },
-          y: {
-            from: 0,
-            duration: 800,
-            easing: 'easeOutBack'
-          }
+      active: {
+        animation: {
+          duration: 1000
         }
       }
     },
@@ -182,12 +180,13 @@ const Dashboard = ({ ressources, communes }) => {
       }
     },
     cutout: '50%',
-    // ANIMATIONS PIE
+    // ✅ ANIMATIONS AMÉLIORÉES PIE
     animation: {
       animateScale: true,
       animateRotate: true,
-      duration: 1500,
-      easing: 'easeOutBounce'
+      duration: 1800,
+      easing: 'easeOutBounce',
+      delay: 300
     },
     hover: {
       animationDuration: 400
@@ -222,12 +221,13 @@ const Dashboard = ({ ressources, communes }) => {
       }
     },
     cutout: '60%',
-    // ANIMATIONS DOUGHNUT
+    // ✅ ANIMATIONS AMÉLIORÉES DOUGHNUT
     animation: {
       animateScale: true,
       animateRotate: true,
-      duration: 1800,
-      easing: 'easeInOutCirc'
+      duration: 2000,
+      easing: 'easeInOutCirc',
+      delay: 500
     },
     hover: {
       animationDuration: 500
@@ -241,10 +241,63 @@ const Dashboard = ({ ressources, communes }) => {
     }
   }, [ressources, communes]);
 
-  // Forcer le re-render des graphiques quand on change d'onglet
+  // ✅ CORRIGÉ : Gérer les animations lors du changement d'onglet
   useEffect(() => {
-    setChartKey(prev => prev + 1);
+    // Désactiver temporairement les animations pour forcer un re-render
+    setAnimationEnabled(false);
+    
+    // Réactiver les animations après un court délai
+    const timer = setTimeout(() => {
+      setAnimationEnabled(true);
+      setChartKey(prev => prev + 1);
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [activeTab]);
+
+  // Options avec animations conditionnelles
+  const getAnimatedOptions = (baseOptions, type) => {
+    if (!animationEnabled) {
+      return {
+        ...baseOptions,
+        animation: { duration: 0 },
+        transitions: { active: { animation: { duration: 0 } } }
+      };
+    }
+    
+    // Animations spécifiques selon le type de graphique
+    switch (type) {
+      case 'doughnut':
+        return {
+          ...baseOptions,
+          animation: {
+            ...baseOptions.animation,
+            duration: 2000,
+            easing: 'easeInOutCirc'
+          }
+        };
+      case 'pie':
+        return {
+          ...baseOptions,
+          animation: {
+            ...baseOptions.animation,
+            duration: 1800,
+            easing: 'easeOutBounce'
+          }
+        };
+      case 'bar':
+        return {
+          ...baseOptions,
+          animation: {
+            ...baseOptions.animation,
+            duration: 1500,
+            easing: 'easeOutElastic'
+          }
+        };
+      default:
+        return baseOptions;
+    }
+  };
 
   const calculerStatistiques = () => {
     if (!ressources || !communes) return;
@@ -351,7 +404,13 @@ const Dashboard = ({ ressources, communes }) => {
   }
 
   return (
-    <Container style={{ padding: '24px 16px', minHeight: '100vh' }}>
+    <Container style={{ 
+      padding: '24px 16px', 
+      minHeight: '100vh',
+      overflow: 'visible',
+      height: 'auto'
+    }}>
+      
       {/* En-tête du dashboard */}
       <div style={{ marginBottom: '32px' }}>
         <h1 style={{ 
@@ -434,230 +493,271 @@ const Dashboard = ({ ressources, communes }) => {
         </div>
       </div>
 
-      {/* Navigation par onglets */}
-      <div style={{ 
-        display: 'flex', 
-        gap: '8px', 
-        marginBottom: '24px',
-        flexWrap: 'wrap'
-      }}>
-        <button
-          className={`flutter-btn ${activeTab === 'general' ? 'primary' : 'secondary'}`}
-          onClick={() => setActiveTab('general')}
-          style={{ fontSize: '14px', padding: '10px 16px' }}
-        >
-          📈 Vue Générale
-        </button>
-        <button
-          className={`flutter-btn ${activeTab === 'types' ? 'primary' : 'secondary'}`}
-          onClick={() => setActiveTab('types')}
-          style={{ fontSize: '14px', padding: '10px 16px' }}
-        >
-          🏗️ Par Type
-        </button>
-        <button
-          className={`flutter-btn ${activeTab === 'potentiel' ? 'primary' : 'secondary'}`}
-          onClick={() => setActiveTab('potentiel')}
-          style={{ fontSize: '14px', padding: '10px 16px' }}
-        >
-          📊 Par Potentiel
-        </button>
-      </div>
-
-      {/* Contenu des onglets */}
-      {activeTab === 'general' && (
-        <div style={{ 
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '24px',
-          marginBottom: '32px'
-        }}>
-          <div className="flutter-card elevated" style={{ padding: '24px' }}>
-            <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
-              📈 Répartition par Type
-            </h3>
-            <Doughnut 
-              key={`doughnut-${chartKey}`}
-              data={stats.chartData.types} 
-              options={optionsDoughnut} 
-              style={{ maxHeight: '300px' }}
-            />
-          </div>
-
-          <div className="flutter-card elevated" style={{ padding: '24px' }}>
-            <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
-              📊 Répartition par Potentiel
-            </h3>
-            <Pie 
-              key={`pie-${chartKey}`}
-              data={stats.chartData.potentiels} 
-              options={optionsPie}
-              style={{ maxHeight: '300px' }}
-            />
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'types' && (
-        <div style={{ 
-          display: 'grid',
-          gridTemplateColumns: '2fr 1fr',
-          gap: '24px',
-          marginBottom: '32px'
-        }}>
-          <div className="flutter-card elevated" style={{ padding: '24px' }}>
-            <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
-              📊 Répartition par Type de Ressource
-            </h3>
-            <Bar 
-              key={`bar-types-${chartKey}`}
-              data={stats.chartData.types} 
-              options={optionsBar}
-              style={{ maxHeight: '400px' }}
-            />
-          </div>
-
-          <div className="flutter-card elevated" style={{ padding: '24px' }}>
-            <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
-              📋 Détail par Type
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {Object.entries(stats.types).map(([type, count]) => (
-                <div key={type} style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '12px',
-                  background: 'var(--background)',
-                  borderRadius: 'var(--radius-md)',
-                  transition: 'all 0.3s ease'
-                }}>
-                  <span style={{ fontSize: '14px', fontWeight: '500' }}>{type}</span>
-                  <span className="flutter-chip">{count}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'potentiel' && (
-        <div style={{ 
-          display: 'grid',
-          gridTemplateColumns: '2fr 1fr',
-          gap: '24px',
-          marginBottom: '32px'
-        }}>
-          <div className="flutter-card elevated" style={{ padding: '24px' }}>
-            <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
-              🎯 Répartition par Potentiel de Valorisation
-            </h3>
-            <Bar 
-              key={`bar-potentiels-${chartKey}`}
-              data={stats.chartData.potentiels} 
-              options={optionsBar}
-              style={{ maxHeight: '400px' }}
-            />
-          </div>
-
-          <div className="flutter-card elevated" style={{ padding: '24px' }}>
-            <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
-              ⭐ Top 5 Ressources à Haut Potentiel
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {stats.topRessources.map((ressource, index) => (
-                <div key={ressource.id} style={{ 
-                  padding: '16px',
-                  background: 'var(--background)',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid #f1f5f9',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = 'var(--elevation-3)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'var(--elevation-1)';
-                }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center',
-                    gap: '8px',
-                    marginBottom: '8px'
-                  }}>
-                    <span style={{ 
-                      width: '24px',
-                      height: '24px',
-                      background: 'var(--primary-500)',
-                      color: 'white',
-                      borderRadius: 'var(--radius-full)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '12px',
-                      fontWeight: '600'
-                    }}>
-                      {index + 1}
-                    </span>
-                    <span style={{ 
-                      fontSize: '14px', 
-                      fontWeight: '600',
-                      flex: 1
-                    }}>
-                      {ressource.nom}
-                    </span>
-                  </div>
-                  <div style={{ 
-                    display: 'flex', 
-                    gap: '8px',
-                    flexWrap: 'wrap'
-                  }}>
-                    <span className="flutter-chip" style={{ fontSize: '11px' }}>
-                      {ressource.type}
-                    </span>
-                    <span className="flutter-chip" style={{ 
-                      fontSize: '11px',
-                      background: '#dcfce7',
-                      color: '#166534'
-                    }}>
-                      Potentiel Élevé
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* SECTION EXPORT - CORRIGÉE */}
-      <div style={{ 
+      {/* ✅ WRAPPER SCROLLABLE POUR TOUT LE CONTENU */}
+      <div style={{
         width: '100%',
-        minHeight: 'auto',
-        display: 'block'
+        height: 'calc(100vh - 300px)',
+        overflowY: 'auto',
+        overflowX: 'visible',
+        paddingRight: '8px'
       }}>
-        {stats && (
-          <ExportDonnees 
-            ressources={ressources}
-            stats={stats}
-            type="dashboard"
-            onExportStart={(format) => {
-              console.log(`🚀 Début export ${format}...`);
-            }}
-            onExportComplete={(success, format, error) => {
-              if (success) {
-                alert(`✅ Export ${format} réussi !`);
-              } else {
-                alert(`❌ Erreur export ${format}: ${error}`);
-              }
-            }}
-            isMobile={false}
-          />
+
+        {/* Navigation par onglets - AVEC NOUVEL ONGLET ANALYTICS */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '8px', 
+          marginBottom: '24px',
+          flexWrap: 'wrap'
+        }}>
+          <button
+            className={`flutter-btn ${activeTab === 'general' ? 'primary' : 'secondary'}`}
+            onClick={() => setActiveTab('general')}
+            style={{ fontSize: '14px', padding: '10px 16px' }}
+          >
+            📈 Vue Générale
+          </button>
+          <button
+            className={`flutter-btn ${activeTab === 'types' ? 'primary' : 'secondary'}`}
+            onClick={() => setActiveTab('types')}
+            style={{ fontSize: '14px', padding: '10px 16px' }}
+          >
+            🏗️ Par Type
+          </button>
+          <button
+            className={`flutter-btn ${activeTab === 'potentiel' ? 'primary' : 'secondary'}`}
+            onClick={() => setActiveTab('potentiel')}
+            style={{ fontSize: '14px', padding: '10px 16px' }}
+          >
+            📊 Par Potentiel
+          </button>
+          
+          {/* NOUVEL ONGLET ANALYTICS */}
+          <button
+            className={`flutter-btn ${activeTab === 'analytics' ? 'primary' : 'secondary'}`}
+            onClick={() => setActiveTab('analytics')}
+            style={{ fontSize: '14px', padding: '10px 16px' }}
+          >
+            🔍 Analytics Avancés
+          </button>
+        </div>
+
+        {/* Contenu des onglets */}
+        {activeTab === 'general' && (
+          <div style={{ 
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: '24px',
+            marginBottom: '32px'
+          }}>
+            <div className="flutter-card elevated" style={{ padding: '24px' }}>
+              <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
+                📈 Répartition par Type
+              </h3>
+              <Doughnut 
+                key={`doughnut-${chartKey}-${animationEnabled}`}
+                data={stats.chartData.types} 
+                options={getAnimatedOptions(optionsDoughnut, 'doughnut')} 
+                style={{ maxHeight: '300px' }}
+              />
+            </div>
+
+            <div className="flutter-card elevated" style={{ padding: '24px' }}>
+              <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
+                📊 Répartition par Potentiel
+              </h3>
+              <Pie 
+                key={`pie-${chartKey}-${animationEnabled}`}
+                data={stats.chartData.potentiels} 
+                options={getAnimatedOptions(optionsPie, 'pie')}
+                style={{ maxHeight: '300px' }}
+              />
+            </div>
+          </div>
         )}
-      </div>
+
+        {activeTab === 'types' && (
+          <div style={{ 
+            display: 'grid',
+            gridTemplateColumns: '2fr 1fr',
+            gap: '24px',
+            marginBottom: '32px'
+          }}>
+            <div className="flutter-card elevated" style={{ padding: '24px' }}>
+              <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
+                📊 Répartition par Type de Ressource
+              </h3>
+              <Bar 
+                key={`bar-types-${chartKey}-${animationEnabled}`}
+                data={stats.chartData.types} 
+                options={getAnimatedOptions(optionsBar, 'bar')}
+                style={{ maxHeight: '400px' }}
+              />
+            </div>
+
+            <div className="flutter-card elevated" style={{ padding: '24px' }}>
+              <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
+                📋 Détail par Type
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {Object.entries(stats.types).map(([type, count]) => (
+                  <div key={type} style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '12px',
+                    background: 'var(--background)',
+                    borderRadius: 'var(--radius-md)',
+                    transition: 'all 0.3s ease'
+                  }}>
+                    <span style={{ fontSize: '14px', fontWeight: '500' }}>{type}</span>
+                    <span className="flutter-chip">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'potentiel' && (
+          <div style={{ 
+            display: 'grid',
+            gridTemplateColumns: '2fr 1fr',
+            gap: '24px',
+            marginBottom: '32px'
+          }}>
+            <div className="flutter-card elevated" style={{ padding: '24px' }}>
+              <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
+                🎯 Répartition par Potentiel de Valorisation
+              </h3>
+              <Bar 
+                key={`bar-potentiels-${chartKey}-${animationEnabled}`}
+                data={stats.chartData.potentiels} 
+                options={getAnimatedOptions(optionsBar, 'bar')}
+                style={{ maxHeight: '400px' }}
+              />
+            </div>
+
+            <div className="flutter-card elevated" style={{ padding: '24px' }}>
+              <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
+                ⭐ Top 5 Ressources à Haut Potentiel
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {stats.topRessources.map((ressource, index) => (
+                  <div key={ressource.id} style={{ 
+                    padding: '16px',
+                    background: 'var(--background)',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid #f1f5f9',
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = 'var(--elevation-3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'var(--elevation-1)';
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '8px'
+                    }}>
+                      <span style={{ 
+                        width: '24px',
+                        height: '24px',
+                        background: 'var(--primary-500)',
+                        color: 'white',
+                        borderRadius: 'var(--radius-full)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '12px',
+                        fontWeight: '600'
+                      }}>
+                        {index + 1}
+                      </span>
+                      <span style={{ 
+                        fontSize: '14px', 
+                        fontWeight: '600',
+                        flex: 1
+                      }}>
+                        {ressource.nom}
+                      </span>
+                    </div>
+                    <div style={{ 
+                      display: 'flex', 
+                      gap: '8px',
+                      flexWrap: 'wrap'
+                    }}>
+                      <span className="flutter-chip" style={{ fontSize: '11px' }}>
+                        {ressource.type}
+                      </span>
+                      <span className="flutter-chip" style={{ 
+                        fontSize: '11px',
+                        background: '#dcfce7',
+                        color: '#166534'
+                      }}>
+                        Potentiel Élevé
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* NOUVEL ONGLET ANALYTICS AVANCÉS - MAINTENANT VISIBLE */}
+        {activeTab === 'analytics' && (
+          <div style={{ 
+            marginBottom: '32px',
+            overflow: 'visible'
+          }}>
+            <GraphiquesInteractifs 
+              ressources={ressources} 
+              communes={communes} 
+            />
+            
+            <CarteThermique 
+              ressources={ressources} 
+              communes={communes} 
+            />
+          </div>
+        )}
+
+        {/* SECTION EXPORT - MAINTENANT VISIBLE */}
+        <div style={{ 
+          width: '100%',
+          minHeight: 'auto',
+          display: 'block',
+          overflow: 'visible',
+          position: 'relative'
+        }}>
+          {stats && (
+            <ExportDonnees 
+              ressources={ressources}
+              stats={stats}
+              type="dashboard"
+              onExportStart={(format) => {
+                console.log(`🚀 Début export ${format}...`);
+              }}
+              onExportComplete={(success, format, error) => {
+                if (success) {
+                  alert(`✅ Export ${format} réussi !`);
+                } else {
+                  alert(`❌ Erreur export ${format}: ${error}`);
+                }
+              }}
+              isMobile={false}
+            />
+          )}
+        </div>
+
+      </div> {/* Fin du wrapper scrollable */}
+
     </Container>
   );
 };

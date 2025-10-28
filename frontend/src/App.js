@@ -15,8 +15,15 @@ import useMobile from './hooks/useMobile';
 import { API_BASE_URL } from './config';
 import ExportDonnees from './components/ExportDonnees';
 
+// Ajouter ces imports
+
+import GraphiquesInteractifs from './components/GraphiquesInteractifs';
+import CarteThermique from './components/CarteThermique';
+import LanguageSwitcher from './components/LanguageSwitcher';
+
 // Import des notifications
 import { NotificationProvider, useNotifications } from './components/Notifications';
+import { TranslationProvider } from './hooks/useTranslation';
 
 // Composant MobileNavigation
 const MobileNavigation = ({ 
@@ -440,11 +447,14 @@ function App() {
 }
 
 // Wrapper avec le provider de notifications
+
 function AppWithNotifications() {
   return (
-    <NotificationProvider>
-      <App />
-    </NotificationProvider>
+    <TranslationProvider>
+      <NotificationProvider>
+        <App />
+      </NotificationProvider>
+    </TranslationProvider>
   );
 }
 

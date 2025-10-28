@@ -1,5 +1,6 @@
 import React from 'react';
 import { Navbar, Nav, Container, NavDropdown, Button } from 'react-bootstrap';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowFormulaire }) => {
   // ❌ CACHER COMPLÈTEMENT LE HEADER EN MOBILE
@@ -27,6 +28,9 @@ const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowForm
           🌍 Plateforme Communale
         </Navbar.Brand>
         
+        {/* ✅ CORRECTION: REMPLACER LE PLACEHOLDER PAR LE VRAI LANGUAGESWITCHER */}
+        <LanguageSwitcher isMobile={isMobile} />
+
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           {/* Navigation principale */}
