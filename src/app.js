@@ -9,6 +9,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
 // LOG TEMPORAIRE pour debug
 app.use((req, res, next) => {
   console.log('📨 Requête:', req.method, req.url);
@@ -22,6 +23,8 @@ app.get('/', (req, res) => {
     version: '1.0.0'
   });
 });
+
+app.use('/api/statistiques', require('./routes/statistiques'));
 
 // Import et utilisation des routes - CORRECTION : d'abord importer, puis utiliser
 const communesRoutes = require('./routes/communes');

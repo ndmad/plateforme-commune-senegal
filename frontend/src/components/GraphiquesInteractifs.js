@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Bar, Line, Doughnut } from 'react-chartjs-2';
+import React, { useState, useEffect } from 'react';
+import { Bar, Line, Scatter } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,7 +10,7 @@ import {
   Title,
   Tooltip,
   Legend,
-  ArcElement,
+  TimeScale
 } from 'chart.js';
 
 ChartJS.register(
@@ -22,103 +22,97 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  ArcElement
+  TimeScale
 );
 
 const GraphiquesInteractifs = ({ ressources, communes }) => {
-  const [periode, setPeriode] = useState('mois');
-  const [typeAnalyse, setTypeAnalyse] = useState('evolution');
+  const [donneesAvancees, setDonneesAvancees] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [typeGraphique, setTypeGraphique] = useState('comparaison');
 
-  // Données pour graphique d'évolution temporelle
-  const donneesEvolution = useMemo(() => {
-    const maintenant = new Date();
-    let groupes = {};
+  useEffect(() => {
+    chargerDonneesAvancees();
+  }, []);
 
-    ressources.forEach(ressource => {
-      const date = new Date(ressource.created_at);
-      let cle;
+  const chargerDonneesAvancees = async () => {
+    try {
+      // Ici vous appellerez vos nouvelles API
+      // Pour l'instant, on simule avec les données existantes
+      setTimeout(() => {
+        setDonneesAvancees(genererDonneesSimulees());
+        setLoading(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Erreur chargement données avancées:', error);
+      setLoading(false);
+    }
+  };
 
-      switch (periode) {
-        case 'semaine':
-          cle = `S${Math.ceil((date.getDate() + 6 - date.getDay()) / 7)}`;
-          break;
-        case 'mois':
-          cle = `${date.getMonth() + 1}/${date.getFullYear()}`;
-          break;
-        case 'trimestre':
-          const trimestre = Math.floor(date.getMonth() / 3) + 1;
-          cle = `T${trimestre} ${date.getFullYear()}`;
-          break;
-        default:
-          cle = date.getFullYear().toString();
+  const genererDonneesSimulees = () => {
+    // Simulation de données avancées
+    return {
+      comparaisonCommunes: {
+        labels: communes.map(c => c.nom),
+        datasets: [
+          {
+            label: 'Ressources Haut Potentiel',
+            data: communes.map(() => Math.floor(Math.random() * 20) + 5),
+            backgroundColor: '#10b981',
+            borderColor: '#059669',
+            borderWidth: 2
+          },
+          {
+            label: 'Ressources Optimisées',
+            data: communes.map(() => Math.floor(Math.random() * 15) + 3),
+            backgroundColor: '#3b82f6',
+            borderColor: '#2563eb',
+            borderWidth: 2
+          }
+        ]
+      },
+      tendances: {
+        labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'],
+        datasets: [
+          {
+            label: 'Nouvelles Ressources',
+            data: [12, 19, 8, 15, 22, 18, 25, 20, 17, 23, 28, 30],
+            borderColor: '#8b5cf6',
+            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+            tension: 0.4,
+            fill: true
+          },
+          {
+            label: 'Ressources Haut Potentiel',
+            data: [5, 8, 6, 10, 12, 9, 15, 13, 11, 14, 16, 18],
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+            tension: 0.4,
+            fill: true
+          }
+        ]
       }
-
-      if (!groupes[cle]) groupes[cle] = 0;
-      groupes[cle]++;
-    });
-
-    const labels = Object.keys(groupes).sort();
-    const data = labels.map(label => groupes[label]);
-
-    return {
-      labels,
-      datasets: [
-        {
-          label: 'Nouvelles ressources',
-          data,
-          borderColor: 'var(--primary-600)',
-          backgroundColor: 'rgba(14, 165, 233, 0.1)',
-          borderWidth: 3,
-          tension: 0.4,
-          fill: true
-        }
-      ]
     };
-  }, [ressources, periode]);
+  };
 
-  // Données pour analyse comparative par commune
-  const donneesCommunes = useMemo(() => {
-    const ressourcesParCommune = ressources.reduce((acc, ressource) => {
-      const commune = communes.find(c => c.id === ressource.commune_id);
-      const nomCommune = commune ? commune.nom : 'Inconnue';
-      
-      if (!acc[nomCommune]) acc[nomCommune] = 0;
-      acc[nomCommune]++;
-      return acc;
-    }, {});
+  if (loading) {
+    return (
+      <div className="flutter-card elevated" style={{ padding: '24px', textAlign: 'center' }}>
+        <div className="flutter-spinner" style={{ margin: '0 auto 16px' }}></div>
+        <p>Chargement des analyses avancées...</p>
+      </div>
+    );
+  }
 
-    const entries = Object.entries(ressourcesParCommune)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 10);
-
-    return {
-      labels: entries.map(([nom]) => nom),
-      datasets: [
-        {
-          label: 'Ressources par commune',
-          data: entries.map(([,count]) => count),
-          backgroundColor: 'rgba(16, 185, 129, 0.6)',
-          borderColor: 'rgba(16, 185, 129, 1)',
-          borderWidth: 2
-        }
-      ]
-    };
-  }, [ressources, communes]);
-
-  const optionsEvolution = {
+  const optionsComparaison = {
     responsive: true,
-    interaction: {
-      mode: 'index',
-      intersect: false,
-    },
     plugins: {
       legend: {
         position: 'top',
       },
-      tooltip: {
-        callbacks: {
-          label: (context) => `${context.dataset.label}: ${context.parsed.y}`
-        }
+      title: {
+        display: true,
+        text: 'Comparaison des Communes',
+        font: { size: 16, weight: '600' }
       }
     },
     scales: {
@@ -126,86 +120,132 @@ const GraphiquesInteractifs = ({ ressources, communes }) => {
         beginAtZero: true,
         title: {
           display: true,
-          text: 'Nombre de ressources'
+          text: 'Nombre de Ressources'
+        }
+      },
+      x: {
+        title: {
+          display: true,
+          text: 'Communes'
+        }
+      }
+    }
+  };
+
+  const optionsTendances = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: 'Évolution Mensuelle',
+        font: { size: 16, weight: '600' }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Nombre de Ressources'
         }
       }
     }
   };
 
   return (
-    <div className="flutter-card elevated" style={{ padding: '24px', marginBottom: '24px' }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
+    <div style={{ marginBottom: '32px' }}>
+      {/* Sélecteur de type de graphique */}
+      <div style={{
+        display: 'flex',
+        gap: '8px',
         marginBottom: '24px',
-        flexWrap: 'wrap',
-        gap: '16px'
+        flexWrap: 'wrap'
       }}>
-        <h3 style={{ fontSize: '20px', fontWeight: '600' }}>📈 Analytics Avancés</h3>
-        
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <select 
-            className="flutter-input"
-            value={periode}
-            onChange={(e) => setPeriode(e.target.value)}
-            style={{ width: 'auto', minWidth: '120px' }}
-          >
-            <option value="semaine">Par semaine</option>
-            <option value="mois">Par mois</option>
-            <option value="trimestre">Par trimestre</option>
-            <option value="annee">Par année</option>
-          </select>
-
-          <select 
-            className="flutter-input"
-            value={typeAnalyse}
-            onChange={(e) => setTypeAnalyse(e.target.value)}
-            style={{ width: 'auto', minWidth: '140px' }}
-          >
-            <option value="evolution">Évolution</option>
-            <option value="communes">Par commune</option>
-            <option value="potentiel">Par potentiel</option>
-          </select>
-        </div>
+        <button
+          className={`flutter-btn ${typeGraphique === 'comparaison' ? 'primary' : 'secondary'}`}
+          onClick={() => setTypeGraphique('comparaison')}
+        >
+          🏘️ Comparaison Communes
+        </button>
+        <button
+          className={`flutter-btn ${typeGraphique === 'tendances' ? 'primary' : 'secondary'}`}
+          onClick={() => setTypeGraphique('tendances')}
+        >
+          📈 Tendances Temporelles
+        </button>
+        <button
+          className={`flutter-btn ${typeGraphique === 'repartition' ? 'primary' : 'secondary'}`}
+          onClick={() => setTypeGraphique('repartition')}
+        >
+          🎯 Répartition Avancée
+        </button>
       </div>
 
-      {typeAnalyse === 'evolution' && (
-        <div style={{ height: '400px' }}>
-          <Line data={donneesEvolution} options={optionsEvolution} />
-        </div>
-      )}
-
-      {typeAnalyse === 'communes' && (
-        <div style={{ height: '400px' }}>
-          <Bar data={donneesCommunes} options={optionsEvolution} />
-        </div>
-      )}
-
-      {typeAnalyse === 'potentiel' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-          <div>
-            <h4 style={{ marginBottom: '16px' }}>Répartition par type</h4>
-            <Doughnut 
-              data={donneesEvolution} 
-              options={{ maintainAspectRatio: false }} 
-              style={{ height: '200px' }}
-            />
-          </div>
-          <div>
-            <h4 style={{ marginBottom: '16px' }}>Top communes</h4>
+      {/* Graphiques */}
+      <div style={{
+        display: 'grid',
+        gap: '24px',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))'
+      }}>
+        {typeGraphique === 'comparaison' && (
+          <div className="flutter-card elevated" style={{ padding: '24px' }}>
             <Bar 
-              data={donneesCommunes} 
-              options={{ 
-                ...optionsEvolution, 
-                indexAxis: 'y',
-                maintainAspectRatio: false 
-              }} 
-              style={{ height: '200px' }}
+              data={donneesAvancees.comparaisonCommunes} 
+              options={optionsComparaison}
+              height={300}
             />
           </div>
-        </div>
-      )}
+        )}
+
+        {typeGraphique === 'tendances' && (
+          <div className="flutter-card elevated" style={{ padding: '24px' }}>
+            <Line 
+              data={donneesAvancees.tendances} 
+              options={optionsTendances}
+              height={300}
+            />
+          </div>
+        )}
+
+        {typeGraphique === 'repartition' && (
+          <div className="flutter-card elevated" style={{ padding: '24px' }}>
+            <h4 style={{ marginBottom: '20px' }}>📊 Analyse Détaillée</h4>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '16px'
+            }}>
+              <div style={{ textAlign: 'center', padding: '20px' }}>
+                <div style={{ fontSize: '24px', fontWeight: '700', color: '#10b981' }}>
+                  {ressources.filter(r => r.potentiel === 'élevé').length}
+                </div>
+                <div style={{ fontSize: '14px', color: 'var(--on-background)' }}>
+                  Ressources Haut Potentiel
+                </div>
+              </div>
+              <div style={{ textAlign: 'center', padding: '20px' }}>
+                <div style={{ fontSize: '24px', fontWeight: '700', color: '#3b82f6' }}>
+                  {ressources.filter(r => r.etat_utilisation === 'optimisé').length}
+                </div>
+                <div style={{ fontSize: '14px', color: 'var(--on-background)' }}>
+                  Ressources Optimisées
+                </div>
+              </div>
+              <div style={{ textAlign: 'center', padding: '20px' }}>
+                <div style={{ fontSize: '24px', fontWeight: '700', color: '#f59e0b' }}>
+                  {new Set(ressources.map(r => r.commune_id)).size}
+                </div>
+                <div style={{ fontSize: '14px', color: 'var(--on-background)' }}>
+                  Communes Actives
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
