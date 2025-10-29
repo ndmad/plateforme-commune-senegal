@@ -34,7 +34,7 @@ ChartJS.register(
 );
 
 const Dashboard = ({ ressources, communes }) => {
-  const { t } = useTranslation();
+  const { t, language, changeLanguage } = useTranslation();
   const [stats, setStats] = useState(null);
   const [indicateurs, setIndicateurs] = useState(null);
   const [tendances, setTendances] = useState(null);
@@ -43,7 +43,7 @@ const Dashboard = ({ ressources, communes }) => {
   const [activeTab, setActiveTab] = useState('general');
   const [chartKey, setChartKey] = useState(0);
 
-  // Options avec animations FORCÉES (gardées intactes)
+  // Options avec animations FORCÉES
   const optionsBar = {
     responsive: true,
     plugins: {
@@ -52,7 +52,7 @@ const Dashboard = ({ ressources, communes }) => {
       },
       title: {
         display: true,
-        text: 'Répartition des ressources',
+        text: t('resource_distribution'),
         font: {
           size: 16,
           weight: '600'
@@ -159,7 +159,7 @@ const Dashboard = ({ ressources, communes }) => {
       },
       title: {
         display: true,
-        text: 'Évolution mensuelle',
+        text: t('monthly_evolution'),
         font: {
           size: 16,
           weight: '600'
@@ -241,14 +241,14 @@ const Dashboard = ({ ressources, communes }) => {
 
     // Répartition par type
     const typesRepartition = ressources.reduce((acc, ressource) => {
-      const type = ressource.type || 'Non spécifié';
+      const type = ressource.type || t('unspecified');
       acc[type] = (acc[type] || 0) + 1;
       return acc;
     }, {});
 
     // Répartition par potentiel
     const potentielRepartition = ressources.reduce((acc, ressource) => {
-      const potentiel = ressource.potentiel || 'Non spécifié';
+      const potentiel = ressource.potentiel || t('unspecified');
       acc[potentiel] = (acc[potentiel] || 0) + 1;
       return acc;
     }, {});
@@ -264,7 +264,7 @@ const Dashboard = ({ ressources, communes }) => {
       labels: Object.keys(typesRepartition),
       datasets: [
         {
-          label: 'Nombre de ressources',
+          label: t('resources'),
           data: Object.values(typesRepartition),
           backgroundColor: [
             '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
@@ -287,7 +287,7 @@ const Dashboard = ({ ressources, communes }) => {
       labels: Object.keys(potentielRepartition),
       datasets: [
         {
-          label: 'Nombre de ressources',
+          label: t('resources'),
           data: Object.values(potentielRepartition),
           backgroundColor: [
             '#10b981',  // Élevé - Vert
@@ -336,7 +336,7 @@ const Dashboard = ({ ressources, communes }) => {
         labels: derniersMois,
         datasets: [
           {
-            label: 'Nouvelles ressources',
+            label: t('resources'),
             data: derniersMois.map(() => Math.floor(Math.random() * 10) + 5),
             borderColor: '#0ea5e9',
             backgroundColor: 'rgba(14, 165, 233, 0.1)',
@@ -351,7 +351,7 @@ const Dashboard = ({ ressources, communes }) => {
       labels: tendances.map(t => t.mois_affichage || t.mois_format),
       datasets: [
         {
-          label: 'Nouvelles ressources',
+          label: t('resources'),
           data: tendances.map(t => t.nouvelles_ressources),
           borderColor: '#0ea5e9',
           backgroundColor: 'rgba(14, 165, 233, 0.1)',
@@ -359,7 +359,7 @@ const Dashboard = ({ ressources, communes }) => {
           fill: true
         },
         {
-          label: 'Ressources haut potentiel',
+          label: t('high_potential_resources'),
           data: tendances.map(t => t.ressources_haut_potentiel),
           borderColor: '#10b981',
           backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -381,7 +381,7 @@ const Dashboard = ({ ressources, communes }) => {
           minHeight: '400px'
         }}>
           <div className="flutter-spinner" style={{ marginBottom: '20px' }}></div>
-          <p style={{ color: 'var(--on-background)' }}>Calcul des statistiques...</p>
+          <p style={{ color: 'var(--on-background)' }}>{t('loading')}</p>
         </div>
       </Container>
     );
@@ -403,13 +403,13 @@ const Dashboard = ({ ressources, communes }) => {
           color: 'var(--on-surface)',
           marginBottom: '8px'
         }}>
-          📊 Tableau de Bord
+          📊 {t('dashboard')}
         </h1>
         <p style={{
           color: 'var(--on-background)',
           fontSize: '16px'
         }}>
-          Analyse et statistiques des ressources territoriales
+          {t('resource_distribution')}
         </p>
       </div>
 
@@ -430,7 +430,7 @@ const Dashboard = ({ ressources, communes }) => {
             {indicateurs?.total_ressources || stats.general.totalRessources}
           </div>
           <div style={{ color: 'var(--on-background)', fontSize: '14px' }}>
-            Ressources totales
+            {t('total_resources')}
           </div>
         </div>
 
@@ -444,7 +444,7 @@ const Dashboard = ({ ressources, communes }) => {
             {indicateurs?.communes_couvertes || stats.general.totalCommunes}
           </div>
           <div style={{ color: 'var(--on-background)', fontSize: '14px' }}>
-            Communes couvertes
+            {t('covered_municipalities')}
           </div>
         </div>
 
@@ -455,10 +455,10 @@ const Dashboard = ({ ressources, communes }) => {
             color: '#f59e0b',
             marginBottom: '8px'
           }}>
-            {indicateurs?.taux_haut_potentiel || stats.general.contributeurs}%
+            {indicateurs ? `${indicateurs.taux_haut_potentiel}%` : stats.general.contributeurs}
           </div>
           <div style={{ color: 'var(--on-background)', fontSize: '14px' }}>
-            {indicateurs ? 'Taux haut potentiel' : 'Contributeurs'}
+            {indicateurs ? t('high_potential') : t('contributors')}
           </div>
         </div>
 
@@ -472,7 +472,7 @@ const Dashboard = ({ ressources, communes }) => {
             {indicateurs?.taux_optimisation || stats.general.tauxUtilisation}%
           </div>
           <div style={{ color: 'var(--on-background)', fontSize: '14px' }}>
-            {indicateurs ? "Taux d'optimisation" : 'Taux optimisation'}
+            {t('optimization_rate')}
           </div>
         </div>
       </div>
@@ -498,42 +498,42 @@ const Dashboard = ({ ressources, communes }) => {
             onClick={() => setActiveTab('general')}
             style={{ fontSize: '14px', padding: '10px 16px' }}
           >
-            📈 Vue Générale
+            📈 {t('general')}
           </button>
           <button
             className={`flutter-btn ${activeTab === 'types' ? 'primary' : 'secondary'}`}
             onClick={() => setActiveTab('types')}
             style={{ fontSize: '14px', padding: '10px 16px' }}
           >
-            🏗️ Par Type
+            🏗️ {t('by_type')}
           </button>
           <button
             className={`flutter-btn ${activeTab === 'potentiel' ? 'primary' : 'secondary'}`}
             onClick={() => setActiveTab('potentiel')}
             style={{ fontSize: '14px', padding: '10px 16px' }}
           >
-            📊 Par Potentiel
+            📊 {t('by_potential')}
           </button>
           <button
             className={`flutter-btn ${activeTab === 'tendances' ? 'primary' : 'secondary'}`}
             onClick={() => setActiveTab('tendances')}
             style={{ fontSize: '14px', padding: '10px 16px' }}
           >
-            📈 Tendances
+            📈 {t('monthly_evolution')}
           </button>
           <button
             className={`flutter-btn ${activeTab === 'communes' ? 'primary' : 'secondary'}`}
             onClick={() => setActiveTab('communes')}
             style={{ fontSize: '14px', padding: '10px 16px' }}
           >
-            🏘️ Communes
+            🏘️ {t('municipalities')}
           </button>
           <button
             className={`flutter-btn ${activeTab === 'analytics' ? 'primary' : 'secondary'}`}
             onClick={() => setActiveTab('analytics')}
             style={{ fontSize: '14px', padding: '10px 16px' }}
           >
-            🔍 Analytics Avancés
+            🔍 {t('advanced_analytics')}
           </button>
         </div>
 
@@ -547,7 +547,7 @@ const Dashboard = ({ ressources, communes }) => {
           }}>
             <div className="flutter-card elevated" style={{ padding: '24px' }}>
               <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
-                📈 Répartition par Type
+                📈 {t('by_type')}
               </h3>
               <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Doughnut
@@ -561,7 +561,7 @@ const Dashboard = ({ ressources, communes }) => {
 
             <div className="flutter-card elevated" style={{ padding: '24px' }}>
               <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
-                📊 Répartition par Potentiel
+                📊 {t('by_potential')}
               </h3>
               <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Pie
@@ -584,7 +584,7 @@ const Dashboard = ({ ressources, communes }) => {
           }}>
             <div className="flutter-card elevated" style={{ padding: '24px' }}>
               <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
-                📊 Répartition par Type de Ressource
+                📊 {t('resource_distribution')} {t('by_type')}
               </h3>
               <div style={{ height: '400px' }}>
                 <Bar
@@ -598,7 +598,7 @@ const Dashboard = ({ ressources, communes }) => {
 
             <div className="flutter-card elevated" style={{ padding: '24px' }}>
               <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
-                📋 Détail par Type
+                📋 {t('details_by_type')}
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {Object.entries(stats.types).map(([type, count]) => (
@@ -629,7 +629,7 @@ const Dashboard = ({ ressources, communes }) => {
           }}>
             <div className="flutter-card elevated" style={{ padding: '24px' }}>
               <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
-                🎯 Répartition par Potentiel de Valorisation
+                🎯 {t('resource_distribution')} {t('by_potential')}
               </h3>
               <div style={{ height: '400px' }}>
                 <Bar
@@ -637,7 +637,7 @@ const Dashboard = ({ ressources, communes }) => {
                   data={{
                     labels: Object.keys(stats.potentiels),
                     datasets: [{
-                      label: 'Nombre de ressources',
+                      label: t('resources'),
                       data: Object.values(stats.potentiels),
                       backgroundColor: [
                         '#10b981',  // Élevé - Vert
@@ -660,7 +660,7 @@ const Dashboard = ({ ressources, communes }) => {
 
             <div className="flutter-card elevated" style={{ padding: '24px' }}>
               <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
-                ⭐ Top 5 Ressources à Haut Potentiel
+                ⭐ {t('high_potential_resources')}
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {stats.topRessources.map((ressource, index) => (
@@ -721,7 +721,7 @@ const Dashboard = ({ ressources, communes }) => {
                         background: '#dcfce7',
                         color: '#166534'
                       }}>
-                        Potentiel Élevé
+                        {t('high')} {t('potential')}
                       </span>
                     </div>
                   </div>
@@ -740,7 +740,7 @@ const Dashboard = ({ ressources, communes }) => {
           }}>
             <div className="flutter-card elevated" style={{ padding: '24px' }}>
               <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
-                📈 Évolution Mensuelle des Ressources
+                📈 {t('monthly_evolution')}
               </h3>
               <div style={{ height: '400px' }}>
                 <Line
@@ -755,8 +755,7 @@ const Dashboard = ({ ressources, communes }) => {
         )}
 
         {/* NOUVEL ONGLET COMMUNES */}
-                {/* NOUVEL ONGLET COMMUNES */}
-                {activeTab === 'communes' && (
+        {activeTab === 'communes' && (
           <div style={{
             display: 'grid',
             gap: '24px',
@@ -764,7 +763,7 @@ const Dashboard = ({ ressources, communes }) => {
           }}>
             <div className="flutter-card elevated" style={{ padding: '24px' }}>
               <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
-                🏆 Classement des Communes
+                🏆 {t('municipality_ranking')}
               </h3>
               
               {statsCommunes && statsCommunes.length > 0 ? (
@@ -772,11 +771,11 @@ const Dashboard = ({ ressources, communes }) => {
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
-                        <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600' }}>Position</th>
-                        <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600' }}>Commune</th>
-                        <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600' }}>Ressources</th>
-                        <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600' }}>Haut Potentiel</th>
-                        <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600' }}>Score</th>
+                        <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600' }}>{t('position')}</th>
+                        <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600' }}>{t('municipality')}</th>
+                        <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600' }}>{t('resources')}</th>
+                        <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600' }}>{t('high_potential')}</th>
+                        <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600' }}>{t('score')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -815,10 +814,10 @@ const Dashboard = ({ ressources, communes }) => {
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
-                        <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600' }}>Position</th>
-                        <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600' }}>Commune</th>
-                        <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600' }}>Ressources</th>
-                        <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600' }}>Haut Potentiel</th>
+                        <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600' }}>{t('position')}</th>
+                        <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600' }}>{t('municipality')}</th>
+                        <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600' }}>{t('resources')}</th>
+                        <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600' }}>{t('high_potential')}</th>
                       </tr>
                     </thead>
                     <tbody>

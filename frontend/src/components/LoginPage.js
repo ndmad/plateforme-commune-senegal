@@ -1,9 +1,10 @@
-// Dans LoginPage.js - Version Flutter-like
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import './LoginPage.css';
+import { useTranslation } from '../hooks/useTranslation';
 
 const LoginPage = ({ onLoginSuccess }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -35,7 +36,7 @@ const LoginPage = ({ onLoginSuccess }) => {
       const result = await response.json();
 
       if (result.success) {
-        setMessage('✅ Connexion réussie! Redirection...');
+        setMessage(`✅ ${t('login_success')}`);
         
         localStorage.setItem('token', result.data.token);
         localStorage.setItem('user', JSON.stringify(result.data.user));
@@ -46,10 +47,10 @@ const LoginPage = ({ onLoginSuccess }) => {
           }
         }, 1500);
       } else {
-        setMessage('❌ ' + (result.error || 'Email ou mot de passe incorrect'));
+        setMessage('❌ ' + (result.error || t('login_error')));
       }
     } catch (error) {
-      setMessage('❌ Erreur de connexion au serveur');
+      setMessage('❌ ' + t('connection_error'));
       console.error('Erreur:', error);
     } finally {
       setIsLoading(false);
@@ -94,13 +95,13 @@ const LoginPage = ({ onLoginSuccess }) => {
               color: 'var(--on-surface)',
               marginBottom: '8px'
             }}>
-              Plateforme Communale
+              {t('municipality')} {t('platform')}
             </h1>
             <p style={{ 
               color: 'var(--on-background)',
               fontSize: '14px'
             }}>
-              Sénégal - Gestion Territoriale
+              Sénégal - {t('territorial_management')}
             </p>
           </div>
 
@@ -129,7 +130,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                 color: 'var(--on-surface)',
                 fontSize: '14px'
               }}>
-                Email
+                {t('email')}
               </label>
               <input
                 type="email"
@@ -151,14 +152,14 @@ const LoginPage = ({ onLoginSuccess }) => {
                 color: 'var(--on-surface)',
                 fontSize: '14px'
               }}>
-                Mot de passe
+                {t('password')}
               </label>
               <input
                 type="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="Votre mot de passe"
+                placeholder={t('password')}
                 required
                 disabled={isLoading}
                 className="flutter-input"
@@ -178,12 +179,12 @@ const LoginPage = ({ onLoginSuccess }) => {
                     height: '16px',
                     borderWidth: '2px'
                   }}></div>
-                  Connexion en cours...
+                  {t('logging_in')}
                 </>
               ) : (
                 <>
                   <span>🔐</span>
-                  Se connecter
+                  {t('login')}
                 </>
               )}
             </button>
@@ -195,7 +196,7 @@ const LoginPage = ({ onLoginSuccess }) => {
               color: 'var(--on-background)',
               fontSize: '12px'
             }}>
-              Accès réservé aux agents communaux autorisés
+              {t('restricted_access')}
             </small>
           </div>
         </div>
@@ -207,7 +208,7 @@ const LoginPage = ({ onLoginSuccess }) => {
           color: 'var(--on-background)',
           fontSize: '12px'
         }}>
-          <p>&copy; 2024 Plateforme des Ressources Communales - Sénégal</p>
+          <p>&copy; 2024 {t('municipality')} {t('platform')} - Sénégal</p>
         </div>
       </div>
     </div>

@@ -1,22 +1,24 @@
 import React from 'react';
 import { Navbar, Nav, Container, NavDropdown, Button } from 'react-bootstrap';
 import LanguageSwitcher from './LanguageSwitcher';
+import { useTranslation } from '../hooks/useTranslation'; // IMPORT CORRECT
 
 const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowFormulaire }) => {
+  const { t } = useTranslation(); // UTILISATION CORRECTE
+
   // ❌ CACHER COMPLÈTEMENT LE HEADER EN MOBILE
- 
-if (isMobile) {
-  return (
-    <div style={{ 
-      height: '0px', 
-      overflow: 'hidden',
-      position: 'absolute',
-      top: '-100px'
-    }}>
-      {/* Header caché mais présent pour éviter les erreurs */}
-    </div>
-  );
-}
+  if (isMobile) {
+    return (
+      <div style={{ 
+        height: '0px', 
+        overflow: 'hidden',
+        position: 'absolute',
+        top: '-100px'
+      }}>
+        {/* Header caché mais présent pour éviter les erreurs */}
+      </div>
+    );
+  }
 
   return (
     <Navbar expand="lg" fixed="top" className="flutter-app-bar">
@@ -35,10 +37,10 @@ if (isMobile) {
             marginRight: '2rem'
           }}
         >
-          🌍 Plateforme Communale
+          🌍 {t('municipality')} {t('platform')}
         </Navbar.Brand>
         
-        {/* ✅ CORRECTION: REMPLACER LE PLACEHOLDER PAR LE VRAI LANGUAGESWITCHER */}
+        {/* Language Switcher */}
         <LanguageSwitcher isMobile={isMobile} />
 
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
@@ -58,7 +60,7 @@ if (isMobile) {
                 transition: 'all var(--transition-fast)'
               }}
             >
-              🗺️ Carte
+              🗺️ {t('map')}
             </Nav.Link>
             <Nav.Link 
               href="#dashboard"
@@ -73,7 +75,7 @@ if (isMobile) {
                 transition: 'all var(--transition-fast)'
               }}
             >
-              📊 Dashboard
+              📊 {t('dashboard')}
             </Nav.Link>
             {user?.role === 'admin' && (
               <NavDropdown 
@@ -82,7 +84,7 @@ if (isMobile) {
                     color: 'rgba(255,255,255,0.9)',
                     fontWeight: '500'
                   }}>
-                    ⚙️ Administration
+                    ⚙️ {t('administration')}
                   </span>
                 } 
                 id="admin-nav-dropdown"
@@ -94,13 +96,13 @@ if (isMobile) {
                   href="#utilisateurs"
                   style={{ padding: '12px 16px' }}
                 >
-                  👥 Gestion Utilisateurs
+                  👥 {t('user_management')}
                 </NavDropdown.Item>
                 <NavDropdown.Item 
                   href="#statistiques"
                   style={{ padding: '12px 16px' }}
                 >
-                  📈 Statistiques Avancées
+                  📈 {t('advanced_statistics')}
                 </NavDropdown.Item>
               </NavDropdown>
             )}
@@ -119,7 +121,7 @@ if (isMobile) {
                 }}
               >
                 <span style={{ marginRight: '6px' }}>➕</span>
-                Ajouter
+                {t('add')}
               </Button>
             )}
             
@@ -153,8 +155,8 @@ if (isMobile) {
                   color: 'var(--on-background)'
                 }}
               >
-                <div>Commune: {user.commune || 'Non spécifiée'}</div>
-                <div>Rôle: <strong>{user.role}</strong></div>
+                <div>{t('municipality')}: {user.commune || t('unspecified')}</div>
+                <div>{t('role')}: <strong>{user.role}</strong></div>
               </NavDropdown.ItemText>
               <NavDropdown.Divider />
               <NavDropdown.Item 
@@ -167,7 +169,7 @@ if (isMobile) {
                 }}
               >
                 <span style={{ marginRight: '8px' }}>🚪</span>
-                Déconnexion
+                {t('logout')}
               </NavDropdown.Item>
             </NavDropdown>
           </Nav>
