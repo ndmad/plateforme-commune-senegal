@@ -1,10 +1,10 @@
 import React from 'react';
 import { Navbar, Nav, Container, NavDropdown, Button } from 'react-bootstrap';
 import LanguageSwitcher from './LanguageSwitcher';
-import { useTranslation } from '../hooks/useTranslation'; // IMPORT CORRECT
+import { useTranslation } from '../hooks/useTranslation';
 
 const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowFormulaire }) => {
-  const { t } = useTranslation(); // UTILISATION CORRECTE
+  const { t } = useTranslation();
 
   // ❌ CACHER COMPLÈTEMENT LE HEADER EN MOBILE
   if (isMobile) {
@@ -19,6 +19,19 @@ const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowForm
       </div>
     );
   }
+
+  // Gestionnaires pour les menus admin - NAVIGATION INTERNE
+  const handleUserManagement = () => {
+    onViewChange('admin');
+  };
+
+  const handleAdvancedStatistics = () => {
+    onViewChange('admin');
+  };
+
+  const handleSecurityReport = () => {
+    onViewChange('admin');
+  };
 
   return (
     <Navbar expand="lg" fixed="top" className="flutter-app-bar">
@@ -77,6 +90,8 @@ const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowForm
             >
               📊 {t('dashboard')}
             </Nav.Link>
+            
+            {/* Menu Administration - SEULEMENT POUR ADMIN */}
             {user?.role === 'admin' && (
               <NavDropdown 
                 title={
@@ -93,16 +108,44 @@ const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowForm
                 }}
               >
                 <NavDropdown.Item 
-                  href="#utilisateurs"
-                  style={{ padding: '12px 16px' }}
+                  onClick={handleUserManagement}
+                  style={{ 
+                    padding: '12px 16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    cursor: 'pointer'
+                  }}
                 >
                   👥 {t('user_management')}
                 </NavDropdown.Item>
+                
                 <NavDropdown.Item 
-                  href="#statistiques"
-                  style={{ padding: '12px 16px' }}
+                  onClick={handleAdvancedStatistics}
+                  style={{ 
+                    padding: '12px 16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    cursor: 'pointer'
+                  }}
                 >
-                  📈 {t('advanced_statistics')}
+                  📊 {t('advanced_statistics')}
+                </NavDropdown.Item>
+                
+                <NavDropdown.Divider />
+                
+                <NavDropdown.Item 
+                  onClick={handleSecurityReport}
+                  style={{ 
+                    padding: '12px 16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  🔐 {t('security_report')}
                 </NavDropdown.Item>
               </NavDropdown>
             )}
@@ -165,7 +208,8 @@ const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowForm
                   display: 'flex', 
                   alignItems: 'center',
                   padding: '12px 16px',
-                  color: '#dc2626'
+                  color: '#dc2626',
+                  cursor: 'pointer'
                 }}
               >
                 <span style={{ marginRight: '8px' }}>🚪</span>

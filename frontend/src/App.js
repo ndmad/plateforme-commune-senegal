@@ -15,12 +15,7 @@ import useMobile from './hooks/useMobile';
 import { API_BASE_URL } from './config';
 import ExportDonnees from './components/ExportDonnees';
 
-// Ajouter ces imports
-import GraphiquesInteractifs from './components/GraphiquesInteractifs';
-import CarteThermique from './components/CarteThermique';
-import LanguageSwitcher from './components/LanguageSwitcher';
-
-// Import des notifications - CORRIGÉ
+// Import des notifications
 import { NotificationProvider, useNotifications } from './components/Notifications';
 import NotificationContainer from './components/Notifications';
 import { TranslationProvider } from './hooks/useTranslation';
@@ -124,7 +119,227 @@ const MobileNavigation = ({
   );
 };
 
-// Composant App principal - SÉPARÉ du wrapper
+// Composant AdminPanel simple
+// Composant AdminPanel CORRIGÉ avec token
+const AdminPanel = () => {
+  const { success, error } = useNotifications();
+
+  // Fonction pour faire des appels API avec le token
+  const fetchWithToken = async (url, method = 'GET') => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        error('Token non trouvé. Veuillez vous reconnecter.');
+        return null;
+      }
+
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (err) {
+      error(`Erreur: ${err.message}`);
+      return null;
+    }
+  };
+
+  // Gestionnaires corrigés
+  const handleUserManagement = async () => {
+    const data = await fetchWithToken('http://localhost:5000/api/admin/utilisateurs');
+    if (data) {
+      // Ouvrir les données dans un nouvel onglet formatées
+      const newWindow = window.open('', '_blank');
+      newWindow.document.write(`
+        <html>
+          <head>
+            <title>Gestion des Utilisateurs</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; }
+              pre { background: #f5f5f5; padding: 15px; border-radius: 5px; }
+              .success { color: green; }
+            </style>
+          </head>
+          <body>
+            <h1>👥 Gestion des Utilisateurs</h1>
+            <p class="success">Données récupérées avec succès !</p>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+            <button onclick="window.close()">Fermer</button>
+          </body>
+        </html>
+      `);
+    }
+  };
+
+  const handleAuditLogs = async () => {
+    const data = await fetchWithToken('http://localhost:5000/api/security/audit-logs');
+    if (data) {
+      const newWindow = window.open('', '_blank');
+      newWindow.document.write(`
+        <html>
+          <head>
+            <title>Logs d'Audit</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; }
+              pre { background: #f5f5f5; padding: 15px; border-radius: 5px; }
+              .success { color: green; }
+            </style>
+          </head>
+          <body>
+            <h1>📊 Logs d'Audit</h1>
+            <p class="success">Données récupérées avec succès !</p>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+            <button onclick="window.close()">Fermer</button>
+          </body>
+        </html>
+      `);
+    }
+  };
+
+  const handleSecurityReport = async () => {
+    const data = await fetchWithToken('http://localhost:5000/api/security/security-report');
+    if (data) {
+      const newWindow = window.open('', '_blank');
+      newWindow.document.write(`
+        <html>
+          <head>
+            <title>Rapport de Sécurité</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; }
+              pre { background: #f5f5f5; padding: 15px; border-radius: 5px; }
+              .success { color: green; }
+            </style>
+          </head>
+          <body>
+            <h1>🔐 Rapport de Sécurité</h1>
+            <p class="success">Données récupérées avec succès !</p>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+            <button onclick="window.close()">Fermer</button>
+          </body>
+        </html>
+      `);
+    }
+  };
+
+  const handleDashboard = () => {
+    window.location.href = '#dashboard';
+  };
+
+  return (
+    <Container fluid className="mt-5 pt-4">
+      <div className="row justify-content-center">
+        <div className="col-md-8">
+          <div className="flutter-card elevated p-4">
+            <h3 className="mb-4">⚙️ Panel d'Administration</h3>
+            <p className="text-muted mb-4">
+              Interface d'administration de la plateforme communale
+            </p>
+            
+            <div className="row g-3">
+              <div className="col-md-6">
+                <div className="flutter-card p-3 text-center">
+                  <h5>👥 Gestion Utilisateurs</h5>
+                  <p className="text-muted small mb-3">
+                    Gérer les comptes utilisateurs et permissions
+                  </p>
+                  <button 
+                    className="flutter-btn primary"
+                    onClick={handleUserManagement}
+                  >
+                    Ouvrir
+                  </button>
+                </div>
+              </div>
+              
+              <div className="col-md-6">
+                <div className="flutter-card p-3 text-center">
+                  <h5>📊 Logs d'Audit</h5>
+                  <p className="text-muted small mb-3">
+                    Consulter l'historique des actions
+                  </p>
+                  <button 
+                    className="flutter-btn primary"
+                    onClick={handleAuditLogs}
+                  >
+                    Ouvrir
+                  </button>
+                </div>
+              </div>
+              
+              <div className="col-md-6">
+                <div className="flutter-card p-3 text-center">
+                  <h5>🔐 Rapport Sécurité</h5>
+                  <p className="text-muted small mb-3">
+                    Statistiques de sécurité du système
+                  </p>
+                  <button 
+                    className="flutter-btn primary"
+                    onClick={handleSecurityReport}
+                  >
+                    Ouvrir
+                  </button>
+                </div>
+              </div>
+              
+              <div className="col-md-6">
+                <div className="flutter-card p-3 text-center">
+                  <h5>📈 Statistiques</h5>
+                  <p className="text-muted small mb-3">
+                    Tableaux de bord avancés
+                  </p>
+                  <button 
+                    className="flutter-btn secondary"
+                    onClick={handleDashboard}
+                  >
+                    Tableau de bord
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Section de débogage */}
+            <div className="mt-4 p-3" style={{ background: '#f8f9fa', borderRadius: '8px' }}>
+              <h6>🐛 Débogage Token</h6>
+              <button 
+                className="btn btn-sm btn-outline-info me-2"
+                onClick={() => {
+                  const token = localStorage.getItem('token');
+                  console.log('Token:', token);
+                  alert(`Token présent: ${!!token}\nLongueur: ${token?.length} caractères`);
+                }}
+              >
+                Vérifier Token
+              </button>
+              <button 
+                className="btn btn-sm btn-outline-warning"
+                onClick={async () => {
+                  const token = localStorage.getItem('token');
+                  const test = await fetchWithToken('http://localhost:5000/api/security/security-report');
+                  if (test) {
+                    success('✅ Test réussi ! Token valide');
+                  }
+                }}
+              >
+                Tester Connexion
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Container>
+  );
+};
+
+// Composant App principal
 const AppContent = () => {
   const isMobile = useMobile();
   const [user, setUser] = useState(null);
@@ -162,7 +377,6 @@ const AppContent = () => {
         const userObj = JSON.parse(userData);
         setUser(userObj);
         
-        // Éviter les notifications multiples
         if (!notificationsShown.current.welcome) {
           info(`Bienvenue de retour ${userObj.nom} !`);
           notificationsShown.current.welcome = true;
@@ -191,7 +405,6 @@ const AppContent = () => {
     try {
       setLoading(true);
       
-      // Éviter les notifications multiples - CORRECTION ICI
       if (!notificationsShown.current.loading) {
         info('Chargement des données...');
         notificationsShown.current.loading = true;
@@ -205,7 +418,6 @@ const AppContent = () => {
       const dataRessources = await reponseRessources.json();
       setRessources(dataRessources.data || []);
       
-      // Éviter les notifications multiples - CORRECTION ICI
       if (!notificationsShown.current.success) {
         success('Données chargées avec succès !');
         notificationsShown.current.success = true;
@@ -214,8 +426,6 @@ const AppContent = () => {
     } catch (erreur) {
       console.error('❌ Erreur chargement données:', erreur);
       error('Erreur lors du chargement des données');
-      
-      // Réinitialiser l'état de chargement en cas d'erreur
       notificationsShown.current.loading = false;
     } finally {
       setLoading(false);
@@ -258,7 +468,6 @@ const AppContent = () => {
   };
 
   const handleLoginSuccess = (userData) => {
-    // Réinitialiser les références pour une nouvelle connexion
     notificationsShown.current = {
       welcome: true,
       loading: false,
@@ -271,7 +480,6 @@ const AppContent = () => {
   };
 
   const handleLogout = () => {
-    // Réinitialiser complètement les références
     notificationsShown.current = {
       welcome: false,
       loading: false,
@@ -302,35 +510,21 @@ const AppContent = () => {
     }
   };
 
-  // Si pas connecté, afficher la page de connexion
-  if (!user) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
-  }
-
-  // Si chargement en cours
-  if (loading) {
-    return (
-      <div className="loading-fullscreen">
-        <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Chargement...</span>
-          </div>
-          <p className="mt-2">Chargement de la plateforme...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Render la vue active (seulement si connecté)
+  // Fonction renderActiveView CORRIGÉE
   const renderActiveView = () => {
     console.log('🔄 Vue active:', activeView);
     
-    // Si on est sur le dashboard, on retourne seulement le dashboard
+    // Vue Dashboard
     if (activeView === 'dashboard') {
       return <Dashboard ressources={ressources} communes={communes} />;
     }
 
-    // Sinon, on retourne la vue carte avec ses panneaux
+    // Vue Admin Panel
+    if (activeView === 'admin') {
+      return <AdminPanel />;
+    }
+
+    // Vue Carte (par défaut)
     return (
       <div className="main-content-wrapper">
         {/* Filtres mobiles */}
@@ -431,6 +625,25 @@ const AppContent = () => {
     );
   };
 
+  // Si pas connecté, afficher la page de connexion
+  if (!user) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  // Si chargement en cours
+  if (loading) {
+    return (
+      <div className="loading-fullscreen">
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Chargement...</span>
+          </div>
+          <p className="mt-2">Chargement de la plateforme...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="App">
       {/* Header - caché en mobile */}
@@ -491,7 +704,6 @@ function AppWithNotifications() {
     <TranslationProvider>
       <NotificationProvider>
         <AppContent />
-        {/* UN SEUL NotificationContainer à la racine */}
         <NotificationContainer />
       </NotificationProvider>
     </TranslationProvider>

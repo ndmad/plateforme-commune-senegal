@@ -1,56 +1,63 @@
+
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
+const dotenv = require('dotenv');
+
+// NOUVEAU: Importer les middlewares de sécurité
+const { securityMiddleware, authLimiter, apiLimiter } = require('./middleware/security')
+
+dotenv.config();
 
 const app = express();
 
-// Middlewares
+// NOUVEAU: Middlewares de sécurité
+app.use(securityMiddleware);
+app.use('/api/auth/login', authLimiter);
+app.use('/api/', apiLimiter);
+
+
+// Middleware de base
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+//  MIDDLEWARE AUDIT DOIT ÊTRE ICI - AVANT LES ROUTES 
+const { auditMiddleware } = require('./middleware/audit');
+app.use(auditMiddleware);
 
-// LOG TEMPORAIRE pour debug
-app.use((req, res, next) => {
-  console.log('📨 Requête:', req.method, req.url);
-  next();
-});
-
-// Route de test
-app.get('/', (req, res) => {
-  res.json({ 
-    message: '🚀 API Plateforme Communale Sénégal',
-    version: '1.0.0'
-  });
-});
-
+// Routes existantes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/ressources', require('./routes/ressources'));
+app.use('/api/communes', require('./routes/communes'));
+app.use('/api/admin', require('./routes/admin'));
 app.use('/api/statistiques', require('./routes/statistiques'));
 
-// Import et utilisation des routes - CORRECTION : d'abord importer, puis utiliser
-const communesRoutes = require('./routes/communes');
-const ressourcesRoutes = require('./routes/ressources');
-const authRoutes = require('./routes/auth');
-const adminRoutes = require('./routes/admin');
+// NOUVELLES ROUTES DE SÉCURITÉ
+app.use('/api/security', require('./routes/security'));
 
-// Routes API
-app.use('/api/communes', communesRoutes);
-app.use('/api/ressources', ressourcesRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
+// Routes GDPR (COMMENTER TEMPORAIREMENT SI BESOIN)
+// app.use('/api/gdpr', require('./routes/gdpr'));
 
-console.log('✅ Routes chargées: /api/communes, /api/ressources, /api/auth, /api/admin');
 
-// Middleware de gestion des erreurs 404
-app.use((req, res) => {
-  console.log('❌ Route non trouvée:', req.method, req.url);
-  res.status(404).json({ 
-    success: false,
-    error: 'Route non trouvée',
-    path: req.url
+
+// Route de santé
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'API Plateforme Communale en fonctionnement',
+    timestamp: new Date().toISOString()
   });
 });
 
-// Gestionnaire d'erreurs global
+// Gestion des routes non trouvées
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'Route non trouvée'
+  });
+});
+
+// Gestion des erreurs globales
 app.use((error, req, res, next) => {
   console.error('Erreur globale:', error);
   res.status(500).json({

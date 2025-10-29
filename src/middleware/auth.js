@@ -1,6 +1,58 @@
 const jwt = require('jsonwebtoken');
 const db = require('../config/database');
 
+// Rôles et permissions (AJOUT)
+const ROLES = {
+  ADMIN: 'admin',
+  EDITEUR: 'editeur', 
+  CONSULTANT: 'consultant',
+  AGENT_COMMUNAL: 'agent_communal'
+};
+
+const PERMISSIONS = {
+  RESSOURCE_CREATE: 'ressource:create',
+  RESSOURCE_READ: 'ressource:read',
+  RESSOURCE_UPDATE: 'ressource:update',
+  RESSOURCE_DELETE: 'ressource:delete',
+  RESSOURCE_UPDATE_ALL: 'ressource:update_all',
+  USER_MANAGE: 'user:manage',
+  USER_READ: 'user:read',
+  STATS_READ: 'stats:read',
+  STATS_READ_ALL: 'stats:read_all',
+  ADMIN_ACCESS: 'admin:access'
+};
+
+const ROLE_PERMISSIONS = {
+  [ROLES.ADMIN]: [
+    PERMISSIONS.RESSOURCE_CREATE,
+    PERMISSIONS.RESSOURCE_READ,
+    PERMISSIONS.RESSOURCE_UPDATE_ALL,
+    PERMISSIONS.RESSOURCE_DELETE,
+    PERMISSIONS.USER_MANAGE,
+    PERMISSIONS.USER_READ,
+    PERMISSIONS.STATS_READ_ALL,
+    PERMISSIONS.ADMIN_ACCESS
+  ],
+  [ROLES.EDITEUR]: [
+    PERMISSIONS.RESSOURCE_CREATE,
+    PERMISSIONS.RESSOURCE_READ,
+    PERMISSIONS.RESSOURCE_UPDATE,
+    PERMISSIONS.RESSOURCE_DELETE,
+    PERMISSIONS.STATS_READ
+  ],
+  [ROLES.AGENT_COMMUNAL]: [
+    PERMISSIONS.RESSOURCE_CREATE,
+    PERMISSIONS.RESSOURCE_READ,
+    PERMISSIONS.RESSOURCE_UPDATE,
+    PERMISSIONS.STATS_READ
+  ],
+  [ROLES.CONSULTANT]: [
+    PERMISSIONS.RESSOURCE_READ,
+    PERMISSIONS.STATS_READ
+  ]
+};
+
+// Middleware existant (GARDER)
 const authMiddleware = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
@@ -35,7 +87,12 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    req.user = user;
+    // AJOUT: Ajouter les permissions basées sur le rôle
+    req.user = {
+      ...user,
+      permissions: ROLE_PERMISSIONS[user.role] || []
+    };
+    
     next();
   } catch (error) {
     console.error('Erreur authentification:', error);
@@ -46,7 +103,7 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-// Middleware pour vérifier les rôles
+// Middleware existant (GARDER)
 const requireRole = (roles) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -67,7 +124,7 @@ const requireRole = (roles) => {
   };
 };
 
-// Middleware pour vérifier la propriété ou le rôle admin
+// Middleware existant (GARDER)
 const requireOwnershipOrAdmin = (tableName) => {
   return async (req, res, next) => {
     try {
@@ -114,8 +171,32 @@ const requireOwnershipOrAdmin = (tableName) => {
   };
 };
 
+// NOUVEAU: Middleware de permission granulaire (AJOUT)
+const requirePermission = (permission) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentification requise'
+      });
+    }
+
+    if (!req.user.permissions.includes(permission)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Permissions insuffisantes'
+      });
+    }
+
+    next();
+  };
+};
+
 module.exports = { 
   authMiddleware, 
   requireRole, 
-  requireOwnershipOrAdmin 
+  requireOwnershipOrAdmin,
+  requirePermission, // AJOUT
+  ROLES, // AJOUT
+  PERMISSIONS // AJOUT
 };
