@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Tabs, Tab, Badge, Spinner, Alert } from 'react-bootstrap';
 import { useNotifications } from '../Notifications';
+// Ajouter l'import en haut
+import CarteANSDPanel from '../cartographie/CarteANSDPanel';
+
 import { API_BASE_URL } from '../../config';
 
 // ✅ FONCTION FORMATNUMBER DÉFINIE ICI
@@ -28,7 +31,7 @@ const ANSDPanel = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      
+
       const [demographic, economic, indicateurs] = await Promise.all([
         fetch(`${API_BASE_URL}/ansd/demographie/${commune}`, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -60,7 +63,7 @@ const ANSDPanel = () => {
       const response = await fetch(`${API_BASE_URL}/ansd/statistiques-globales`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setGlobalData(data.data);
@@ -94,7 +97,7 @@ const ANSDPanel = () => {
               </p>
             </Col>
             <Col xs="auto">
-              <select 
+              <select
                 className="form-select"
                 value={selectedCommune}
                 onChange={(e) => setSelectedCommune(e.target.value)}
@@ -115,15 +118,19 @@ const ANSDPanel = () => {
             <Tab eventKey="demographie" title="📊 Démographie">
               <DemographicTab data={communeData} />
             </Tab>
-            
+
             <Tab eventKey="economie" title="💼 Économie">
               <EconomicTab data={communeData} />
             </Tab>
-            
+
             <Tab eventKey="indicateurs" title="📈 Indicateurs">
               <IndicatorsTab data={communeData} />
             </Tab>
-            
+            {/* ✅ NOUVEL ONGLET CARTOGRAPHIE */}
+            <Tab eventKey="cartographie" title="🗺️ Cartographie">
+              <CarteANSDPanel />
+            </Tab>
+
             <Tab eventKey="comparaison" title="🔄 Comparaison">
               <ComparisonTab data={globalData} selectedCommune={selectedCommune} />
             </Tab>
@@ -152,7 +159,7 @@ const DemographicTab = ({ data }) => {
           </Card.Body>
         </Card>
       </Col>
-      
+
       <Col md={4}>
         <Card className="flutter-card text-center h-100">
           <Card.Body>
@@ -163,7 +170,7 @@ const DemographicTab = ({ data }) => {
           </Card.Body>
         </Card>
       </Col>
-      
+
       <Col md={4}>
         <Card className="flutter-card text-center h-100">
           <Card.Body>
@@ -220,7 +227,7 @@ const EconomicTab = ({ data }) => {
                   {economic.taux_chomage}%
                 </Badge>
               </div>
-              
+
               <div className="d-flex justify-content-between align-items-center p-2 border-bottom">
                 <span>Revenu mensuel moyen</span>
                 <Badge bg="success">
@@ -243,34 +250,34 @@ const EconomicTab = ({ data }) => {
                 <span>Primaire</span>
                 <div className="d-flex align-items-center gap-2">
                   <div className="progress" style={{ width: '100px', height: '8px' }}>
-                    <div 
-                      className="progress-bar bg-success" 
+                    <div
+                      className="progress-bar bg-success"
                       style={{ width: `${economic.secteur_primaire}%` }}
                     ></div>
                   </div>
                   <span>{economic.secteur_primaire}%</span>
                 </div>
               </div>
-              
+
               <div className="d-flex justify-content-between align-items-center">
                 <span>Secondaire</span>
                 <div className="d-flex align-items-center gap-2">
                   <div className="progress" style={{ width: '100px', height: '8px' }}>
-                    <div 
-                      className="progress-bar bg-warning" 
+                    <div
+                      className="progress-bar bg-warning"
                       style={{ width: `${economic.secteur_secondaire}%` }}
                     ></div>
                   </div>
                   <span>{economic.secteur_secondaire}%</span>
                 </div>
               </div>
-              
+
               <div className="d-flex justify-content-between align-items-center">
                 <span>Tertiaire</span>
                 <div className="d-flex align-items-center gap-2">
                   <div className="progress" style={{ width: '100px', height: '8px' }}>
-                    <div 
-                      className="progress-bar bg-info" 
+                    <div
+                      className="progress-bar bg-info"
                       style={{ width: `${economic.secteur_tertiaire}%` }}
                     ></div>
                   </div>
@@ -311,7 +318,7 @@ const IndicatorsTab = ({ data }) => {
           </Card.Body>
         </Card>
       </Col>
-      
+
       <Col md={3}>
         <Card className="flutter-card text-center">
           <Card.Body>
@@ -321,7 +328,7 @@ const IndicatorsTab = ({ data }) => {
           </Card.Body>
         </Card>
       </Col>
-      
+
       <Col md={3}>
         <Card className="flutter-card text-center">
           <Card.Body>
@@ -331,7 +338,7 @@ const IndicatorsTab = ({ data }) => {
           </Card.Body>
         </Card>
       </Col>
-      
+
       <Col md={3}>
         <Card className="flutter-card text-center">
           <Card.Body>
@@ -384,7 +391,7 @@ const ComparisonTab = ({ data, selectedCommune }) => {
             <Card className={`flutter-card ${commune === selectedCommune ? 'border-primary' : ''}`}>
               <Card.Header>
                 <h6 className="mb-0">
-                  {commune} 
+                  {commune}
                   {commune === selectedCommune && <Badge bg="primary" className="ms-2">Actuelle</Badge>}
                 </h6>
               </Card.Header>

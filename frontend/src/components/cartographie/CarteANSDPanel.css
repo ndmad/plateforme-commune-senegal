@@ -1,0 +1,93 @@
+/* FORCE LA PLEINE LARGEUR - GARANTI */
+.carte-full-width-container {
+  width: 100vw !important;
+  margin-left: calc(-50vw + 50%) !important;
+  margin-right: calc(-50vw + 50%) !important;
+  padding: 0 !important;
+  position: relative;
+  left: 0;
+  right: 0;
+}
+
+.carte-ansd-wrapper {
+  width: 100% !important;
+  height: 70vh !important;
+  min-height: 500px;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.carte-ansd-full {
+  height: 100% !important;
+  width: 100% !important;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-2);
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Supprime tous les espaces autour de la carte */
+.container-fluid.p-0.m-0.w-100 {
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: 100% !important;
+}
+
+/* Correction Leaflet */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  border-radius: var(--radius-lg);
+  font-family: inherit !important;
+}
+
+/* Styles pour la légende */
+.carte-legende-color {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.carte-legende-gradient {
+  flex: 1;
+  height: 10px;
+  background: linear-gradient(to right, #f7fbff, #08306b);
+  border-radius: 5px;
+}
+
+.carte-ressource-point {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.carte-zone-point {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Garantir que Bootstrap n'ajoute pas de padding */
+.row {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.col, .col-md-4, .col-md-6, .col-auto {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Correction pour les cartes Bootstrap */
+.card-body {
+  padding: 1rem !important;
+}
+
+.mx-3 {
+  margin-left: 1rem !important;
+  margin-right: 1rem !important;
+}
