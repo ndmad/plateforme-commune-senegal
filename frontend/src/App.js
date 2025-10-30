@@ -15,6 +15,10 @@ import useMobile from './hooks/useMobile';
 import { API_BASE_URL } from './config';
 import ExportDonnees from './components/ExportDonnees';
 
+// Import des composants Admin améliorés
+import UserManagement from './components/admin/UserManagement';
+import SecurityDashboard from './components/admin/SecurityDashboard';
+
 // Import des notifications
 import { NotificationProvider, useNotifications } from './components/Notifications';
 import NotificationContainer from './components/Notifications';
@@ -119,22 +123,22 @@ const MobileNavigation = ({
   );
 };
 
-// Composant AdminPanel simple
-// Composant AdminPanel CORRIGÉ avec token
+// Composant AdminPanel amélioré avec onglets
+// Composant AdminPanel amélioré avec onglets
 const AdminPanel = () => {
+  const [activeTab, setActiveTab] = useState('dashboard');
   const { success, error } = useNotifications();
 
-  // Fonction pour faire des appels API avec le token
-  const fetchWithToken = async (url, method = 'GET') => {
+  // Fonction pour ouvrir les données avec token
+  const openDataWithToken = async (url, title) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        error('Token non trouvé. Veuillez vous reconnecter.');
-        return null;
+        error('Token non trouvé');
+        return;
       }
 
       const response = await fetch(url, {
-        method: method,
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -142,195 +146,143 @@ const AdminPanel = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+        throw new Error(`Erreur ${response.status}`);
       }
 
       const data = await response.json();
-      return data;
+      
+      // Ouvrir dans une nouvelle fenêtre
+      const newWindow = window.open('', '_blank');
+      newWindow.document.write(`
+        <html>
+          <head>
+            <title>${title}</title>
+            <style>
+              body { 
+                font-family: Arial, sans-serif; 
+                padding: 20px; 
+                background: #f5f5f5;
+              }
+              .container {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                max-width: 1200px;
+                margin: 0 auto;
+              }
+              pre { 
+                background: #f8f9fa; 
+                padding: 15px; 
+                border-radius: 5px; 
+                border: 1px solid #e9ecef;
+                overflow-x: auto;
+                font-size: 12px;
+                max-height: 80vh;
+                overflow-y: auto;
+              }
+              button { 
+                padding: 10px 20px;
+                background: #007bff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                margin-top: 15px;
+              }
+              button:hover { background: #0056b3; }
+              .success { color: #28a745; font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>${title}</h1>
+              <p class="success">✅ Données récupérées avec succès</p>
+              <pre>${JSON.stringify(data, null, 2)}</pre>
+              <button onclick="window.close()">Fermer la fenêtre</button>
+            </div>
+          </body>
+        </html>
+      `);
+      
+      success(`${title} ouvert avec succès`);
     } catch (err) {
       error(`Erreur: ${err.message}`);
-      return null;
     }
   };
 
-  // Gestionnaires corrigés
-  const handleUserManagement = async () => {
-    const data = await fetchWithToken('http://localhost:5000/api/admin/utilisateurs');
-    if (data) {
-      // Ouvrir les données dans un nouvel onglet formatées
-      const newWindow = window.open('', '_blank');
-      newWindow.document.write(`
-        <html>
-          <head>
-            <title>Gestion des Utilisateurs</title>
-            <style>
-              body { font-family: Arial, sans-serif; padding: 20px; }
-              pre { background: #f5f5f5; padding: 15px; border-radius: 5px; }
-              .success { color: green; }
-            </style>
-          </head>
-          <body>
-            <h1>👥 Gestion des Utilisateurs</h1>
-            <p class="success">Données récupérées avec succès !</p>
-            <pre>${JSON.stringify(data, null, 2)}</pre>
-            <button onclick="window.close()">Fermer</button>
-          </body>
-        </html>
-      `);
-    }
-  };
-
-  const handleAuditLogs = async () => {
-    const data = await fetchWithToken('http://localhost:5000/api/security/audit-logs');
-    if (data) {
-      const newWindow = window.open('', '_blank');
-      newWindow.document.write(`
-        <html>
-          <head>
-            <title>Logs d'Audit</title>
-            <style>
-              body { font-family: Arial, sans-serif; padding: 20px; }
-              pre { background: #f5f5f5; padding: 15px; border-radius: 5px; }
-              .success { color: green; }
-            </style>
-          </head>
-          <body>
-            <h1>📊 Logs d'Audit</h1>
-            <p class="success">Données récupérées avec succès !</p>
-            <pre>${JSON.stringify(data, null, 2)}</pre>
-            <button onclick="window.close()">Fermer</button>
-          </body>
-        </html>
-      `);
-    }
-  };
-
-  const handleSecurityReport = async () => {
-    const data = await fetchWithToken('http://localhost:5000/api/security/security-report');
-    if (data) {
-      const newWindow = window.open('', '_blank');
-      newWindow.document.write(`
-        <html>
-          <head>
-            <title>Rapport de Sécurité</title>
-            <style>
-              body { font-family: Arial, sans-serif; padding: 20px; }
-              pre { background: #f5f5f5; padding: 15px; border-radius: 5px; }
-              .success { color: green; }
-            </style>
-          </head>
-          <body>
-            <h1>🔐 Rapport de Sécurité</h1>
-            <p class="success">Données récupérées avec succès !</p>
-            <pre>${JSON.stringify(data, null, 2)}</pre>
-            <button onclick="window.close()">Fermer</button>
-          </body>
-        </html>
-      `);
-    }
-  };
-
-  const handleDashboard = () => {
-    window.location.href = '#dashboard';
+  const tabs = {
+    dashboard: { 
+      title: '📊 Dashboard Sécurité', 
+      component: <SecurityDashboard /> 
+    },
+    users: { 
+      title: '👥 Gestion Utilisateurs', 
+      component: <UserManagement /> 
+    },
   };
 
   return (
     <Container fluid className="mt-5 pt-4">
-      <div className="row justify-content-center">
-        <div className="col-md-8">
-          <div className="flutter-card elevated p-4">
-            <h3 className="mb-4">⚙️ Panel d'Administration</h3>
-            <p className="text-muted mb-4">
-              Interface d'administration de la plateforme communale
-            </p>
-            
-            <div className="row g-3">
-              <div className="col-md-6">
-                <div className="flutter-card p-3 text-center">
-                  <h5>👥 Gestion Utilisateurs</h5>
-                  <p className="text-muted small mb-3">
-                    Gérer les comptes utilisateurs et permissions
+      <div className="row">
+        <div className="col-12">
+          <div className="flutter-card elevated">
+            {/* En-tête Admin */}
+            <div className="p-4 border-bottom">
+              <div className="row align-items-center">
+                <div className="col">
+                  <h4 className="mb-1">⚙️ Administration de la Plateforme</h4>
+                  <p className="text-muted mb-0">
+                    Gestion complète des utilisateurs, sécurité et statistiques
                   </p>
-                  <button 
-                    className="flutter-btn primary"
-                    onClick={handleUserManagement}
-                  >
-                    Ouvrir
-                  </button>
                 </div>
-              </div>
-              
-              <div className="col-md-6">
-                <div className="flutter-card p-3 text-center">
-                  <h5>📊 Logs d'Audit</h5>
-                  <p className="text-muted small mb-3">
-                    Consulter l'historique des actions
-                  </p>
-                  <button 
-                    className="flutter-btn primary"
-                    onClick={handleAuditLogs}
-                  >
-                    Ouvrir
-                  </button>
-                </div>
-              </div>
-              
-              <div className="col-md-6">
-                <div className="flutter-card p-3 text-center">
-                  <h5>🔐 Rapport Sécurité</h5>
-                  <p className="text-muted small mb-3">
-                    Statistiques de sécurité du système
-                  </p>
-                  <button 
-                    className="flutter-btn primary"
-                    onClick={handleSecurityReport}
-                  >
-                    Ouvrir
-                  </button>
-                </div>
-              </div>
-              
-              <div className="col-md-6">
-                <div className="flutter-card p-3 text-center">
-                  <h5>📈 Statistiques</h5>
-                  <p className="text-muted small mb-3">
-                    Tableaux de bord avancés
-                  </p>
-                  <button 
-                    className="flutter-btn secondary"
-                    onClick={handleDashboard}
-                  >
-                    Tableau de bord
-                  </button>
+                <div className="col-auto">
+                  <div className="d-flex gap-2">
+                    <button 
+                      className="btn btn-outline-primary btn-sm"
+                      onClick={() => openDataWithToken(
+                        `${API_BASE_URL}/security/audit-logs`,
+                        '📋 Logs d\'Audit Complets'
+                      )}
+                    >
+                      📋 Logs Complets
+                    </button>
+                    <button 
+                      className="btn btn-outline-success btn-sm"
+                      onClick={() => openDataWithToken(
+                        `${API_BASE_URL}/admin/utilisateurs`,
+                        '🔗 API Utilisateurs'
+                      )}
+                    >
+                      🔗 API Utilisateurs
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Section de débogage */}
-            <div className="mt-4 p-3" style={{ background: '#f8f9fa', borderRadius: '8px' }}>
-              <h6>🐛 Débogage Token</h6>
-              <button 
-                className="btn btn-sm btn-outline-info me-2"
-                onClick={() => {
-                  const token = localStorage.getItem('token');
-                  console.log('Token:', token);
-                  alert(`Token présent: ${!!token}\nLongueur: ${token?.length} caractères`);
-                }}
-              >
-                Vérifier Token
-              </button>
-              <button 
-                className="btn btn-sm btn-outline-warning"
-                onClick={async () => {
-                  const token = localStorage.getItem('token');
-                  const test = await fetchWithToken('http://localhost:5000/api/security/security-report');
-                  if (test) {
-                    success('✅ Test réussi ! Token valide');
-                  }
-                }}
-              >
-                Tester Connexion
-              </button>
+            {/* Navigation par onglets */}
+            <div className="px-4 pt-3">
+              <div className="d-flex gap-2 border-bottom">
+                {Object.entries(tabs).map(([key, { title }]) => (
+                  <button
+                    key={key}
+                    className={`btn btn-sm ${activeTab === key ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => setActiveTab(key)}
+                    style={{
+                      borderRadius: 'var(--radius-md) var(--radius-md) 0 0',
+                      marginBottom: '-1px'
+                    }}
+                  >
+                    {title}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Contenu de l'onglet actif */}
+            <div className="p-4">
+              {tabs[activeTab]?.component}
             </div>
           </div>
         </div>
@@ -510,7 +462,7 @@ const AppContent = () => {
     }
   };
 
-  // Fonction renderActiveView CORRIGÉE
+  // Fonction renderActiveView CORRIGÉE avec AdminPanel
   const renderActiveView = () => {
     console.log('🔄 Vue active:', activeView);
     
