@@ -1,13 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
+const bcrypt = require('bcryptjs');
 const { authMiddleware, requireRole } = require('../middleware/auth');
 
-// Route pour lister tous les utilisateurs - Admin seulement
+// Route pour récupérer tous les utilisateurs (EXISTANTE)
 router.get('/utilisateurs', authMiddleware, requireRole(['admin']), async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT id, nom, email, role, commune_id, telephone, actif, created_at FROM utilisateurs ORDER BY created_at DESC'
+      `SELECT id, nom, email, role, commune_id, telephone, actif, created_at 
+       FROM utilisateurs 
+       ORDER BY created_at DESC`
     );
     
     res.json({
@@ -16,7 +19,7 @@ router.get('/utilisateurs', authMiddleware, requireRole(['admin']), async (req, 
       count: result.rowCount
     });
   } catch (error) {
-    console.error('Erreur liste utilisateurs:', error);
+    console.error('Erreur récupération utilisateurs:', error);
     res.status(500).json({
       success: false,
       error: 'Erreur lors de la récupération des utilisateurs'
@@ -24,69 +27,66 @@ router.get('/utilisateurs', authMiddleware, requireRole(['admin']), async (req, 
   }
 });
 
-// Route pour modifier un utilisateur - Admin seulement
+// ✅ NOUVELLE ROUTE POUR MODIFIER UN UTILISATEUR
+// ✅ ROUTE CORRIGÉE POUR password_hash
 router.put('/utilisateurs/:id', authMiddleware, requireRole(['admin']), async (req, res) => {
   try {
     const { id } = req.params;
-    const { role, actif } = req.body;
-    
-    const result = await db.query(
-      'UPDATE utilisateurs SET role = $1, actif = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING id, nom, email, role, actif',
-      [role, actif, id]
+    const { role, actif, commune_id, nouveau_mot_de_passe } = req.body;
+
+    console.log('📝 Modification utilisateur:', { id, role, actif, commune_id });
+
+    // Vérifier si l'utilisateur existe
+    const userCheck = await db.query(
+      'SELECT id FROM utilisateurs WHERE id = $1',
+      [id]
     );
-    
-    if (result.rows.length === 0) {
+
+    if (userCheck.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: 'Utilisateur non trouvé'
       });
     }
-    
+
+    // Préparer la requête de mise à jour
+    let query = 'UPDATE utilisateurs SET role = $1, actif = $2, commune_id = $3';
+    let params = [role, actif, commune_id];
+    let paramIndex = 4;
+
+    // CORRECTION: utiliser password_hash au lieu de mot_de_passe
+    if (nouveau_mot_de_passe && nouveau_mot_de_passe.length >= 6) {
+      const hashedPassword = await bcrypt.hash(nouveau_mot_de_passe, 10);
+      query += `, password_hash = $${paramIndex}`;
+      params.push(hashedPassword);
+      paramIndex++;
+    } else if (nouveau_mot_de_passe && nouveau_mot_de_passe.length < 6) {
+      return res.status(400).json({
+        success: false,
+        error: 'Le mot de passe doit contenir au moins 6 caractères'
+      });
+    }
+
+    query += `, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramIndex} RETURNING id, nom, email, role, commune_id, actif`;
+    params.push(id);
+
+    const result = await db.query(query, params);
+
+    console.log('✅ Utilisateur modifié:', result.rows[0]);
+
     res.json({
       success: true,
       data: result.rows[0],
-      message: 'Utilisateur modifié avec succès'
+      message: nouveau_mot_de_passe ? 
+        'Utilisateur et mot de passe modifiés avec succès' : 
+        'Utilisateur modifié avec succès'
     });
-  } catch (error) {
-    console.error('Erreur modification utilisateur:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Erreur lors de la modification de l\'utilisateur'
-    });
-  }
-});
 
-// Route pour les statistiques - Admin seulement
-router.get('/statistiques', authMiddleware, requireRole(['admin']), async (req, res) => {
-  try {
-    const statsResult = await db.query(`
-      SELECT 
-        COUNT(*) as total_ressources,
-        COUNT(DISTINCT created_by) as total_contributeurs,
-        COUNT(DISTINCT commune_id) as communes_couvertes
-      FROM ressources
-    `);
-    
-    const typesResult = await db.query(`
-      SELECT t.type, COUNT(r.id) as count
-      FROM types_ressources t
-      LEFT JOIN ressources r ON t.id = r.type_ressource_id
-      GROUP BY t.id, t.type
-      ORDER BY count DESC
-    `);
-    
-    res.json({
-      success: true,
-      data: {
-        general: statsResult.rows[0],
-        parType: typesResult.rows
-      }
-    });
   } catch (error) {
-    console.error('Erreur statistiques:', error);
+    console.error('❌ Erreur modification utilisateur:', error);
     res.status(500).json({
       success: false,
-      error: 'Erreur lors de la récupération des statistiques'
+      error: 'Erreur lors de la modification de l\'utilisateur: ' + error.message
     });
   }
 });

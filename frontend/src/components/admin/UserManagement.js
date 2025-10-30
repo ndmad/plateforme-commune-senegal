@@ -42,22 +42,35 @@ const UserManagement = () => {
   const handleUpdateUser = async (formData) => {
     try {
       const token = localStorage.getItem('token');
+      
+      // Préparer les données à envoyer
+      const dataToSend = {
+        role: formData.role,
+        actif: formData.actif,
+        commune_id: formData.commune_id || null
+      };
+  
+      // Ajouter le mot de passe seulement si fourni
+      if (formData.nouveau_mot_de_passe) {
+        dataToSend.nouveau_mot_de_passe = formData.nouveau_mot_de_passe;
+      }
+  
       const response = await fetch(`${API_BASE_URL}/admin/utilisateurs/${selectedUser.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(dataToSend)
       });
-
+  
       if (!response.ok) throw new Error('Erreur modification utilisateur');
-
+  
       success('Utilisateur modifié avec succès !');
       setShowEditModal(false);
       loadUsers();
     } catch (err) {
-      error('Erreur lors de la modification');
+      error('Erreur lors de la modification: ' + err.message);
     }
   };
 
@@ -161,16 +174,18 @@ const UserManagement = () => {
 };
 
 // Modal d'édition des utilisateurs
+// Modal d'édition des utilisateurs AVEC MOT DE PASSE
 const EditUserModal = ({ show, user, onHide, onSave }) => {
   const [formData, setFormData] = useState({});
-  const { error } = useNotifications();
+  const { error, success } = useNotifications();
 
   useEffect(() => {
     if (user) {
       setFormData({
         role: user.role,
         actif: user.actif,
-        commune_id: user.commune_id || ''
+        commune_id: user.commune_id || '',
+        nouveau_mot_de_passe: '' // Champ mot de passe vide par défaut
       });
     }
   }, [user]);
@@ -180,6 +195,12 @@ const EditUserModal = ({ show, user, onHide, onSave }) => {
     
     if (!formData.role) {
       error('Le rôle est obligatoire');
+      return;
+    }
+
+    // Validation du mot de passe si fourni
+    if (formData.nouveau_mot_de_passe && formData.nouveau_mot_de_passe.length < 6) {
+      error('Le mot de passe doit contenir au moins 6 caractères');
       return;
     }
 
@@ -240,6 +261,20 @@ const EditUserModal = ({ show, user, onHide, onSave }) => {
             </Col>
           </Row>
 
+          {/* CHAMP MOT DE PASSE AJOUTÉ ICI */}
+          <Form.Group className="mb-3">
+            <Form.Label>Nouveau mot de passe</Form.Label>
+            <Form.Control
+              type="password"
+              placeholder="Laisser vide pour ne pas changer"
+              value={formData.nouveau_mot_de_passe || ''}
+              onChange={(e) => setFormData({...formData, nouveau_mot_de_passe: e.target.value})}
+            />
+            <Form.Text className="text-muted">
+              Laisser vide pour garder l'ancien mot de passe. Minimum 6 caractères.
+            </Form.Text>
+          </Form.Group>
+
           <Form.Group className="mb-3">
             <Form.Label>Commune ID</Form.Label>
             <Form.Control
@@ -262,5 +297,4 @@ const EditUserModal = ({ show, user, onHide, onSave }) => {
     </Modal>
   );
 };
-
 export default UserManagement;
