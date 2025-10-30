@@ -9,8 +9,8 @@ const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowForm
   // ❌ CACHER COMPLÈTEMENT LE HEADER EN MOBILE
   if (isMobile) {
     return (
-      <div style={{ 
-        height: '0px', 
+      <div style={{
+        height: '0px',
         overflow: 'hidden',
         position: 'absolute',
         top: '-100px'
@@ -37,8 +37,8 @@ const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowForm
     <Navbar expand="lg" fixed="top" className="flutter-app-bar">
       <Container fluid style={{ padding: '0 16px' }}>
         {/* Logo/Brand */}
-        <Navbar.Brand 
-          href="#" 
+        <Navbar.Brand
+          href="#"
           style={{
             fontWeight: '700',
             fontSize: '1.3rem',
@@ -52,7 +52,7 @@ const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowForm
         >
           🌍 {t('municipality')} {t('platform')}
         </Navbar.Brand>
-        
+
         {/* Language Switcher */}
         <LanguageSwitcher isMobile={isMobile} />
 
@@ -60,7 +60,7 @@ const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowForm
         <Navbar.Collapse id="basic-navbar-nav">
           {/* Navigation principale */}
           <Nav className="me-auto">
-            <Nav.Link 
+            <Nav.Link
               href="#carte"
               onClick={() => onViewChange('carte')}
               style={{
@@ -75,7 +75,7 @@ const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowForm
             >
               🗺️ {t('map')}
             </Nav.Link>
-            <Nav.Link 
+            <Nav.Link
               href="#dashboard"
               onClick={() => onViewChange('dashboard')}
               style={{
@@ -90,26 +90,43 @@ const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowForm
             >
               📊 {t('dashboard')}
             </Nav.Link>
-            
+
+
+            <Nav.Link
+              href="#ansd"
+              onClick={() => onViewChange('ansd')}
+              style={{
+                padding: '8px 16px',
+                margin: '0 4px',
+                borderRadius: 'var(--radius-md)',
+                color: activeView === 'ansd' ? 'white' : 'rgba(255,255,255,0.8)',
+                background: activeView === 'ansd' ? 'rgba(255,255,255,0.15)' : 'transparent',
+                fontWeight: '500',
+                transition: 'all var(--transition-fast)'
+              }}
+            >
+              🌍 Données ANSD
+            </Nav.Link>
+
             {/* Menu Administration - SEULEMENT POUR ADMIN */}
             {user?.role === 'admin' && (
-              <NavDropdown 
+              <NavDropdown
                 title={
-                  <span style={{ 
+                  <span style={{
                     color: 'rgba(255,255,255,0.9)',
                     fontWeight: '500'
                   }}>
                     ⚙️ {t('administration')}
                   </span>
-                } 
+                }
                 id="admin-nav-dropdown"
                 style={{
                   margin: '0 4px'
                 }}
               >
-                <NavDropdown.Item 
+                <NavDropdown.Item
                   onClick={handleUserManagement}
-                  style={{ 
+                  style={{
                     padding: '12px 16px',
                     display: 'flex',
                     alignItems: 'center',
@@ -119,10 +136,10 @@ const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowForm
                 >
                   👥 {t('user_management')}
                 </NavDropdown.Item>
-                
-                <NavDropdown.Item 
+
+                <NavDropdown.Item
                   onClick={handleAdvancedStatistics}
-                  style={{ 
+                  style={{
                     padding: '12px 16px',
                     display: 'flex',
                     alignItems: 'center',
@@ -132,12 +149,12 @@ const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowForm
                 >
                   📊 {t('advanced_statistics')}
                 </NavDropdown.Item>
-                
+
                 <NavDropdown.Divider />
-                
-                <NavDropdown.Item 
+
+                <NavDropdown.Item
                   onClick={handleSecurityReport}
-                  style={{ 
+                  style={{
                     padding: '12px 16px',
                     display: 'flex',
                     alignItems: 'center',
@@ -150,15 +167,15 @@ const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowForm
               </NavDropdown>
             )}
           </Nav>
-          
+
           {/* Boutons utilisateur connecté */}
           <Nav style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {/* Bouton Ajouter */}
             {user?.role !== 'consultant' && (
-              <Button 
+              <Button
                 onClick={onShowFormulaire}
                 className="flutter-btn primary"
-                style={{ 
+                style={{
                   padding: '8px 16px',
                   fontSize: '14px'
                 }}
@@ -167,19 +184,19 @@ const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowForm
                 {t('add')}
               </Button>
             )}
-            
+
             {/* Menu utilisateur */}
-            <NavDropdown 
+            <NavDropdown
               title={
-                <span style={{ 
-                  display: 'flex', 
+                <span style={{
+                  display: 'flex',
                   alignItems: 'center',
                   color: 'white',
                   fontWeight: '500'
                 }}>
                   <span style={{ marginRight: '8px' }}>👋</span>
                   {user.nom}
-                  <span style={{ 
+                  <span style={{
                     marginLeft: '8px',
                     fontSize: '12px',
                     opacity: '0.9'
@@ -187,12 +204,12 @@ const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowForm
                     ({user.role})
                   </span>
                 </span>
-              } 
+              }
               id="user-nav-dropdown"
               align="end"
             >
-              <NavDropdown.ItemText 
-                style={{ 
+              <NavDropdown.ItemText
+                style={{
                   padding: '12px 16px',
                   fontSize: '14px',
                   color: 'var(--on-background)'
@@ -202,10 +219,10 @@ const Header = ({ onViewChange, activeView, user, onLogout, isMobile, onShowForm
                 <div>{t('role')}: <strong>{user.role}</strong></div>
               </NavDropdown.ItemText>
               <NavDropdown.Divider />
-              <NavDropdown.Item 
-                onClick={onLogout} 
-                style={{ 
-                  display: 'flex', 
+              <NavDropdown.Item
+                onClick={onLogout}
+                style={{
+                  display: 'flex',
                   alignItems: 'center',
                   padding: '12px 16px',
                   color: '#dc2626',

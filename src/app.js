@@ -38,6 +38,9 @@ app.use('/api/security', require('./routes/security'));
 // Routes GDPR (COMMENTER TEMPORAIREMENT SI BESOIN)
 // app.use('/api/gdpr', require('./routes/gdpr'));
 
+// ✅ AJOUTEZ CETTE LIGNE :
+app.use('/api/ansd', require('./routes/ansd'));
+
 
 
 // Route de santé

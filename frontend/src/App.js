@@ -23,21 +23,23 @@ import SecurityDashboard from './components/admin/SecurityDashboard';
 import { NotificationProvider, useNotifications } from './components/Notifications';
 import NotificationContainer from './components/Notifications';
 import { TranslationProvider } from './hooks/useTranslation';
+// Dans App.js - Ajouter l'import
+import ANSDPanel from './components/ansd/ANSDPanel';
 
 // Composant MobileNavigation
-const MobileNavigation = ({ 
-  activeView, 
-  setActiveView, 
-  showFilters, 
-  setShowFilters, 
-  showList, 
-  setShowList, 
-  filters, 
+const MobileNavigation = ({
+  activeView,
+  setActiveView,
+  showFilters,
+  setShowFilters,
+  showList,
+  setShowList,
+  filters,
   ressourcesFiltrees,
   onLogout,
   user
 }) => {
-  
+
   const handleCartePress = () => {
     setActiveView('carte');
     setShowFilters(false);
@@ -70,23 +72,23 @@ const MobileNavigation = ({
 
   return (
     <div className="flutter-bottom-nav">
-      <button 
+      <button
         className={`flutter-nav-item ${activeView === 'carte' ? 'active' : ''}`}
         onClick={handleCartePress}
       >
         <span className="icon">🗺️</span>
         <span className="label">Carte</span>
       </button>
-      
-      <button 
+
+      <button
         className={`flutter-nav-item ${activeView === 'dashboard' ? 'active' : ''}`}
         onClick={handleDashboardPress}
       >
         <span className="icon">📊</span>
         <span className="label">Stats</span>
       </button>
-      
-      <button 
+
+      <button
         className={`flutter-nav-item ${showFilters ? 'active' : ''}`}
         onClick={handleFiltersPress}
       >
@@ -98,8 +100,8 @@ const MobileNavigation = ({
           </span>
         )}
       </button>
-      
-      <button 
+
+      <button
         className={`flutter-nav-item ${showList ? 'active' : ''}`}
         onClick={handleListPress}
       >
@@ -109,8 +111,8 @@ const MobileNavigation = ({
           {ressourcesFiltrees.length}
         </span>
       </button>
-      
-      <button 
+
+      <button
         className="flutter-nav-item"
         onClick={onLogout}
         title="Déconnexion"
@@ -150,7 +152,7 @@ const AdminPanel = () => {
       }
 
       const data = await response.json();
-      
+
       // Ouvrir dans une nouvelle fenêtre
       const newWindow = window.open('', '_blank');
       newWindow.document.write(`
@@ -204,7 +206,7 @@ const AdminPanel = () => {
           </body>
         </html>
       `);
-      
+
       success(`${title} ouvert avec succès`);
     } catch (err) {
       error(`Erreur: ${err.message}`);
@@ -212,13 +214,13 @@ const AdminPanel = () => {
   };
 
   const tabs = {
-    dashboard: { 
-      title: '📊 Dashboard Sécurité', 
-      component: <SecurityDashboard /> 
+    dashboard: {
+      title: '📊 Dashboard Sécurité',
+      component: <SecurityDashboard />
     },
-    users: { 
-      title: '👥 Gestion Utilisateurs', 
-      component: <UserManagement /> 
+    users: {
+      title: '👥 Gestion Utilisateurs',
+      component: <UserManagement />
     },
   };
 
@@ -238,7 +240,7 @@ const AdminPanel = () => {
                 </div>
                 <div className="col-auto">
                   <div className="d-flex gap-2">
-                    <button 
+                    <button
                       className="btn btn-outline-primary btn-sm"
                       onClick={() => openDataWithToken(
                         `${API_BASE_URL}/security/audit-logs`,
@@ -247,7 +249,7 @@ const AdminPanel = () => {
                     >
                       📋 Logs Complets
                     </button>
-                    <button 
+                    <button
                       className="btn btn-outline-success btn-sm"
                       onClick={() => openDataWithToken(
                         `${API_BASE_URL}/admin/utilisateurs`,
@@ -296,7 +298,7 @@ const AppContent = () => {
   const isMobile = useMobile();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   // États de l'application (seulement si connecté)
   const [ressources, setRessources] = useState([]);
   const [communes, setCommunes] = useState([]);
@@ -323,17 +325,17 @@ const AppContent = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    
+
     if (token && userData) {
       try {
         const userObj = JSON.parse(userData);
         setUser(userObj);
-        
+
         if (!notificationsShown.current.welcome) {
           info(`Bienvenue de retour ${userObj.nom} !`);
           notificationsShown.current.welcome = true;
         }
-        
+
         chargerDonnees();
       } catch (e) {
         console.error('Erreur parsing user data:', e);
@@ -356,12 +358,12 @@ const AppContent = () => {
   const chargerDonnees = async () => {
     try {
       setLoading(true);
-      
+
       if (!notificationsShown.current.loading) {
         info('Chargement des données...');
         notificationsShown.current.loading = true;
       }
-      
+
       const reponseCommunes = await fetch(`${API_BASE_URL}/communes`);
       const dataCommunes = await reponseCommunes.json();
       setCommunes(dataCommunes.data || []);
@@ -369,12 +371,12 @@ const AppContent = () => {
       const reponseRessources = await fetch(`${API_BASE_URL}/ressources`);
       const dataRessources = await reponseRessources.json();
       setRessources(dataRessources.data || []);
-      
+
       if (!notificationsShown.current.success) {
         success('Données chargées avec succès !');
         notificationsShown.current.success = true;
       }
-      
+
     } catch (erreur) {
       console.error('❌ Erreur chargement données:', erreur);
       error('Erreur lors du chargement des données');
@@ -425,7 +427,7 @@ const AppContent = () => {
       loading: false,
       success: false
     };
-    
+
     success(`👋 Bienvenue ${userData.nom} !`);
     setUser(userData);
     chargerDonnees();
@@ -437,7 +439,7 @@ const AppContent = () => {
       loading: false,
       success: false
     };
-    
+
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
@@ -465,7 +467,7 @@ const AppContent = () => {
   // Fonction renderActiveView CORRIGÉE avec AdminPanel
   const renderActiveView = () => {
     console.log('🔄 Vue active:', activeView);
-    
+
     // Vue Dashboard
     if (activeView === 'dashboard') {
       return <Dashboard ressources={ressources} communes={communes} />;
@@ -476,6 +478,11 @@ const AppContent = () => {
       return <AdminPanel />;
     }
 
+    // AJOUTEZ ICI LA NOUVELLE VUE ANSD ↓
+    if (activeView === 'ansd') {
+      return <ANSDPanel />;
+    }
+
     // Vue Carte (par défaut)
     return (
       <div className="main-content-wrapper">
@@ -484,14 +491,14 @@ const AppContent = () => {
           <div className="mobile-filters-panel">
             <div className="mobile-filters-header">
               <h6>🔍 Recherche et Filtres</h6>
-              <button 
+              <button
                 className="btn btn-outline-secondary btn-sm"
                 onClick={() => setShowFilters(false)}
               >
                 ✕
               </button>
             </div>
-            <RechercheFiltres 
+            <RechercheFiltres
               onSearchChange={handleSearchChange}
               onFilterChange={handleFilterChange}
               communes={communes}
@@ -505,7 +512,7 @@ const AppContent = () => {
           <div className="mobile-list-panel">
             <div className="mobile-list-header">
               <h6>📋 Ressources ({ressourcesFiltrees.length})</h6>
-              <button 
+              <button
                 className="btn btn-outline-secondary btn-sm"
                 onClick={() => setShowList(false)}
               >
@@ -513,7 +520,7 @@ const AppContent = () => {
               </button>
             </div>
             <div className="mobile-list-content">
-              <ListeRessources 
+              <ListeRessources
                 ressources={ressourcesFiltrees}
                 selectedCommune={selectedCommune}
                 onRessourceUpdated={handleRessourceAdded}
@@ -536,7 +543,7 @@ const AppContent = () => {
                 </div>
               </div>
             ) : (
-              <CarteCommunale 
+              <CarteCommunale
                 ressources={ressourcesFiltrees}
                 communes={communes}
                 onCommuneSelect={setSelectedCommune}
@@ -544,26 +551,26 @@ const AppContent = () => {
               />
             )}
           </div>
-          
+
           {/* Sidebar desktop */}
           {!isMobile && (
             <div className="sidebar-section">
               <div className="sidebar-inner">
-                <RechercheFiltres 
+                <RechercheFiltres
                   onSearchChange={handleSearchChange}
                   onFilterChange={handleFilterChange}
                   communes={communes}
                   isMobile={isMobile}
                 />
-                
+
                 {/* Section Export */}
-                <ExportDonnees 
+                <ExportDonnees
                   ressources={ressourcesFiltrees}
                   onExportComplete={handleExport}
                   isMobile={isMobile}
                 />
-                
-                <ListeRessources 
+
+                <ListeRessources
                   ressources={ressourcesFiltrees}
                   selectedCommune={selectedCommune}
                   onRessourceUpdated={handleRessourceAdded}
@@ -600,8 +607,8 @@ const AppContent = () => {
     <div className="App">
       {/* Header - caché en mobile */}
       {!isMobile && (
-        <Header 
-          onViewChange={setActiveView} 
+        <Header
+          onViewChange={setActiveView}
           activeView={activeView}
           user={user}
           onLogout={handleLogout}
@@ -609,15 +616,16 @@ const AppContent = () => {
           onShowFormulaire={() => setShowFormulaire(true)}
         />
       )}
-      
+
       {/* Contenu principal */}
       <div className="main-container">
         {renderActiveView()}
       </div>
-  
+
+
       {/* Navigation mobile */}
       {isMobile && (
-        <MobileNavigation 
+        <MobileNavigation
           activeView={activeView}
           setActiveView={setActiveView}
           showFilters={showFilters}
@@ -630,7 +638,7 @@ const AppContent = () => {
           user={user}
         />
       )}
-  
+
       {/* Bouton ajouter mobile */}
       {isMobile && user && user.role !== 'consultant' && (
         <div className="mobile-add-floating-btn">
@@ -639,8 +647,8 @@ const AppContent = () => {
           </button>
         </div>
       )}
-  
-      <FormulaireRessource 
+
+      <FormulaireRessource
         show={showFormulaire}
         onHide={() => setShowFormulaire(false)}
         onRessourceAdded={handleRessourceAdded}
