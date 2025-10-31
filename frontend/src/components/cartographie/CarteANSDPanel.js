@@ -12,13 +12,14 @@ const CarteANSDPanel = () => {
   const [donneesCommunes, setDonneesCommunes] = useState({});
   const [geoData, setGeoData] = useState(null);
   const [ressources, setRessources] = useState([]);
+  const [zonesBlanches, setZonesBlanches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [couchesActives, setCouchesActives] = useState({
     indicateurs: true,
     ressources: true,
     analyse: false
   });
-  const { error } = useNotifications();
+  const { error, success } = useNotifications();
 
   const indicateurs = [
     { id: 'population', nom: '👥 Population', champ: 'total' },
@@ -37,11 +38,79 @@ const CarteANSDPanel = () => {
     'Touristique': { couleur: '#f39c12', icone: '🏞️' }
   };
 
-  useEffect(() => {
-    loadDonneesCartographiques();
-    loadRessources();
-  }, []);
+  // 🔄 NOUVELLES FONCTIONS POUR CONTOURS RÉELS
+  const loadContoursReels = async (donneesANSD) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/geographie/communes/contours`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🗺️ Contours réels chargés:', data.data.length, 'communes');
+        
+        // Fusionner avec les données ANSD
+        const geoDataAvecIndicateurs = fusionnerAvecDonneesANSD(data.data, donneesANSD);
+        setGeoData(geoDataAvecIndicateurs);
+        success(`✅ ${data.data.length} contours réels chargés`);
+        return true;
+      } else {
+        console.warn('⚠️ Impossible de charger les contours réels');
+        return false;
+      }
+    } catch (err) {
+      console.error('❌ Erreur chargement contours réels:', err);
+      return false;
+    }
+  };
 
+  // Fusionner les contours avec les indicateurs ANSD
+  const fusionnerAvecDonneesANSD = (contours, donneesANSD) => {
+    return {
+      type: 'FeatureCollection',
+      features: contours.map(commune => {
+        const donneesANSDCommune = donneesANSD[commune.nom] || {};
+        
+        return {
+          type: 'Feature',
+          properties: {
+            name: commune.nom,
+            id: commune.id,
+            region: commune.region,
+            // Données ANSD si disponibles, sinon valeurs par défaut
+            total: donneesANSDCommune.demographic?.population?.total || 0,
+            density: donneesANSDCommune.demographic?.population?.density || 0,
+            taux_chomage: donneesANSDCommune.economic?.taux_chomage || 0,
+            idh: donneesANSDCommune.indicateurs?.idh || 0,
+            pauvreté: donneesANSDCommune.indicateurs?.pauvreté || 0,
+            acces_eau: donneesANSDCommune.indicateurs?.acces_eau || 0
+          },
+          geometry: commune.geometry
+        };
+      })
+    };
+  };
+
+  const loadZonesBlanchesReelles = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/geographie/analyse/zones-blanches`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🔍 Zones blanches réelles:', data.data.length, 'zones');
+        return data.data;
+      }
+    } catch (err) {
+      console.error('❌ Erreur chargement zones blanches:', err);
+    }
+    return [];
+  };
+
+  // 📊 FONCTIONS EXISTANTES
   const loadDonneesCartographiques = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -53,14 +122,12 @@ const CarteANSDPanel = () => {
       if (response.ok) {
         const data = await response.json();
         setDonneesCommunes(data.data);
-        const geoDataSimule = genererGeoDataSimulee(data.data);
-        setGeoData(geoDataSimule);
+        return data.data;
       }
     } catch (err) {
-      error('Erreur chargement données cartographiques');
-    } finally {
-      setLoading(false);
+      error('Erreur chargement données cartographiques ANSD');
     }
+    return {};
   };
 
   const loadRessources = async () => {
@@ -75,6 +142,50 @@ const CarteANSDPanel = () => {
     }
   };
 
+  // 🔄 NOUVEAU useEffect AVEC CONTOURS RÉELS
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      
+      try {
+        // 1. Charger les données ANSD d'abord
+        const donneesANSD = await loadDonneesCartographiques();
+        
+        // 2. Charger les contours réels depuis PostGIS
+        const contoursReelsCharges = await loadContoursReels(donneesANSD);
+        
+        // 3. Si échec contours réels, utiliser données simulées
+        if (!contoursReelsCharges) {
+          console.log('🔄 Utilisation des données simulées (fallback)');
+          const geoDataSimule = genererGeoDataSimulee(donneesANSD);
+          setGeoData(geoDataSimule);
+        }
+        
+        // 4. Charger les ressources
+        await loadRessources();
+        
+        // 5. Charger les zones blanches réelles
+        const zonesReelles = await loadZonesBlanchesReelles();
+        if (zonesReelles.length > 0) {
+          setZonesBlanches(zonesReelles);
+        } else {
+          // Fallback vers l'analyse côté client
+          const zonesClient = analyserZonesBlanches();
+          setZonesBlanches(zonesClient);
+        }
+        
+      } catch (error) {
+        console.error('❌ Erreur chargement données:', error);
+        error('Erreur lors du chargement des données cartographiques');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  }, []);
+
+  // 🗺️ GÉNÉRATION DE DONNÉES SIMULÉES (fallback)
   const genererGeoDataSimulee = (donnees) => {
     const geometries = {
       'Dakar': { 
@@ -110,7 +221,7 @@ const CarteANSDPanel = () => {
     };
   };
 
-  // 🔧 ANALYSE SPATIALE - Identification des zones blanches
+  // 🔧 ANALYSE SPATIALE - Version améliorée pour contours réels
   const analyserZonesBlanches = () => {
     if (!geoData || !ressources.length) return [];
 
@@ -119,19 +230,25 @@ const CarteANSDPanel = () => {
     geoData.features.forEach(commune => {
       const ressourcesCommune = ressources.filter(res => {
         if (!res.localisation) return false;
-        return estDansPolygone(
-          [res.localisation.coordinates[1], res.localisation.coordinates[0]],
-          commune.geometry.coordinates[0]
-        );
+        
+        // Utiliser l'analyse PostGIS si disponible, sinon fallback
+        if (commune.geometry && commune.geometry.coordinates) {
+          return estDansPolygone(
+            [res.localisation.coordinates[1], res.localisation.coordinates[0]],
+            commune.geometry.coordinates[0]
+          );
+        }
+        return false;
       });
 
-      // Si moins de 3 ressources pour une commune de plus de 500k habitants
-      if (ressourcesCommune.length < 3 && commune.properties.total > 500000) {
+      // Critère : moins de 3 ressources = zone sous-équipée
+      if (ressourcesCommune.length < 3) {
         zonesBlanches.push({
           commune: commune.properties.name,
           ressourcesCount: ressourcesCommune.length,
-          population: commune.properties.total,
-          indicateur: 'Sous-équipée'
+          population: commune.properties.total || 0,
+          indicateur: 'Sous-équipée',
+          geometry: commune.geometry
         });
       }
     });
@@ -139,7 +256,7 @@ const CarteANSDPanel = () => {
     return zonesBlanches;
   };
 
-  // 🔧 FONCTION : Vérifier si un point est dans un polygone
+  // 🔧 FONCTION : Vérifier si un point est dans un polygone (fallback)
   const estDansPolygone = (point, vs) => {
     const x = point[0], y = point[1];
     let inside = false;
@@ -231,7 +348,26 @@ const CarteANSDPanel = () => {
     layer.bindPopup(popupContent);
   };
 
-  const zonesBlanches = analyserZonesBlanches();
+  // 🔄 FONCTION DE RECHARGEMENT COMPLET
+  const handleReload = async () => {
+    setLoading(true);
+    try {
+      const donneesANSD = await loadDonneesCartographiques();
+      const contoursReelsCharges = await loadContoursReels(donneesANSD);
+      
+      if (!contoursReelsCharges) {
+        const geoDataSimule = genererGeoDataSimulee(donneesANSD);
+        setGeoData(geoDataSimule);
+      }
+      
+      await loadRessources();
+      success('✅ Carte actualisée avec les données les plus récentes');
+    } catch (err) {
+      error('❌ Erreur lors de l\'actualisation');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -241,27 +377,29 @@ const CarteANSDPanel = () => {
             <span className="visually-hidden">Chargement...</span>
           </div>
           <p className="mt-2">Chargement de la carte ANSD...</p>
+          <small className="text-muted">Utilisation des contours administratifs réels</small>
         </Card.Body>
       </Card>
     );
   }
-
   return (
-    <Container fluid className="p-0">
+    // ⚠️ SUPPRIMEZ Container fluid - C'EST LE PROBLÈME !
+    <div style={{ width: '100%', margin: 0, padding: 0 }}>
       {/* En-tête avec contrôles avancés */}
       <Card className="flutter-card mb-3">
         <Card.Body>
           <Row className="align-items-center">
             <Col>
-              <h4 className="mb-1">🗺️ Cartographie ANSD - Analyse Spatiale</h4>
+              <h4 className="mb-1">🗺️ Cartographie ANSD - Contours Réels</h4>
               <p className="text-muted mb-0">
-                Superposition indicateurs ANSD + ressources communales
+                {geoData ? `✅ ${geoData.features.length} communes avec contours réels` : 'Chargement des contours...'}
               </p>
             </Col>
             <Col xs="auto">
               <Button 
                 variant="outline-primary"
-                onClick={loadDonneesCartographiques}
+                onClick={handleReload}
+                disabled={loading}
               >
                 🔄 Actualiser
               </Button>
@@ -322,7 +460,7 @@ const CarteANSDPanel = () => {
               </Form.Group>
             </Col>
           </Row>
-
+  
           {/* Alertes zones blanches */}
           {zonesBlanches.length > 0 && couchesActives.analyse && (
             <Alert variant="warning" className="mt-3">
@@ -338,16 +476,36 @@ const CarteANSDPanel = () => {
           )}
         </Card.Body>
       </Card>
-
-      {/* Carte - PLEINE LARGEUR AVEC COUCHES */}
-      <div className="flutter-card" style={{ height: '70vh', minHeight: '500px' }}>
+  
+      {/* Carte - VERSION ULTIME PLEINE LARGEUR */}
+      <div style={{ 
+        width: '100%', 
+        height: '70vh',
+        minHeight: '500px',
+        position: 'relative',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        border: '1px solid #e2e8f0',
+        marginBottom: '24px'
+      }}>
         <MapContainer
           center={[14.7167, -17.4677]}
-          zoom={11}
+          zoom={7}
           style={{ 
             height: '100%', 
             width: '100%',
-            borderRadius: 'var(--radius-lg)'
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0
+          }}
+          whenReady={(map) => {
+            // FORCER LE REDIMENSIONNEMENT APRÈS CHARGEMENT
+            setTimeout(() => {
+              map.target.invalidateSize();
+            }, 100);
           }}
         >
           <LayersControl position="topright">
@@ -364,7 +522,7 @@ const CarteANSDPanel = () => {
                 attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
               />
             </BaseLayer>
-
+  
             {/* Couche indicateurs ANSD */}
             <Overlay checked={couchesActives.indicateurs} name="Indicateurs ANSD">
               {geoData && (
@@ -375,7 +533,7 @@ const CarteANSDPanel = () => {
                 />
               )}
             </Overlay>
-
+  
             {/* Couche ressources */}
             <Overlay checked={couchesActives.ressources} name="Ressources communales">
               {ressources.map((ressource, index) => {
@@ -411,32 +569,36 @@ const CarteANSDPanel = () => {
                 );
               })}
             </Overlay>
-
+  
             {/* Couche analyse - zones blanches */}
             {couchesActives.analyse && zonesBlanches.length > 0 && (
               <Overlay name="Zones sous-équipées">
-                {geoData && geoData.features.filter(f => 
-                  zonesBlanches.some(z => z.commune === f.properties.name)
-                ).map((feature, index) => (
-                  <GeoJSON
-                    key={index}
-                    data={feature}
-                    style={{
-                      fillColor: '#ff6b6b',
-                      weight: 3,
-                      opacity: 0.8,
-                      color: '#ff0000',
-                      dashArray: '5, 5',
-                      fillOpacity: 0.2
-                    }}
-                  />
+                {zonesBlanches.map((zone, index) => (
+                  zone.geometry && (
+                    <GeoJSON
+                      key={index}
+                      data={{
+                        type: 'Feature',
+                        properties: { name: zone.commune },
+                        geometry: zone.geometry
+                      }}
+                      style={{
+                        fillColor: '#ff6b6b',
+                        weight: 3,
+                        opacity: 0.8,
+                        color: '#ff0000',
+                        dashArray: '5, 5',
+                        fillOpacity: 0.2
+                      }}
+                    />
+                  )
                 ))}
               </Overlay>
             )}
           </LayersControl>
         </MapContainer>
       </div>
-
+  
       {/* Légende avancée */}
       <Card className="flutter-card mt-3">
         <Card.Header>
@@ -522,7 +684,7 @@ const CarteANSDPanel = () => {
           </Row>
         </Card.Body>
       </Card>
-    </Container>
+    </div>
   );
 };
 

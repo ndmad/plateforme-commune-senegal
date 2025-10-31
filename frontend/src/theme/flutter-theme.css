@@ -451,3 +451,46 @@
   animation: pulse 0.5s ease-in-out;
 }
 
+/* === CORRECTION URGENTE POUR LA CARTE === */
+
+/* SUPPRIMER TOUTES LES LIMITES DE LARGEUR */
+.container-fluid,
+.container,
+.tab-content,
+.tab-pane,
+.card,
+.card-body {
+  max-width: none !important;
+  width: 100% !important;
+}
+
+/* Forcer la largeur sur le composant CarteANSDPanel */
+.CarteANSDPanel,
+.CarteANSDPanel > div {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Correction spécifique pour les onglets Bootstrap */
+.tab-content .active {
+  width: 100% !important;
+}
+
+/* Garantir que Leaflet a toute la place */
+.leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+  flex: 1 !important;
+}
+
+/* Supprimer le padding du container parent dans ANSDPanel */
+.ANSDPanel .card-body {
+  padding: 0 !important;
+}
+
+.ANSDPanel .tab-content {
+  padding: 20px !important;
+  width: 100% !important;
+}

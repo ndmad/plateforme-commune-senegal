@@ -3,6 +3,9 @@ import { Card, Row, Col, Tabs, Tab, Badge, Spinner, Alert } from 'react-bootstra
 import { useNotifications } from '../Notifications';
 // Ajouter l'import en haut
 import CarteANSDPanel from '../cartographie/CarteANSDPanel';
+// Ajouter l'import en haut
+import MeteoPanel from '../meteo/MeteoPanel';
+
 
 import { API_BASE_URL } from '../../config';
 
@@ -129,6 +132,11 @@ const ANSDPanel = () => {
             {/* ✅ NOUVEL ONGLET CARTOGRAPHIE */}
             <Tab eventKey="cartographie" title="🗺️ Cartographie">
               <CarteANSDPanel />
+            </Tab>
+
+            {/* Nouvel onglet Météo */}
+            <Tab eventKey="meteo" title="🌤️ Météo">
+              <MeteoPanel />
             </Tab>
 
             <Tab eventKey="comparaison" title="🔄 Comparaison">

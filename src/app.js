@@ -40,6 +40,10 @@ app.use('/api/security', require('./routes/security'));
 
 // ✅ AJOUTEZ CETTE LIGNE :
 app.use('/api/ansd', require('./routes/ansd'));
+// Après les autres routes
+app.use('/api/geographie', require('./routes/geographie'));
+// Après les autres routes
+app.use('/api/meteo', require('./routes/meteo'));
 
 
 
