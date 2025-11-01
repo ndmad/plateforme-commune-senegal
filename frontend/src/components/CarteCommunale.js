@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, ScaleControl } from 'react-leaflet';
 import L from 'leaflet';
 import * as turf from '@turf/turf';
+import AnalysisToolsBar from './AnalysisToolsBar';
 
 // Correction des icônes Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -15,459 +16,38 @@ L.Icon.Default.mergeOptions({
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 // ============================================================================
-// COMPOSANT OUTILS D'ANALYSE SIG AVEC BOUTONS FLOTTANTS
+// CACHE POUR LES CONTOURS
 // ============================================================================
+const contoursCache = new Map();
 
-const FloatingAnalysisTools = ({ isMobile }) => {
-  const map = useMap();
-  const [activeTool, setActiveTool] = useState(null);
-  const [bufferDistance, setBufferDistance] = useState(1);
-  const [showDistanceControl, setShowDistanceControl] = useState(false);
+const fetchCommuneBoundaries = async (communeId) => {
+  if (contoursCache.has(communeId)) {
+    console.log('📦 Contours depuis le cache:', communeId);
+    return contoursCache.get(communeId);
+  }
 
-  // Références pour les layers
-  const layersRef = useRef({
-    buffer: null,
-    intersection: null,
-    density: null,
-    measurement: null
-  });
-
-  // Nettoyer les layers
-  const cleanupLayers = () => {
-    Object.values(layersRef.current).forEach(layer => {
-      if (layer && map.hasLayer(layer)) {
-        map.removeLayer(layer);
-      }
-    });
+  try {
+    console.log(`📍 Récupération des contours pour la commune ID: ${communeId}`);
+    const response = await fetch(`${API_BASE_URL}/communes/${communeId}/contours`);
     
-    layersRef.current = {
-      buffer: null, intersection: null, density: null, measurement: null
-    };
-    
-    map.off('click');
-    map.getContainer().style.cursor = '';
-  };
-
-  // Outil BUFFER
-  const activateBufferTool = () => {
-    if (activeTool === 'buffer') {
-      deactivateTools();
-      return;
+    if (!response.ok) {
+      throw new Error(`Erreur HTTP: ${response.status}`);
     }
     
-    cleanupLayers();
-    setActiveTool('buffer');
-    setShowDistanceControl(true);
-
-    const handleBufferClick = (e) => {
-      const point = turf.point([e.latlng.lng, e.latlng.lat]);
-      const buffer = turf.buffer(point, bufferDistance, { units: 'kilometers' });
-      
-      layersRef.current.buffer = L.geoJSON(buffer, {
-        style: {
-          color: '#00853f',
-          weight: 2,
-          opacity: 0.9,
-          fillColor: '#00853f',
-          fillOpacity: 0.3,
-          dashArray: '5, 3'
-        }
-      }).addTo(map);
-      
-      const area = (turf.area(buffer) / 1000000).toFixed(2);
-      
-      layersRef.current.buffer.bindPopup(`
-        <div style="padding: 12px; min-width: 200px;">
-          <strong>🎯 Zone d'Influence</strong><br>
-          <small>Rayon: ${bufferDistance} km</small><br>
-          <small>Surface: ${area} km²</small><br>
-          <button onclick="window.removeAnalysisLayer('buffer')" style="
-            margin-top: 8px; padding: 4px 12px; background: #ff4444; color: white; 
-            border: none; border-radius: 4px; cursor: pointer; font-size: 11px;
-          ">Supprimer</button>
-        </div>
-      `).openPopup();
-    };
-
-    map.on('click', handleBufferClick);
-    map.getContainer().style.cursor = 'crosshair';
+    const result = await response.json();
     
-    window.removeAnalysisLayer = (type) => {
-      if (layersRef.current[type] && map.hasLayer(layersRef.current[type])) {
-        map.removeLayer(layersRef.current[type]);
-        layersRef.current[type] = null;
-      }
-    };
-  };
-
-  // Outil INTERSECTION
-  const activateIntersectionTool = () => {
-    if (activeTool === 'intersection') {
-      deactivateTools();
-      return;
+    if (result.success && result.data) {
+      console.log('✅ Contours reçus pour:', result.data.nom);
+      contoursCache.set(communeId, result.data);
+      return result.data;
+    } else {
+      throw new Error(result.error || 'Erreur inconnue');
     }
-    
-    cleanupLayers();
-    setActiveTool('intersection');
-    setShowDistanceControl(false);
-
-    let polygons = [];
-    let tempLayers = [];
-
-    const handleIntersectionClick = (e) => {
-      const center = [e.latlng.lng, e.latlng.lat];
-      const polygon = turf.circle(center, 0.8, { units: 'kilometers' });
-      polygons.push(polygon);
-      
-      const colors = ['#00853f', '#ff4444'];
-      const layer = L.geoJSON(polygon, {
-        style: {
-          color: colors[polygons.length - 1],
-          weight: 2,
-          opacity: 0.8,
-          fillColor: colors[polygons.length - 1],
-          fillOpacity: 0.2
-        }
-      }).addTo(map);
-      
-      tempLayers.push(layer);
-
-      if (polygons.length === 2) {
-        try {
-          const intersection = turf.intersect(polygons[0], polygons[1]);
-          if (intersection) {
-            layersRef.current.intersection = L.geoJSON(intersection, {
-              style: {
-                color: '#ff9900',
-                weight: 3,
-                opacity: 1,
-                fillColor: '#ff9900',
-                fillOpacity: 0.4
-              }
-            }).addTo(map)
-            .bindPopup(`
-              <div style="padding: 12px; min-width: 220px;">
-                <strong>🔗 Intersection de Zones</strong><br>
-                <small>Surface: ${(turf.area(intersection) / 1000000).toFixed(2)} km²</small>
-              </div>
-            `).openPopup();
-          }
-        } catch (error) {
-          console.error('Erreur intersection:', error);
-        }
-        
-        map.off('click', handleIntersectionClick);
-        setActiveTool(null);
-        map.getContainer().style.cursor = '';
-      }
-    };
-
-    map.on('click', handleIntersectionClick);
-    map.getContainer().style.cursor = 'crosshair';
-  };
-
-  // Outil DENSITÉ
-  const activateDensityTool = () => {
-    if (activeTool === 'density') {
-      deactivateTools();
-      return;
-    }
-    
-    cleanupLayers();
-    setActiveTool('density');
-    setShowDistanceControl(false);
-
-    const bounds = map.getBounds();
-    const bbox = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
-    
-    const points = turf.randomPoint(30, { bbox: bbox });
-    const grid = turf.pointGrid(bbox, 2, { units: 'kilometers' });
-    const densityGrid = turf.tag(grid, points, 'density', 'density_values');
-    
-    layersRef.current.density = L.geoJSON(densityGrid, {
-      style: (feature) => {
-        const density = feature.properties.density_values ? feature.properties.density_values.length : 0;
-        const opacity = Math.min(density * 0.8, 0.7);
-        
-        return {
-          color: '#00853f',
-          weight: 1,
-          opacity: 0.5,
-          fillColor: '#00853f',
-          fillOpacity: opacity
-        };
-      }
-    }).addTo(map);
-    
-    layersRef.current.density.bindPopup(`
-      <div style="padding: 12px;">
-        <strong>📊 Carte de Densité</strong><br>
-        <small>Zones plus foncées = plus de points</small>
-      </div>
-    `).openPopup();
-  };
-
-  // Outil MESURE
-  const activateMeasurementTool = () => {
-    if (activeTool === 'measurement') {
-      deactivateTools();
-      return;
-    }
-    
-    cleanupLayers();
-    setActiveTool('measurement');
-    setShowDistanceControl(false);
-
-    let points = [];
-    let polyline = null;
-    const markers = [];
-
-    const handleMeasureClick = (e) => {
-      const { lat, lng } = e.latlng;
-      points.push([lat, lng]);
-
-      const marker = L.marker([lat, lng], {
-        icon: L.divIcon({
-          html: `
-            <div style="
-              background: #00853f; color: white; width: 24px; height: 24px; 
-              border-radius: 50%; display: flex; align-items: center; 
-              justify-content: center; font-size: 12px; font-weight: bold;
-              border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            ">${points.length}</div>
-          `,
-          iconSize: [24, 24],
-          iconAnchor: [12, 12]
-        })
-      }).addTo(map);
-      markers.push(marker);
-
-      if (points.length > 1) {
-        if (polyline) map.removeLayer(polyline);
-        polyline = L.polyline(points, {
-          color: '#00853f',
-          weight: 3,
-          opacity: 0.8,
-          dashArray: '5, 5'
-        }).addTo(map);
-        layersRef.current.measurement = polyline;
-
-        let totalDistance = 0;
-        for (let i = 1; i < points.length; i++) {
-          const dist = turf.distance(
-            turf.point([points[i-1][1], points[i-1][0]]),
-            turf.point([points[i][1], points[i][0]]),
-            { units: 'kilometers' }
-          );
-          totalDistance += dist;
-        }
-
-        marker.bindPopup(`
-          <div style="padding: 12px;">
-            <strong>📏 Mesure de Distance</strong><br>
-            <small>Distance totale: ${totalDistance.toFixed(2)} km</small><br>
-            <small>Points: ${points.length}</small>
-          </div>
-        `).openPopup();
-      }
-    };
-
-    map.on('click', handleMeasureClick);
-    map.getContainer().style.cursor = 'crosshair';
-  };
-
-  // Désactiver tous les outils
-  const deactivateTools = () => {
-    cleanupLayers();
-    setActiveTool(null);
-    setShowDistanceControl(false);
-  };
-
-  // Nettoyer à la destruction
-  useEffect(() => {
-    return () => {
-      cleanupLayers();
-    };
-  }, [map]);
-
-  return (
-    <>
-      {/* BOUTON FLOTTANT BUFFER */}
-      <div style={{
-        position: 'absolute',
-        top: isMobile ? '80px' : '80px',
-        right: '10px',
-        zIndex: 1000
-      }}>
-        <FloatingToolButton 
-          active={activeTool === 'buffer'}
-          icon="🎯"
-          title="Zone d'influence (Buffer)"
-          onClick={activateBufferTool}
-          isMobile={isMobile}
-        />
-      </div>
-
-      {/* BOUTON FLOTTANT INTERSECTION */}
-      <div style={{
-        position: 'absolute',
-        top: isMobile ? '140px' : '140px',
-        right: '10px',
-        zIndex: 1000
-      }}>
-        <FloatingToolButton 
-          active={activeTool === 'intersection'}
-          icon="🔗"
-          title="Intersection de zones"
-          onClick={activateIntersectionTool}
-          isMobile={isMobile}
-        />
-      </div>
-
-      {/* BOUTON FLOTTANT DENSITÉ */}
-      <div style={{
-        position: 'absolute',
-        top: isMobile ? '200px' : '200px',
-        right: '10px',
-        zIndex: 1000
-      }}>
-        <FloatingToolButton 
-          active={activeTool === 'density'}
-          icon="📊"
-          title="Carte de densité"
-          onClick={activateDensityTool}
-          isMobile={isMobile}
-        />
-      </div>
-
-      {/* BOUTON FLOTTANT MESURE */}
-      <div style={{
-        position: 'absolute',
-        top: isMobile ? '260px' : '260px',
-        right: '10px',
-        zIndex: 1000
-      }}>
-        <FloatingToolButton 
-          active={activeTool === 'measurement'}
-          icon="📏"
-          title="Mesure de distance"
-          onClick={activateMeasurementTool}
-          isMobile={isMobile}
-        />
-      </div>
-
-      {/* BOUTON FLOTTANT EFFACER */}
-      <div style={{
-        position: 'absolute',
-        top: isMobile ? '320px' : '320px',
-        right: '10px',
-        zIndex: 1000
-      }}>
-        <FloatingToolButton 
-          active={false}
-          icon="🗑️"
-          title="Effacer tout"
-          onClick={deactivateTools}
-          isMobile={isMobile}
-          color="#ff4444"
-        />
-      </div>
-
-      {/* CONTRÔLE DE DISTANCE (apparaît seulement pour le buffer) */}
-      {showDistanceControl && (
-        <div style={{
-          position: 'absolute',
-          top: isMobile ? '80px' : '80px',
-          right: isMobile ? '70px' : '70px',
-          zIndex: 1000,
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)',
-          borderRadius: '12px',
-          padding: '12px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          minWidth: '160px',
-          animation: 'slideInRight 0.3s ease'
-        }}>
-          <div style={{
-            fontSize: '12px',
-            fontWeight: '600',
-            color: '#333',
-            marginBottom: '8px',
-            textAlign: 'center'
-          }}>
-            📏 Rayon: {bufferDistance} km
-          </div>
-          <input
-            type="range"
-            min="0.1"
-            max="10"
-            step="0.1"
-            value={bufferDistance}
-            onChange={(e) => setBufferDistance(parseFloat(e.target.value))}
-            style={{
-              width: '100%',
-              height: '4px',
-              borderRadius: '2px',
-              background: 'linear-gradient(90deg, #00853f, #00a651)',
-              outline: 'none'
-            }}
-          />
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            fontSize: '10px',
-            color: '#666',
-            marginTop: '4px'
-          }}>
-            <span>0.1 km</span>
-            <span>10 km</span>
-          </div>
-        </div>
-      )}
-    </>
-  );
+  } catch (error) {
+    console.error('❌ Erreur récupération contours:', error);
+    return null;
+  }
 };
-
-// Composant bouton flottant individuel
-const FloatingToolButton = ({ active, icon, title, onClick, isMobile, color = '#00853f' }) => (
-  <button
-    onClick={onClick}
-    title={title}
-    style={{
-      width: isMobile ? '50px' : '45px',
-      height: isMobile ? '50px' : '45px',
-      borderRadius: '50%',
-      background: active ? color : 'white',
-      color: active ? 'white' : color,
-      border: `2px solid ${color}`,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: isMobile ? '18px' : '16px',
-      cursor: 'pointer',
-      boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-      transition: 'all 0.3s ease',
-      animation: active ? 'pulse 2s infinite' : 'none'
-    }}
-    onMouseEnter={(e) => {
-      if (!active) {
-        e.target.style.background = color;
-        e.target.style.color = 'white';
-        e.target.style.transform = 'scale(1.1)';
-      }
-    }}
-    onMouseLeave={(e) => {
-      if (!active) {
-        e.target.style.background = 'white';
-        e.target.style.color = color;
-        e.target.style.transform = 'scale(1)';
-      }
-    }}
-  >
-    {icon}
-  </button>
-);
 
 // ============================================================================
 // COMPOSANTS EXISTANTS
@@ -616,29 +196,6 @@ const LocateControl = ({ isMobile }) => {
 };
 
 // FONCTIONS API
-const fetchCommuneBoundaries = async (communeId) => {
-  try {
-    console.log(`📍 Récupération des contours pour la commune ID: ${communeId}`);
-    const response = await fetch(`${API_BASE_URL}/communes/${communeId}/contours`);
-    
-    if (!response.ok) {
-      throw new Error(`Erreur HTTP: ${response.status}`);
-    }
-    
-    const result = await response.json();
-    
-    if (result.success && result.data) {
-      console.log('✅ Contours reçus pour:', result.data.nom);
-      return result.data;
-    } else {
-      throw new Error(result.error || 'Erreur inconnue');
-    }
-  } catch (error) {
-    console.error('❌ Erreur récupération contours:', error);
-    return null;
-  }
-};
-
 const searchCommunesAPI = async (searchTerm) => {
   try {
     const response = await fetch(`${API_BASE_URL}/communes/search/${encodeURIComponent(searchTerm)}`);
@@ -676,7 +233,6 @@ const SearchBarCommunes = ({ onCommuneSelect, isMobile, communesData = [] }) => 
     setIsSearching(true);
     
     try {
-      // Essayer d'abord avec les données locales (fallback)
       const localResults = communesData.filter(commune =>
         commune.nom.toLowerCase().includes(term.toLowerCase()) || 
         (commune.region && commune.region.toLowerCase().includes(term.toLowerCase()))
@@ -687,7 +243,6 @@ const SearchBarCommunes = ({ onCommuneSelect, isMobile, communesData = [] }) => 
       
       console.log(`🔍 Recherche locale: ${localResults.length} résultats pour "${term}"`);
       
-      // En parallèle, essayer l'API mais ne pas attendre
       searchCommunesAPI(term).then(apiResults => {
         if (apiResults && apiResults.length > 0) {
           console.log(`🔍 Résultats API: ${apiResults.length} résultats`);
@@ -707,7 +262,6 @@ const SearchBarCommunes = ({ onCommuneSelect, isMobile, communesData = [] }) => 
   const handleSelectCommune = async (commune) => {
     console.log('Commune sélectionnée:', commune);
     
-    // AJOUTER L'INDICATEUR DE CHARGEMENT
     setSearchTerm('⏳ Chargement...');
     setShowResults(false);
     
@@ -725,7 +279,6 @@ const SearchBarCommunes = ({ onCommuneSelect, isMobile, communesData = [] }) => 
       
     } catch (error) {
       console.error('❌ Erreur:', error);
-      // En cas d'erreur, remettre le nom de la commune
       setSearchTerm(commune.nom);
     }
   };
@@ -945,26 +498,22 @@ const obtenirCoordonnees = (ressource) => {
 const getIconForRessource = (typeRessource) => icones[typeRessource] || icones.default;
 
 // Fonction pour valider et parser les coordonnées
-// Fonction pour valider et parser les coordonnées
 const parseCoordinates = (commune) => {
   console.log('📍 Parsing coordinates for commune:', commune);
   
   let lat, lng;
   
-  // Source 1: Propriétés directes latitude/longitude
   if (commune.latitude !== undefined && commune.longitude !== undefined) {
     lat = parseFloat(commune.latitude);
     lng = parseFloat(commune.longitude);
     console.log('📍 Coords from direct properties:', lat, lng);
   }
   
-  // Source 2: Vérifier si ce sont des nombres valides
   if (isNaN(lat) || isNaN(lng)) {
     console.warn('📍 Coordonnées invalides, utilisation des valeurs par défaut');
-    return [14.7167, -17.4677]; // Dakar par défaut
+    return [14.7167, -17.4677];
   }
   
-  // Vérifier que les coordonnées sont dans des plages raisonnables pour le Sénégal
   if (lat < 12 || lat > 17 || lng < -18 || lng > -11) {
     console.warn('📍 Coordonnées hors du Sénégal, utilisation des valeurs par défaut');
     return [14.7167, -17.4677];
@@ -975,14 +524,94 @@ const parseCoordinates = (commune) => {
 };
 
 // ============================================================================
-// COMPOSANT PRINCIPAL
+// COMPOSANT PRINCIPAL AVEC SYNCHRONISATION
 // ============================================================================
-const CarteCommunale = ({ ressources, communes, onCommuneSelect, isMobile }) => {
+const CarteCommunale = ({ 
+  ressources, 
+  communes, 
+  onCommuneSelect, 
+  isMobile, 
+  formulairePosition, 
+  onMapPositionRequest 
+}) => {
   const positionDefaut = [14.7167, -17.4677];
   const mapRef = useRef();
   const [cartePrete, setCartePrete] = useState(false);
   const [currentBasemap, setCurrentBasemap] = useState('osm');
   const [selectedCommune, setSelectedCommune] = useState(null);
+  const [currentPosition, setCurrentPosition] = useState(positionDefaut);
+
+  // Mettre à jour la position quand formulairePosition change
+  useEffect(() => {
+    if (formulairePosition && mapRef.current) {
+      const { lat, lng } = formulairePosition;
+      const newPosition = [lat, lng];
+      setCurrentPosition(newPosition);
+      mapRef.current.setView(newPosition, 15);
+      
+      // Ajouter un marqueur temporaire pour la position du formulaire
+      if (window.formulaireMarker) {
+        mapRef.current.removeLayer(window.formulaireMarker);
+      }
+      
+      window.formulaireMarker = L.marker(newPosition, {
+        icon: L.divIcon({
+          html: `<div style="background: #ff6b35; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); animation: pulse 1.5s infinite;">📌</div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
+        })
+      }).addTo(mapRef.current).bindPopup(`
+        <div style="padding: 12px; text-align: center; min-width: 200px;">
+          <strong style="color: #ff6b35; font-size: 14px;">📍 Position du formulaire</strong><br/>
+          <small>Lat: ${lat.toFixed(6)}</small><br/>
+          <small>Lng: ${lng.toFixed(6)}</small>
+        </div>
+      `).openPopup();
+    }
+  }, [formulairePosition]);
+
+  // Fonction pour obtenir la position actuelle de la carte
+  const getCurrentMapPosition = () => {
+    if (mapRef.current) {
+      const center = mapRef.current.getCenter();
+      return { lat: center.lat, lng: center.lng };
+    }
+    return null;
+  };
+
+  // Gérer les demandes de position depuis le formulaire
+  useEffect(() => {
+    if (onMapPositionRequest === 'getCurrent') {
+      const position = getCurrentMapPosition();
+      if (position) {
+        // Émettre un événement avec la position actuelle
+        window.dispatchEvent(new CustomEvent('mapPositionResponse', { 
+          detail: position 
+        }));
+        console.log('📍 Position carte envoyée:', position);
+      }
+    }
+  }, [onMapPositionRequest]);
+
+  // Écouter les événements de position depuis le formulaire
+  useEffect(() => {
+    const handleMapPositionRequest = (event) => {
+      if (event.detail === 'getCurrent') {
+        const position = getCurrentMapPosition();
+        if (position) {
+          window.dispatchEvent(new CustomEvent('mapPositionResponse', { 
+            detail: position 
+          }));
+        }
+      }
+    };
+
+    window.addEventListener('mapPositionRequest', handleMapPositionRequest);
+    
+    return () => {
+      window.removeEventListener('mapPositionRequest', handleMapPositionRequest);
+    };
+  }, []);
 
   const handleCommuneSelect = async (commune) => {
     console.log('📍 Commune sélectionnée:', commune);
@@ -1054,7 +683,7 @@ const CarteCommunale = ({ ressources, communes, onCommuneSelect, isMobile }) => 
             ${communeData.chef_lieu ? `<small><strong>Chef-lieu:</strong> ${communeData.chef_lieu}</small><br/>` : ''}
             ${communeData.population ? `<small><strong>Population:</strong> ${communeData.population.toLocaleString()}</small><br/>` : ''}
             ${communeData.superficie_km2 ? `<small><strong>Superficie:</strong> ${communeData.superficie_km2} km²</small><br/>` : ''}
-            
+            ${boundaries ? `<small><strong>✅ Contours disponibles</strong></small>` : '<small><strong>❌ Contours non disponibles</strong></small>'}
           </div>
           <button onclick="window.closeCommunePopup()" style="margin-top: 12px; padding: 6px 16px; background: #00853f; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">Fermer</button>
         </div>
@@ -1084,6 +713,7 @@ const CarteCommunale = ({ ressources, communes, onCommuneSelect, isMobile }) => 
       delete window.closeCommunePopup; 
       delete window.communeBoundaryLayer;
       delete window.communeMarker;
+      delete window.formulaireMarker;
     };
   }, []);
 
@@ -1115,7 +745,10 @@ const CarteCommunale = ({ ressources, communes, onCommuneSelect, isMobile }) => 
         }}
       >
 
-        <FloatingAnalysisTools isMobile={isMobile} />
+        <AnalysisToolsBar 
+          isMobile={isMobile} 
+          ressources={ressourcesAvecCoordonnees} 
+        />
         
         <MapController isMobile={isMobile} />
         <BasemapController onBasemapChange={setCurrentBasemap} />

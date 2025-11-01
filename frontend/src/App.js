@@ -23,7 +23,6 @@ import SecurityDashboard from './components/admin/SecurityDashboard';
 import { NotificationProvider, useNotifications } from './components/Notifications';
 import NotificationContainer from './components/Notifications';
 import { TranslationProvider } from './hooks/useTranslation';
-// Dans App.js - Ajouter l'import
 import ANSDPanel from './components/ansd/ANSDPanel';
 
 // Composant MobileNavigation
@@ -126,12 +125,10 @@ const MobileNavigation = ({
 };
 
 // Composant AdminPanel amélioré avec onglets
-// Composant AdminPanel amélioré avec onglets
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const { success, error } = useNotifications();
 
-  // Fonction pour ouvrir les données avec token
   const openDataWithToken = async (url, title) => {
     try {
       const token = localStorage.getItem('token');
@@ -153,7 +150,6 @@ const AdminPanel = () => {
 
       const data = await response.json();
 
-      // Ouvrir dans une nouvelle fenêtre
       const newWindow = window.open('', '_blank');
       newWindow.document.write(`
         <html>
@@ -293,6 +289,125 @@ const AdminPanel = () => {
   );
 };
 
+// Composants de vues séparés pour éviter l'erreur de hooks
+const CarteView = ({ 
+  loading, 
+  ressourcesFiltrees, 
+  communes, 
+  selectedCommune, 
+  setSelectedCommune, 
+  isMobile, 
+  showFilters, 
+  setShowFilters, 
+  showList, 
+  setShowList, 
+  handleSearchChange, 
+  handleFilterChange,
+  formulairePosition,
+  mapPositionRequest
+}) => {
+  return (
+    <div className="main-content-wrapper">
+      {/* Filtres mobiles */}
+      {isMobile && showFilters && (
+        <div className="mobile-filters-panel">
+          <div className="mobile-filters-header">
+            <h6>🔍 Recherche et Filtres</h6>
+            <button
+              className="btn btn-outline-secondary btn-sm"
+              onClick={() => setShowFilters(false)}
+            >
+              ✕
+            </button>
+          </div>
+          <RechercheFiltres
+            onSearchChange={handleSearchChange}
+            onFilterChange={handleFilterChange}
+            communes={communes}
+            isMobile={isMobile}
+          />
+        </div>
+      )}
+
+      {/* Liste mobile */}
+      {isMobile && showList && (
+        <div className="mobile-list-panel">
+          <div className="mobile-list-header">
+            <h6>📋 Ressources ({ressourcesFiltrees.length})</h6>
+            <button
+              className="btn btn-outline-secondary btn-sm"
+              onClick={() => setShowList(false)}
+            >
+              ✕
+            </button>
+          </div>
+          <div className="mobile-list-content">
+            <ListeRessources
+              ressources={ressourcesFiltrees}
+              selectedCommune={selectedCommune}
+              onRessourceUpdated={() => {}} // Cette fonction sera passée par le parent
+              isMobile={isMobile}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Layout principal */}
+      <div className="main-layout-container">
+        <div className={`carte-section ${!isMobile ? 'with-sidebar' : 'full-width'}`}>
+          {loading ? (
+            <div className="loading-container">
+              <div className="text-center">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Chargement...</span>
+                </div>
+                <p className="mt-2">Chargement de la carte...</p>
+              </div>
+            </div>
+          ) : (
+            <CarteCommunale
+              ressources={ressourcesFiltrees}
+              communes={communes}
+              onCommuneSelect={setSelectedCommune}
+              isMobile={isMobile}
+              formulairePosition={formulairePosition}
+              onMapPositionRequest={mapPositionRequest}
+            />
+          )}
+        </div>
+
+        {/* Sidebar desktop */}
+        {!isMobile && (
+          <div className="sidebar-section">
+            <div className="sidebar-inner">
+              <RechercheFiltres
+                onSearchChange={handleSearchChange}
+                onFilterChange={handleFilterChange}
+                communes={communes}
+                isMobile={isMobile}
+              />
+
+              {/* Section Export */}
+              <ExportDonnees
+                ressources={ressourcesFiltrees}
+                onExportComplete={() => {}} // Cette fonction sera passée par le parent
+                isMobile={isMobile}
+              />
+
+              <ListeRessources
+                ressources={ressourcesFiltrees}
+                selectedCommune={selectedCommune}
+                onRessourceUpdated={() => {}} // Cette fonction sera passée par le parent
+                isMobile={isMobile}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Composant App principal
 const AppContent = () => {
   const isMobile = useMobile();
@@ -310,6 +425,10 @@ const AppContent = () => {
   const [activeView, setActiveView] = useState('carte');
   const [showFilters, setShowFilters] = useState(false);
   const [showList, setShowList] = useState(false);
+
+  // NOUVEAUX ÉTATS POUR LA SYNCHRONISATION
+  const [formulairePosition, setFormulairePosition] = useState(null);
+  const [mapPositionRequest, setMapPositionRequest] = useState(null);
 
   // Références pour éviter les déclenchements multiples de notifications
   const notificationsShown = useRef({
@@ -464,124 +583,64 @@ const AppContent = () => {
     }
   };
 
-  // Fonction renderActiveView CORRIGÉE avec AdminPanel
+  // Gérer le changement de position depuis le formulaire
+  const handleFormulairePositionChange = (position) => {
+    if (position === 'getCurrent') {
+      // Demander la position actuelle de la carte
+      setMapPositionRequest('getCurrent');
+      
+      // Écouter la réponse de la carte
+      const handlePositionResponse = (event) => {
+        setFormulairePosition(event.detail);
+        window.removeEventListener('mapPositionResponse', handlePositionResponse);
+      };
+      window.addEventListener('mapPositionResponse', handlePositionResponse);
+      
+      // Émettre l'événement de demande
+      window.dispatchEvent(new CustomEvent('mapPositionRequest', { 
+        detail: 'getCurrent' 
+      }));
+    } else {
+      // Mettre à jour la position du formulaire
+      setFormulairePosition(position);
+    }
+  };
+
+  // Fonction renderActiveView CORRIGÉE - sans hooks conditionnels
   const renderActiveView = () => {
     console.log('🔄 Vue active:', activeView);
 
-    // Vue Dashboard
-    if (activeView === 'dashboard') {
-      return <Dashboard ressources={ressources} communes={communes} />;
+    switch (activeView) {
+      case 'dashboard':
+        return <Dashboard ressources={ressources} communes={communes} />;
+      
+      case 'admin':
+        return <AdminPanel />;
+      
+      case 'ansd':
+        return <ANSDPanel />;
+      
+      case 'carte':
+      default:
+        return (
+          <CarteView
+            loading={loading}
+            ressourcesFiltrees={ressourcesFiltrees}
+            communes={communes}
+            selectedCommune={selectedCommune}
+            setSelectedCommune={setSelectedCommune}
+            isMobile={isMobile}
+            showFilters={showFilters}
+            setShowFilters={setShowFilters}
+            showList={showList}
+            setShowList={setShowList}
+            handleSearchChange={handleSearchChange}
+            handleFilterChange={handleFilterChange}
+            formulairePosition={formulairePosition}
+            mapPositionRequest={mapPositionRequest}
+          />
+        );
     }
-
-    // Vue Admin Panel
-    if (activeView === 'admin') {
-      return <AdminPanel />;
-    }
-
-    // AJOUTEZ ICI LA NOUVELLE VUE ANSD ↓
-    if (activeView === 'ansd') {
-      return <ANSDPanel />;
-    }
-
-    // Vue Carte (par défaut)
-    return (
-      <div className="main-content-wrapper">
-        {/* Filtres mobiles */}
-        {isMobile && showFilters && (
-          <div className="mobile-filters-panel">
-            <div className="mobile-filters-header">
-              <h6>🔍 Recherche et Filtres</h6>
-              <button
-                className="btn btn-outline-secondary btn-sm"
-                onClick={() => setShowFilters(false)}
-              >
-                ✕
-              </button>
-            </div>
-            <RechercheFiltres
-              onSearchChange={handleSearchChange}
-              onFilterChange={handleFilterChange}
-              communes={communes}
-              isMobile={isMobile}
-            />
-          </div>
-        )}
-
-        {/* Liste mobile */}
-        {isMobile && showList && (
-          <div className="mobile-list-panel">
-            <div className="mobile-list-header">
-              <h6>📋 Ressources ({ressourcesFiltrees.length})</h6>
-              <button
-                className="btn btn-outline-secondary btn-sm"
-                onClick={() => setShowList(false)}
-              >
-                ✕
-              </button>
-            </div>
-            <div className="mobile-list-content">
-              <ListeRessources
-                ressources={ressourcesFiltrees}
-                selectedCommune={selectedCommune}
-                onRessourceUpdated={handleRessourceAdded}
-                isMobile={isMobile}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Layout principal */}
-        <div className="main-layout-container">
-          <div className={`carte-section ${!isMobile ? 'with-sidebar' : 'full-width'}`}>
-            {loading ? (
-              <div className="loading-container">
-                <div className="text-center">
-                  <div className="spinner-border text-primary" role="status">
-                    <span className="visually-hidden">Chargement...</span>
-                  </div>
-                  <p className="mt-2">Chargement de la carte...</p>
-                </div>
-              </div>
-            ) : (
-              <CarteCommunale
-                ressources={ressourcesFiltrees}
-                communes={communes}
-                onCommuneSelect={setSelectedCommune}
-                isMobile={isMobile}
-              />
-            )}
-          </div>
-
-          {/* Sidebar desktop */}
-          {!isMobile && (
-            <div className="sidebar-section">
-              <div className="sidebar-inner">
-                <RechercheFiltres
-                  onSearchChange={handleSearchChange}
-                  onFilterChange={handleFilterChange}
-                  communes={communes}
-                  isMobile={isMobile}
-                />
-
-                {/* Section Export */}
-                <ExportDonnees
-                  ressources={ressourcesFiltrees}
-                  onExportComplete={handleExport}
-                  isMobile={isMobile}
-                />
-
-                <ListeRessources
-                  ressources={ressourcesFiltrees}
-                  selectedCommune={selectedCommune}
-                  onRessourceUpdated={handleRessourceAdded}
-                  isMobile={isMobile}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
   };
 
   // Si pas connecté, afficher la page de connexion
@@ -622,7 +681,6 @@ const AppContent = () => {
         {renderActiveView()}
       </div>
 
-
       {/* Navigation mobile */}
       {isMobile && (
         <MobileNavigation
@@ -653,6 +711,8 @@ const AppContent = () => {
         onHide={() => setShowFormulaire(false)}
         onRessourceAdded={handleRessourceAdded}
         isMobile={isMobile}
+        positionInitiale={formulairePosition}
+        onPositionChange={handleFormulairePositionChange}
       />
     </div>
   );
