@@ -31,13 +31,13 @@ const fetchCommuneBoundaries = async (communeId) => {
   try {
     console.log(`📍 Récupération des contours pour la commune ID: ${communeId}`);
     const response = await fetch(`${API_BASE_URL}/communes/${communeId}/contours`);
-    
+
     if (!response.ok) {
       throw new Error(`Erreur HTTP: ${response.status}`);
     }
-    
+
     const result = await response.json();
-    
+
     if (result.success && result.data) {
       console.log('✅ Contours reçus pour:', result.data.nom);
       contoursCache.set(communeId, result.data);
@@ -78,20 +78,20 @@ const CoordinatesDisplay = ({ isMobile }) => {
 
   return (
     <div style={{
-      position: 'absolute', 
-      bottom: '80px', 
+      position: 'absolute',
+      bottom: '80px',
       right: '10px',
-      background: 'rgba(255, 255, 255, 0.9)', 
-      color: '#333', 
+      background: 'rgba(255, 255, 255, 0.9)',
+      color: '#333',
       padding: '4px 8px',
-      borderRadius: '4px', 
-      fontSize: '11px', 
-      fontFamily: 'monospace', 
+      borderRadius: '4px',
+      fontSize: '11px',
+      fontFamily: 'monospace',
       zIndex: 1000,
-      border: '2px solid rgba(0,0,0,0.2)', 
+      border: '2px solid rgba(0,0,0,0.2)',
       backdropFilter: 'blur(2px)',
-      whiteSpace: 'nowrap', 
-      maxWidth: isMobile ? '140px' : '200px', 
+      whiteSpace: 'nowrap',
+      maxWidth: isMobile ? '140px' : '200px',
       lineHeight: '1.2'
     }}>
       <div style={{ display: 'flex', gap: '8px' }}>
@@ -105,14 +105,14 @@ const CoordinatesDisplay = ({ isMobile }) => {
 // COMPOSANT ÉCHELLE - Affiche l'échelle de la carte
 const CustomScaleControl = ({ isMobile }) => {
   return (
-    <ScaleControl 
-      position="bottomright" 
-      imperial={false} 
-      metric={true} 
+    <ScaleControl
+      position="bottomright"
+      imperial={false}
+      metric={true}
       style={{
-        marginBottom: isMobile ? '50px' : '40px', 
+        marginBottom: isMobile ? '50px' : '40px',
         marginRight: '10px'
-      }} 
+      }}
     />
   );
 };
@@ -121,17 +121,17 @@ const CustomScaleControl = ({ isMobile }) => {
 const StatusInfo = ({ ressourcesCount, selectedCommune, currentBasemap, isMobile }) => {
   return (
     <div style={{
-      position: 'absolute', 
-      bottom: '10px', 
+      position: 'absolute',
+      bottom: '10px',
       left: '10px',
-      background: 'rgba(255, 255, 255, 0.9)', 
-      color: '#333', 
+      background: 'rgba(255, 255, 255, 0.9)',
+      color: '#333',
       padding: '6px 10px',
-      borderRadius: '4px', 
-      fontSize: '11px', 
-      fontFamily: 'Arial, sans-serif', 
+      borderRadius: '4px',
+      fontSize: '11px',
+      fontFamily: 'Arial, sans-serif',
       zIndex: 1000,
-      border: '2px solid rgba(0,0,0,0.2)', 
+      border: '2px solid rgba(0,0,0,0.2)',
       backdropFilter: 'blur(2px)',
       maxWidth: isMobile ? '200px' : '300px'
     }}>
@@ -150,29 +150,30 @@ const StatusInfo = ({ ressourcesCount, selectedCommune, currentBasemap, isMobile
 };
 
 // COMPOSANT LOCALISATION - Bouton de géolocalisation
+// COMPOSANT LOCALISATION - Bouton de géolocalisation
 const LocateControl = ({ isMobile }) => {
   const map = useMap();
   const [isLocating, setIsLocating] = useState(false);
 
   const locateUser = () => {
     if (!navigator.geolocation) return;
-    
+
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
         map.setView([latitude, longitude], 15);
-        
+
         if (window.currentLocationMarker) map.removeLayer(window.currentLocationMarker);
-        
+
         window.currentLocationMarker = L.marker([latitude, longitude], {
           icon: L.divIcon({
             html: `<div style="position: relative; width: 24px; height: 24px;">
               <div style="position: absolute; top: 0; left: 0; width: 24px; height: 24px; background: rgba(0, 133, 63, 0.3); border-radius: 50%; animation: ripple 2s infinite;"></div>
               <div style="position: absolute; top: 4px; left: 4px; width: 16px; height: 16px; background: #00853f; border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>
             </div>`,
-            className: 'modern-location-marker', 
-            iconSize: [24, 24], 
+            className: 'modern-location-marker',
+            iconSize: [24, 24],
             iconAnchor: [12, 12],
           })
         }).addTo(map).bindPopup(`
@@ -200,34 +201,65 @@ const LocateControl = ({ isMobile }) => {
 
   useEffect(() => {
     const LocateControl = L.Control.extend({
-      onAdd: function(map) {
+      onAdd: function (map) {
         const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
-        const buttonStyle = isMobile ? `width: 50px; height: 50px; font-size: 20px; border-radius: 50%;` : `width: 45px; height: 45px; font-size: 18px; border-radius: 50%;`;
-        
-        container.innerHTML = `<button title="Localiser ma position" style="${buttonStyle} background: ${isLocating ? '#f59e0b' : '#00853f'}; border: 3px solid white; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s ease; animation: ${isLocating ? 'pulse 1.5s infinite' : 'none'}; outline: none;">${isLocating ? '⏳' : '📍'}</button>`;
-        
+
+        // MÊMES DIMENSIONS QUE LES BOUTONS DE ZOOM
+        const buttonSize = isMobile ? '34px' : '30px'; // ← Mêmes dimensions que zoom
+        const fontSize = isMobile ? '16px' : '14px';   // ← Même taille de police
+
+        container.innerHTML = `
+          <button 
+            title="Localiser ma position" 
+            style="
+              width: ${buttonSize}; 
+              height: ${buttonSize}; 
+              font-size: ${fontSize}; 
+              background: ${isLocating ? '#f59e0b' : '#00853f'}; 
+              border: 2px solid white; 
+              color: white; 
+              cursor: pointer; 
+              display: flex; 
+              align-items: center; 
+              justify-content: center; 
+              box-shadow: 0 1px 5px rgba(0,0,0,0.4); 
+              transition: all 0.3s ease; 
+              animation: ${isLocating ? 'pulse 1.5s infinite' : 'none'}; 
+              outline: none;
+              border-radius: 4px;
+              line-height: 1;
+            "
+          >
+            ${isLocating ? '⏳' : '📍'}
+          </button>
+        `;
+
         const button = container.querySelector('button');
-        button.addEventListener('mouseenter', function() { 
-          this.style.transform = 'scale(1.1)'; 
-          this.style.background = isLocating ? '#d97706' : '#006b33'; 
+
+        // Effets hover identiques aux boutons de zoom
+        button.addEventListener('mouseenter', function () {
+          this.style.background = isLocating ? '#d97706' : '#006b33';
         });
-        button.addEventListener('mouseleave', function() { 
-          this.style.transform = 'scale(1)'; 
-          this.style.background = isLocating ? '#f59e0b' : '#00853f'; 
+        button.addEventListener('mouseleave', function () {
+          this.style.background = isLocating ? '#f59e0b' : '#00853f';
         });
-        button.onclick = (e) => { 
-          e.preventDefault(); 
-          e.stopPropagation(); 
-          locateUser(); 
+
+        button.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          locateUser();
         };
-        
+
         return container;
       }
     });
 
     const locateControl = new LocateControl({ position: 'topleft' });
     locateControl.addTo(map);
-    return () => { map.removeControl(locateControl); };
+
+    return () => {
+      map.removeControl(locateControl);
+    };
   }, [map, isMobile, isLocating]);
 
   return null;
@@ -237,7 +269,7 @@ const LocateControl = ({ isMobile }) => {
 const searchCommunesAPI = async (searchTerm) => {
   try {
     const response = await fetch(`${API_BASE_URL}/communes/search/${encodeURIComponent(searchTerm)}`);
-    
+
     if (response.ok) {
       const result = await response.json();
       if (result.success) {
@@ -261,32 +293,32 @@ const SearchBarCommunes = ({ onCommuneSelect, isMobile, communesData = [] }) => 
 
   const handleSearch = async (term) => {
     setSearchTerm(term);
-    
+
     if (!term.trim() || term.length < 2) {
       setResults([]);
       setShowResults(false);
       return;
     }
-  
+
     setIsSearching(true);
-    
+
     try {
       const localResults = communesData.filter(commune =>
-        commune.nom.toLowerCase().includes(term.toLowerCase()) || 
+        commune.nom.toLowerCase().includes(term.toLowerCase()) ||
         (commune.region && commune.region.toLowerCase().includes(term.toLowerCase()))
       ).slice(0, 8);
-      
+
       setResults(localResults);
       setShowResults(true);
-      
+
       console.log(`🔍 Recherche locale: ${localResults.length} résultats pour "${term}"`);
-      
+
       const apiResults = await searchCommunesAPI(term);
       if (apiResults && apiResults.length > 0) {
         console.log(`🔍 Résultats API: ${apiResults.length} résultats`);
         setResults(apiResults);
       }
-      
+
     } catch (error) {
       console.error('Erreur recherche:', error);
     } finally {
@@ -296,10 +328,10 @@ const SearchBarCommunes = ({ onCommuneSelect, isMobile, communesData = [] }) => 
 
   const handleSelectCommune = async (commune) => {
     console.log('Commune sélectionnée:', commune);
-    
+
     setSearchTerm('⏳ Chargement...');
     setShowResults(false);
-    
+
     try {
       if (commune.id) {
         const contours = await fetchCommuneBoundaries(commune.id);
@@ -307,11 +339,11 @@ const SearchBarCommunes = ({ onCommuneSelect, isMobile, communesData = [] }) => 
           commune = { ...commune, ...contours };
         }
       }
-      
+
       if (onCommuneSelect) onCommuneSelect(commune);
       setSearchTerm('');
       setIsFocused(false);
-      
+
     } catch (error) {
       console.error('❌ Erreur:', error);
       setSearchTerm(commune.nom);
@@ -320,35 +352,35 @@ const SearchBarCommunes = ({ onCommuneSelect, isMobile, communesData = [] }) => 
   };
 
   return (
-    <div style={{ 
-      position: 'absolute', 
-      top: '10px', 
-      left: '50%', 
-      transform: 'translateX(-50%)', 
-      zIndex: 1000, 
-      width: isMobile ? '90%' : '400px' 
+    <div style={{
+      position: 'absolute',
+      top: '10px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: 1000,
+      width: isMobile ? '90%' : '400px'
     }}>
-      <input 
-        type="text" 
-        placeholder="🔍 Rechercher une commune..." 
+      <input
+        type="text"
+        placeholder="🔍 Rechercher une commune..."
         value={searchTerm}
-        onChange={(e) => handleSearch(e.target.value)} 
-        onFocus={() => setIsFocused(true)} 
+        onChange={(e) => handleSearch(e.target.value)}
+        onFocus={() => setIsFocused(true)}
         onBlur={() => setTimeout(() => setIsFocused(false), 200)}
-        style={{ 
-          width: '100%', 
-          padding: '12px 16px', 
-          borderRadius: '25px', 
-          border: `2px solid ${isFocused ? '#00a651' : '#00853f'}`, 
-          fontSize: '14px', 
-          boxShadow: isFocused ? '0 4px 20px rgba(0, 133, 63, 0.3)' : '0 2px 10px rgba(0,0,0,0.1)', 
-          outline: 'none', 
-          background: 'white', 
-          transition: 'all 0.3s ease', 
-          transform: isFocused ? 'scale(1.02)' : 'scale(1)' 
+        style={{
+          width: '100%',
+          padding: '12px 16px',
+          borderRadius: '25px',
+          border: `2px solid ${isFocused ? '#00a651' : '#00853f'}`,
+          fontSize: '14px',
+          boxShadow: isFocused ? '0 4px 20px rgba(0, 133, 63, 0.3)' : '0 2px 10px rgba(0,0,0,0.1)',
+          outline: 'none',
+          background: 'white',
+          transition: 'all 0.3s ease',
+          transform: isFocused ? 'scale(1.02)' : 'scale(1)'
         }}
       />
-      
+
       {isSearching && (
         <div style={{
           position: 'absolute',
@@ -360,50 +392,50 @@ const SearchBarCommunes = ({ onCommuneSelect, isMobile, communesData = [] }) => 
           ⏳
         </div>
       )}
-      
+
       {showResults && results.length > 0 && (
-        <div style={{ 
-          background: 'white', 
-          borderRadius: '12px', 
-          marginTop: '8px', 
-          boxShadow: '0 8px 25px rgba(0,0,0,0.15)', 
-          maxHeight: '300px', 
-          overflowY: 'auto', 
-          border: '1px solid #e0e0e0' 
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          marginTop: '8px',
+          boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+          maxHeight: '300px',
+          overflowY: 'auto',
+          border: '1px solid #e0e0e0'
         }}>
           {results.map((commune, index) => (
-            <div 
-              key={commune.id || index} 
-              onClick={() => handleSelectCommune(commune)} 
-              style={{ 
-                padding: '12px 16px', 
-                borderBottom: '1px solid #f0f0f0', 
-                cursor: 'pointer', 
-                transition: 'all 0.2s ease', 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '12px' 
+            <div
+              key={commune.id || index}
+              onClick={() => handleSelectCommune(commune)}
+              style={{
+                padding: '12px 16px',
+                borderBottom: '1px solid #f0f0f0',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
               }}
-              onMouseEnter={(e) => { 
-                e.target.style.background = '#f8f9fa'; 
-                e.target.style.transform = 'translateX(5px)'; 
+              onMouseEnter={(e) => {
+                e.target.style.background = '#f8f9fa';
+                e.target.style.transform = 'translateX(5px)';
               }}
-              onMouseLeave={(e) => { 
-                e.target.style.background = 'white'; 
-                e.target.style.transform = 'translateX(0)'; 
+              onMouseLeave={(e) => {
+                e.target.style.background = 'white';
+                e.target.style.transform = 'translateX(0)';
               }}
             >
-              <div style={{ 
-                width: '32px', 
-                height: '32px', 
-                borderRadius: '50%', 
-                background: 'linear-gradient(135deg, #00853f, #00a651)', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                fontSize: '14px', 
-                color: 'white', 
-                fontWeight: 'bold' 
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #00853f, #00a651)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '14px',
+                color: 'white',
+                fontWeight: 'bold'
               }}>
                 🏛️
               </div>
@@ -412,13 +444,13 @@ const SearchBarCommunes = ({ onCommuneSelect, isMobile, communesData = [] }) => 
                 <div style={{ fontSize: '12px', color: '#666' }}>Région: {commune.region}</div>
                 {commune.departement && <div style={{ fontSize: '11px', color: '#888' }}>Département: {commune.departement}</div>}
               </div>
-              <div style={{ 
-                fontSize: '11px', 
-                color: '#00853f', 
-                background: '#e8f5e8', 
-                padding: '4px 8px', 
-                borderRadius: '12px', 
-                fontWeight: '600' 
+              <div style={{
+                fontSize: '11px',
+                color: '#00853f',
+                background: '#e8f5e8',
+                padding: '4px 8px',
+                borderRadius: '12px',
+                fontWeight: '600'
               }}>
                 Aller
               </div>
@@ -433,8 +465,8 @@ const SearchBarCommunes = ({ onCommuneSelect, isMobile, communesData = [] }) => 
 // COMPOSANT CONTRÔLEUR DE CARTE
 const MapController = ({ isMobile }) => {
   const map = useMap();
-  useEffect(() => { 
-    console.log('🗺️ MapController - Carte initialisée, mobile:', isMobile); 
+  useEffect(() => {
+    console.log('🗺️ MapController - Carte initialisée, mobile:', isMobile);
   }, [map, isMobile]);
   return null;
 };
@@ -443,72 +475,153 @@ const MapController = ({ isMobile }) => {
 // CONFIGURATION DES FONDS DE CARTE
 // ============================================================================
 const BASEMAPS = {
-  osm: { 
-    name: 'OpenStreetMap', 
-    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', 
-    attribution: '&copy; OpenStreetMap' 
+  osm: {
+    name: 'OpenStreetMap',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; OpenStreetMap'
   },
-  satellite: { 
-    name: 'Satellite', 
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', 
-    attribution: '&copy; ArcGIS' 
+  satellite: {
+    name: 'Satellite',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; ArcGIS'
   },
-  topo: { 
-    name: 'Topographique', 
-    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', 
-    attribution: '&copy; OpenTopoMap' 
+  topo: {
+    name: 'Topographique',
+    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; OpenTopoMap'
   },
-  dark: { 
-    name: 'Sombre', 
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', 
-    attribution: '&copy; OpenStreetMap & CARTO' 
+  dark: {
+    name: 'Sombre',
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+    attribution: '&copy; OpenStreetMap & CARTO'
   }
 };
 
 // COMPOSANT SÉLECTEUR DE FOND DE CARTE
+// COMPOSANT SÉLECTEUR DE FOND DE CARTE
 const BasemapController = ({ onBasemapChange }) => {
   const [basemap, setBasemap] = useState('osm');
+  const [isOpen, setIsOpen] = useState(false);
   
   const handleBasemapChange = (newBasemap) => { 
     setBasemap(newBasemap); 
     if (onBasemapChange) onBasemapChange(newBasemap); 
+    setIsOpen(false);
   };
-  
+
+  // Liste des fonds de carte
+  const basemapOptions = [
+    { value: 'osm', label: '🗺️ OpenStreetMap', name: 'OpenStreetMap' },
+    { value: 'satellite', label: '🛰️ Satellite', name: 'Satellite' },
+    { value: 'topo', label: '🏔️ Topographique', name: 'Topographique' },
+    { value: 'dark', label: '🌙 Sombre', name: 'Sombre' }
+  ];
+
+  const currentBasemap = basemapOptions.find(opt => opt.value === basemap);
+
   return (
-    <select 
-      onChange={(e) => handleBasemapChange(e.target.value)} 
-      value={basemap} 
-      style={{ 
-        position: 'absolute', 
-        top: '10px', 
-        right: '10px', 
-        zIndex: 1000, 
-        padding: '8px 12px', 
-        borderRadius: '8px', 
-        border: '2px solid #00853f', 
-        background: 'white', 
-        fontSize: '14px', 
-        fontWeight: '500', 
-        color: '#333', 
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)', 
-        cursor: 'pointer' 
-      }}
-    >
-      <option value="osm">🗺️ OpenStreetMap</option>
-      <option value="satellite">🛰️ Satellite</option>
-      <option value="topo">🏔️ Topographique</option>
-      <option value="dark">🌙 Sombre</option>
-    </select>
+    <div style={{ 
+      position: 'absolute', 
+      top: '10px', 
+      right: '10px', 
+      zIndex: 1000,
+    }}>
+      {/* Sélecteur personnalisé */}
+      <div style={{ position: 'relative' }}>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          style={{ 
+            padding: '8px 12px', 
+            borderRadius: '8px', 
+            border: '2px solid #00853f', 
+            background: 'white', 
+            fontSize: '14px', 
+            fontWeight: '500', 
+            color: '#333', 
+            boxShadow: '0 2px 10px rgba(0,0,0,0.1)', 
+            cursor: 'pointer',
+            minWidth: '180px',
+            textAlign: 'left',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}
+        >
+          <span>{currentBasemap?.label || '🗺️ Fond de carte'}</span>
+          <span style={{ fontSize: '12px', marginLeft: '8px' }}>▼</span>
+        </button>
+
+        {isOpen && (
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            background: 'white',
+            border: '2px solid #00853f',
+            borderTop: 'none',
+            borderRadius: '0 0 8px 8px',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+            zIndex: 10002,
+            overflow: 'hidden'
+          }}>
+            {basemapOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handleBasemapChange(option.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  background: basemap === option.value ? '#f0f9f0' : 'white',
+                  border: 'none',
+                  borderBottom: '1px solid #f0f0f0',
+                  fontSize: '14px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  color: '#333',
+                  display: 'flex',
+                  alignItems: 'center',
+                  transition: 'background 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#f8f9fa';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = basemap === option.value ? '#f0f9f0' : 'white';
+                }}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Fermer le menu si on clique ailleurs */}
+      {isOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 999
+          }}
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+    </div>
   );
 };
 
 // COMPOSANT COUCHE DE CARTE DYNAMIQUE
 const DynamicTileLayer = ({ basemap }) => {
   const map = useMap();
-  useEffect(() => { 
-    map.invalidateSize(); 
+  useEffect(() => {
+    map.invalidateSize();
   }, [basemap, map]);
-  
+
   const currentBasemap = BASEMAPS[basemap] || BASEMAPS.osm;
   return <TileLayer attribution={currentBasemap.attribution} url={currentBasemap.url} />;
 };
@@ -521,19 +634,19 @@ const DynamicTileLayer = ({ basemap }) => {
 const creerIcone = (couleur) => new L.Icon({
   iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${couleur}.png`,
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-  iconSize: [25, 41], 
-  iconAnchor: [12, 41], 
-  popupAnchor: [1, -34], 
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
   shadowSize: [41, 41]
 });
 
 const icones = {
-  'Agricole': creerIcone('green'), 
-  'Hydrique': creerIcone('blue'), 
+  'Agricole': creerIcone('green'),
+  'Hydrique': creerIcone('blue'),
   'Commerciale': creerIcone('violet'),
-  'Artisanale': creerIcone('orange'), 
-  'Touristique': creerIcone('red'), 
-  'Minérale': creerIcone('black'), 
+  'Artisanale': creerIcone('orange'),
+  'Touristique': creerIcone('red'),
+  'Minérale': creerIcone('black'),
   'default': creerIcone('grey')
 };
 
@@ -584,25 +697,25 @@ const getIconForRessource = (typeRessource) => icones[typeRessource] || icones.d
 // Fonction pour valider et parser les coordonnées d'une commune
 const parseCoordinates = (commune) => {
   console.log('📍 Parsing coordinates for commune:', commune);
-  
+
   let lat, lng;
-  
+
   if (commune.latitude !== undefined && commune.longitude !== undefined) {
     lat = parseFloat(commune.latitude);
     lng = parseFloat(commune.longitude);
     console.log('📍 Coords from direct properties:', lat, lng);
   }
-  
+
   if (isNaN(lat) || isNaN(lng)) {
     console.warn('📍 Coordonnées invalides, utilisation des valeurs par défaut');
     return [14.7167, -17.4677];
   }
-  
+
   if (lat < 12 || lat > 17 || lng < -18 || lng > -11) {
     console.warn('📍 Coordonnées hors du Sénégal, utilisation des valeurs par défaut');
     return [14.7167, -17.4677];
   }
-  
+
   console.log('📍 Coordonnées valides:', [lat, lng]);
   return [lat, lng];
 };
@@ -610,13 +723,13 @@ const parseCoordinates = (commune) => {
 // ============================================================================
 // COMPOSANT PRINCIPAL
 // ============================================================================
-const CarteCommunale = ({ 
-  ressources, 
-  communes, 
-  onCommuneSelect, 
-  isMobile, 
-  formulairePosition, 
-  onMapPositionRequest 
+const CarteCommunale = ({
+  ressources,
+  communes,
+  onCommuneSelect,
+  isMobile,
+  formulairePosition,
+  onMapPositionRequest
 }) => {
   // ============================================================================
   // DÉCLARATION DES STATES ET RÉFÉRENCES
@@ -647,12 +760,12 @@ const CarteCommunale = ({
       const newPosition = [lat, lng];
       setCurrentPosition(newPosition);
       mapRef.current.setView(newPosition, 15);
-      
+
       // Ajouter un marqueur temporaire pour la position du formulaire
       if (window.formulaireMarker) {
         mapRef.current.removeLayer(window.formulaireMarker);
       }
-      
+
       window.formulaireMarker = L.marker(newPosition, {
         icon: L.divIcon({
           html: `<div style="background: #ff6b35; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); animation: pulse 1.5s infinite;">📌</div>`,
@@ -683,8 +796,8 @@ const CarteCommunale = ({
     if (onMapPositionRequest === 'getCurrent') {
       const position = getCurrentMapPosition();
       if (position) {
-        window.dispatchEvent(new CustomEvent('mapPositionResponse', { 
-          detail: position 
+        window.dispatchEvent(new CustomEvent('mapPositionResponse', {
+          detail: position
         }));
         console.log('📍 Position carte envoyée:', position);
       }
@@ -697,15 +810,15 @@ const CarteCommunale = ({
       if (event.detail === 'getCurrent') {
         const position = getCurrentMapPosition();
         if (position) {
-          window.dispatchEvent(new CustomEvent('mapPositionResponse', { 
-            detail: position 
+          window.dispatchEvent(new CustomEvent('mapPositionResponse', {
+            detail: position
           }));
         }
       }
     };
 
     window.addEventListener('mapPositionRequest', handleMapPositionRequest);
-    
+
     return () => {
       window.removeEventListener('mapPositionRequest', handleMapPositionRequest);
     };
@@ -716,7 +829,7 @@ const CarteCommunale = ({
   // ============================================================================
   const handleCommuneSelect = useCallback(async (commune) => {
     console.log('📍 Commune sélectionnée:', commune);
-    
+
     if (!mapRef.current) {
       console.error('❌ Carte non initialisée');
       return;
@@ -763,7 +876,7 @@ const CarteCommunale = ({
             dashArray: '5, 5'
           }
         }).addTo(mapRef.current);
-        
+
         const bounds = window.communeBoundaryLayer.getBounds();
         mapRef.current.fitBounds(bounds, { padding: [20, 20] });
         console.log('🎯 Vue ajustée aux contours');
@@ -800,7 +913,7 @@ const CarteCommunale = ({
     } catch (error) {
       console.error('❌ Erreur affichage commune:', error);
     }
-    
+
     if (onCommuneSelect) onCommuneSelect(commune);
   }, [onCommuneSelect]);
 
@@ -808,7 +921,7 @@ const CarteCommunale = ({
   // NETTOYAGE ET GESTION DU CYCLE DE VIE
   // ============================================================================
   useEffect(() => {
-    window.closeCommunePopup = () => { 
+    window.closeCommunePopup = () => {
       if (window.communeMarker) {
         window.communeMarker.closePopup();
       }
@@ -817,10 +930,10 @@ const CarteCommunale = ({
         window.communeBoundaryLayer = null;
       }
     };
-    
-    return () => { 
+
+    return () => {
       // Nettoyer toutes les références globales
-      delete window.closeCommunePopup; 
+      delete window.closeCommunePopup;
       delete window.communeBoundaryLayer;
       delete window.communeMarker;
       delete window.formulaireMarker;
@@ -847,24 +960,24 @@ const CarteCommunale = ({
   // ============================================================================
   return (
     <div className={`carte-container ${isMobile ? 'mobile' : 'desktop'}`} style={{ animation: 'fadeIn 0.8s ease' }}>
-      
+
       {/* BARRE DE RECHERCHE - Centrée en haut */}
-      <SearchBarCommunes 
-        onCommuneSelect={handleCommuneSelect} 
+      <SearchBarCommunes
+        onCommuneSelect={handleCommuneSelect}
         isMobile={isMobile}
         communesData={communes}
       />
-      
+
       {/* CONTENEUR PRINCIPAL DE LA CARTE LEAFLET */}
-      <MapContainer 
-        center={positionDefaut} 
-        zoom={isMobile ? 10 : 12} 
-        style={{ height: '100%', width: '100%' }} 
-        zoomControl={!isMobile} 
-        ref={mapRef} 
-        whenReady={() => { 
-          console.log('✅ Carte Leaflet prête !'); 
-          setCartePrete(true); 
+      <MapContainer
+        center={positionDefaut}
+        zoom={isMobile ? 10 : 12}
+        style={{ height: '100%', width: '100%' }}
+        zoomControl={!isMobile}
+        ref={mapRef}
+        whenReady={() => {
+          console.log('✅ Carte Leaflet prête !');
+          setCartePrete(true);
         }}
       >
 
@@ -872,7 +985,7 @@ const CarteCommunale = ({
             PANEL DES OUTILS À DROITE
             Modifier les propriétés CSS ici pour ajuster la position des outils
         ============================================================================ */}
-        
+
         {/* CONTENEUR PRINCIPAL DES OUTILS À DROITE */}
         <div style={{
           position: 'absolute',
@@ -883,21 +996,21 @@ const CarteCommunale = ({
           flexDirection: 'column',
           gap: '15px' // ← MODIFIER CETTE VALEUR pour ajuster l'espacement entre les groupes d'outils
         }}>
-          
+
           {/* OUTILS D'ANALYSE - Premier groupe en haut */}
-          <AnalysisToolsBar 
-            isMobile={isMobile} 
-            ressources={ressourcesAvecCoordonnees} 
+          <AnalysisToolsBar
+            isMobile={isMobile}
+            ressources={ressourcesAvecCoordonnees}
             mapRef={mapRef}
           />
 
           {/* OUTILS DE DESSIN - Deuxième groupe en dessous */}
-          <DrawingAndPrintTools 
-            isMobile={isMobile} 
-            mapRef={mapRef} 
+          <DrawingAndPrintTools
+            isMobile={isMobile}
+            mapRef={mapRef}
           />
         </div>
-        
+
         {/* ============================================================================
             COMPOSANTS LEAFLET ET CONTRÔLES
         ============================================================================ */}
@@ -906,11 +1019,11 @@ const CarteCommunale = ({
         <LocateControl isMobile={isMobile} />
         <CustomScaleControl isMobile={isMobile} />
         <CoordinatesDisplay isMobile={isMobile} />
-        <StatusInfo 
-          ressourcesCount={ressourcesAvecCoordonnees.length} 
-          selectedCommune={selectedCommune} 
-          currentBasemap={currentBasemapData} 
-          isMobile={isMobile} 
+        <StatusInfo
+          ressourcesCount={ressourcesAvecCoordonnees.length}
+          selectedCommune={selectedCommune}
+          currentBasemap={currentBasemapData}
+          isMobile={isMobile}
         />
         <DynamicTileLayer basemap={currentBasemap} />
 
