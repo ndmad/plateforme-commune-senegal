@@ -1,10 +1,12 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, ScaleControl } from 'react-leaflet';
 import L from 'leaflet';
-import * as turf from '@turf/turf';
 import AnalysisToolsBar from './AnalysisToolsBar';
+import DrawingAndPrintTools from './DrawingAndPrintTools';
 
-// Correction des icônes Leaflet
+// ============================================================================
+// CONFIGURATION DES ICÔNES LEAFLET
+// ============================================================================
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
@@ -50,10 +52,10 @@ const fetchCommuneBoundaries = async (communeId) => {
 };
 
 // ============================================================================
-// COMPOSANTS EXISTANTS
+// COMPOSANTS FONCTIONNELS
 // ============================================================================
 
-// COMPOSANT COORDONNÉES
+// COMPOSANT COORDONNÉES - Affiche les coordonnées en temps réel
 const CoordinatesDisplay = ({ isMobile }) => {
   const map = useMap();
   const [coordinates, setCoordinates] = useState({ lat: 0, lng: 0 });
@@ -76,11 +78,21 @@ const CoordinatesDisplay = ({ isMobile }) => {
 
   return (
     <div style={{
-      position: 'absolute', bottom: '80px', right: '10px',
-      background: 'rgba(255, 255, 255, 0.9)', color: '#333', padding: '4px 8px',
-      borderRadius: '4px', fontSize: '11px', fontFamily: 'monospace', zIndex: 1000,
-      border: '2px solid rgba(0,0,0,0.2)', backdropFilter: 'blur(2px)',
-      whiteSpace: 'nowrap', maxWidth: isMobile ? '140px' : '200px', lineHeight: '1.2'
+      position: 'absolute', 
+      bottom: '80px', 
+      right: '10px',
+      background: 'rgba(255, 255, 255, 0.9)', 
+      color: '#333', 
+      padding: '4px 8px',
+      borderRadius: '4px', 
+      fontSize: '11px', 
+      fontFamily: 'monospace', 
+      zIndex: 1000,
+      border: '2px solid rgba(0,0,0,0.2)', 
+      backdropFilter: 'blur(2px)',
+      whiteSpace: 'nowrap', 
+      maxWidth: isMobile ? '140px' : '200px', 
+      lineHeight: '1.2'
     }}>
       <div style={{ display: 'flex', gap: '8px' }}>
         <span><span style={{ color: '#00853f', fontWeight: 'bold' }}>Lat:</span> {coordinates.lat}°</span>
@@ -90,23 +102,37 @@ const CoordinatesDisplay = ({ isMobile }) => {
   );
 };
 
-// COMPOSANT ÉCHELLE
+// COMPOSANT ÉCHELLE - Affiche l'échelle de la carte
 const CustomScaleControl = ({ isMobile }) => {
   return (
-    <ScaleControl position="bottomright" imperial={false} metric={true} style={{
-      marginBottom: isMobile ? '50px' : '40px', marginRight: '10px'
-    }} />
+    <ScaleControl 
+      position="bottomright" 
+      imperial={false} 
+      metric={true} 
+      style={{
+        marginBottom: isMobile ? '50px' : '40px', 
+        marginRight: '10px'
+      }} 
+    />
   );
 };
 
-// COMPOSANT INFO STATUT
+// COMPOSANT INFO STATUT - Affiche les informations de statut
 const StatusInfo = ({ ressourcesCount, selectedCommune, currentBasemap, isMobile }) => {
   return (
     <div style={{
-      position: 'absolute', bottom: '10px', left: '10px',
-      background: 'rgba(255, 255, 255, 0.9)', color: '#333', padding: '6px 10px',
-      borderRadius: '4px', fontSize: '11px', fontFamily: 'Arial, sans-serif', zIndex: 1000,
-      border: '2px solid rgba(0,0,0,0.2)', backdropFilter: 'blur(2px)',
+      position: 'absolute', 
+      bottom: '10px', 
+      left: '10px',
+      background: 'rgba(255, 255, 255, 0.9)', 
+      color: '#333', 
+      padding: '6px 10px',
+      borderRadius: '4px', 
+      fontSize: '11px', 
+      fontFamily: 'Arial, sans-serif', 
+      zIndex: 1000,
+      border: '2px solid rgba(0,0,0,0.2)', 
+      backdropFilter: 'blur(2px)',
       maxWidth: isMobile ? '200px' : '300px'
     }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -123,7 +149,7 @@ const StatusInfo = ({ ressourcesCount, selectedCommune, currentBasemap, isMobile
   );
 };
 
-// COMPOSANT LOCALISATION
+// COMPOSANT LOCALISATION - Bouton de géolocalisation
 const LocateControl = ({ isMobile }) => {
   const map = useMap();
   const [isLocating, setIsLocating] = useState(false);
@@ -145,7 +171,9 @@ const LocateControl = ({ isMobile }) => {
               <div style="position: absolute; top: 0; left: 0; width: 24px; height: 24px; background: rgba(0, 133, 63, 0.3); border-radius: 50%; animation: ripple 2s infinite;"></div>
               <div style="position: absolute; top: 4px; left: 4px; width: 16px; height: 16px; background: #00853f; border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>
             </div>`,
-            className: 'modern-location-marker', iconSize: [24, 24], iconAnchor: [12, 12],
+            className: 'modern-location-marker', 
+            iconSize: [24, 24], 
+            iconAnchor: [12, 12],
           })
         }).addTo(map).bindPopup(`
           <div style="text-align: center; padding: 8px;">
@@ -179,9 +207,19 @@ const LocateControl = ({ isMobile }) => {
         container.innerHTML = `<button title="Localiser ma position" style="${buttonStyle} background: ${isLocating ? '#f59e0b' : '#00853f'}; border: 3px solid white; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s ease; animation: ${isLocating ? 'pulse 1.5s infinite' : 'none'}; outline: none;">${isLocating ? '⏳' : '📍'}</button>`;
         
         const button = container.querySelector('button');
-        button.addEventListener('mouseenter', function() { this.style.transform = 'scale(1.1)'; this.style.background = isLocating ? '#d97706' : '#006b33'; });
-        button.addEventListener('mouseleave', function() { this.style.transform = 'scale(1)'; this.style.background = isLocating ? '#f59e0b' : '#00853f'; });
-        button.onclick = (e) => { e.preventDefault(); e.stopPropagation(); locateUser(); };
+        button.addEventListener('mouseenter', function() { 
+          this.style.transform = 'scale(1.1)'; 
+          this.style.background = isLocating ? '#d97706' : '#006b33'; 
+        });
+        button.addEventListener('mouseleave', function() { 
+          this.style.transform = 'scale(1)'; 
+          this.style.background = isLocating ? '#f59e0b' : '#00853f'; 
+        });
+        button.onclick = (e) => { 
+          e.preventDefault(); 
+          e.stopPropagation(); 
+          locateUser(); 
+        };
         
         return container;
       }
@@ -213,7 +251,7 @@ const searchCommunesAPI = async (searchTerm) => {
   }
 };
 
-// COMPOSANT RECHERCHE COMMUNES
+// COMPOSANT RECHERCHE COMMUNES - Barre de recherche des communes
 const SearchBarCommunes = ({ onCommuneSelect, isMobile, communesData = [] }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState([]);
@@ -243,14 +281,11 @@ const SearchBarCommunes = ({ onCommuneSelect, isMobile, communesData = [] }) => 
       
       console.log(`🔍 Recherche locale: ${localResults.length} résultats pour "${term}"`);
       
-      searchCommunesAPI(term).then(apiResults => {
-        if (apiResults && apiResults.length > 0) {
-          console.log(`🔍 Résultats API: ${apiResults.length} résultats`);
-          setResults(apiResults);
-        }
-      }).catch(apiError => {
-        console.log('API de recherche non disponible, utilisation des données locales');
-      });
+      const apiResults = await searchCommunesAPI(term);
+      if (apiResults && apiResults.length > 0) {
+        console.log(`🔍 Résultats API: ${apiResults.length} résultats`);
+        setResults(apiResults);
+      }
       
     } catch (error) {
       console.error('Erreur recherche:', error);
@@ -280,11 +315,19 @@ const SearchBarCommunes = ({ onCommuneSelect, isMobile, communesData = [] }) => 
     } catch (error) {
       console.error('❌ Erreur:', error);
       setSearchTerm(commune.nom);
+      setShowResults(false);
     }
   };
 
   return (
-    <div style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, width: isMobile ? '90%' : '400px' }}>
+    <div style={{ 
+      position: 'absolute', 
+      top: '10px', 
+      left: '50%', 
+      transform: 'translateX(-50%)', 
+      zIndex: 1000, 
+      width: isMobile ? '90%' : '400px' 
+    }}>
       <input 
         type="text" 
         placeholder="🔍 Rechercher une commune..." 
@@ -387,23 +430,50 @@ const SearchBarCommunes = ({ onCommuneSelect, isMobile, communesData = [] }) => 
   );
 };
 
-// COMPOSANTS RESTANTS
+// COMPOSANT CONTRÔLEUR DE CARTE
 const MapController = ({ isMobile }) => {
   const map = useMap();
-  useEffect(() => { console.log('🗺️ MapController - Carte initialisée, mobile:', isMobile); }, [map, isMobile]);
+  useEffect(() => { 
+    console.log('🗺️ MapController - Carte initialisée, mobile:', isMobile); 
+  }, [map, isMobile]);
   return null;
 };
 
+// ============================================================================
+// CONFIGURATION DES FONDS DE CARTE
+// ============================================================================
 const BASEMAPS = {
-  osm: { name: 'OpenStreetMap', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: '&copy; OpenStreetMap' },
-  satellite: { name: 'Satellite', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attribution: '&copy; ArcGIS' },
-  topo: { name: 'Topographique', url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', attribution: '&copy; OpenTopoMap' },
-  dark: { name: 'Sombre', url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', attribution: '&copy; OpenStreetMap & CARTO' }
+  osm: { 
+    name: 'OpenStreetMap', 
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', 
+    attribution: '&copy; OpenStreetMap' 
+  },
+  satellite: { 
+    name: 'Satellite', 
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', 
+    attribution: '&copy; ArcGIS' 
+  },
+  topo: { 
+    name: 'Topographique', 
+    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', 
+    attribution: '&copy; OpenTopoMap' 
+  },
+  dark: { 
+    name: 'Sombre', 
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', 
+    attribution: '&copy; OpenStreetMap & CARTO' 
+  }
 };
 
+// COMPOSANT SÉLECTEUR DE FOND DE CARTE
 const BasemapController = ({ onBasemapChange }) => {
   const [basemap, setBasemap] = useState('osm');
-  const handleBasemapChange = (newBasemap) => { setBasemap(newBasemap); if (onBasemapChange) onBasemapChange(newBasemap); };
+  
+  const handleBasemapChange = (newBasemap) => { 
+    setBasemap(newBasemap); 
+    if (onBasemapChange) onBasemapChange(newBasemap); 
+  };
+  
   return (
     <select 
       onChange={(e) => handleBasemapChange(e.target.value)} 
@@ -432,14 +502,22 @@ const BasemapController = ({ onBasemapChange }) => {
   );
 };
 
+// COMPOSANT COUCHE DE CARTE DYNAMIQUE
 const DynamicTileLayer = ({ basemap }) => {
   const map = useMap();
-  useEffect(() => { map.invalidateSize(); }, [basemap, map]);
+  useEffect(() => { 
+    map.invalidateSize(); 
+  }, [basemap, map]);
+  
   const currentBasemap = BASEMAPS[basemap] || BASEMAPS.osm;
   return <TileLayer attribution={currentBasemap.attribution} url={currentBasemap.url} />;
 };
 
-// Création des icônes
+// ============================================================================
+// CONFIGURATION DES ICÔNES ET POPUPS
+// ============================================================================
+
+// Création des icônes personnalisées
 const creerIcone = (couleur) => new L.Icon({
   iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${couleur}.png`,
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -459,7 +537,7 @@ const icones = {
   'default': creerIcone('grey')
 };
 
-// Popups
+// Popup pour mobile
 const MobilePopup = ({ ressource }) => (
   <div className="mobile-popup">
     <h6 className="mb-2">{ressource.nom}</h6>
@@ -470,6 +548,7 @@ const MobilePopup = ({ ressource }) => (
   </div>
 );
 
+// Popup pour desktop
 const DesktopPopup = ({ ressource }) => (
   <div>
     <h6>{ressource.nom}</h6>
@@ -481,7 +560,11 @@ const DesktopPopup = ({ ressource }) => (
   </div>
 );
 
-// Fonctions utilitaires
+// ============================================================================
+// FONCTIONS UTILITAIRES
+// ============================================================================
+
+// Fonction pour obtenir les coordonnées d'une ressource
 const obtenirCoordonnees = (ressource) => {
   if (ressource.localisation && ressource.localisation.coordinates) {
     const [lng, lat] = ressource.localisation.coordinates;
@@ -492,12 +575,13 @@ const obtenirCoordonnees = (ressource) => {
     const lng = parseFloat(ressource.longitude);
     if (!isNaN(lat) && !isNaN(lng)) return [lat, lng];
   }
-  return [14.7167, -17.4677];
+  return [14.7167, -17.4677]; // Position par défaut (Dakar)
 };
 
+// Fonction pour obtenir l'icône selon le type de ressource
 const getIconForRessource = (typeRessource) => icones[typeRessource] || icones.default;
 
-// Fonction pour valider et parser les coordonnées
+// Fonction pour valider et parser les coordonnées d'une commune
 const parseCoordinates = (commune) => {
   console.log('📍 Parsing coordinates for commune:', commune);
   
@@ -524,7 +608,7 @@ const parseCoordinates = (commune) => {
 };
 
 // ============================================================================
-// COMPOSANT PRINCIPAL AVEC SYNCHRONISATION
+// COMPOSANT PRINCIPAL
 // ============================================================================
 const CarteCommunale = ({ 
   ressources, 
@@ -534,12 +618,27 @@ const CarteCommunale = ({
   formulairePosition, 
   onMapPositionRequest 
 }) => {
-  const positionDefaut = [14.7167, -17.4677];
-  const mapRef = useRef();
-  const [cartePrete, setCartePrete] = useState(false);
-  const [currentBasemap, setCurrentBasemap] = useState('osm');
-  const [selectedCommune, setSelectedCommune] = useState(null);
-  const [currentPosition, setCurrentPosition] = useState(positionDefaut);
+  // ============================================================================
+  // DÉCLARATION DES STATES ET RÉFÉRENCES
+  // ============================================================================
+  const positionDefaut = [14.7167, -17.4677]; // Position par défaut: Dakar
+  const mapRef = useRef(); // Référence vers la carte Leaflet
+  const [cartePrete, setCartePrete] = useState(false); // État de chargement de la carte
+  const [currentBasemap, setCurrentBasemap] = useState('osm'); // Fond de carte actuel
+  const [selectedCommune, setSelectedCommune] = useState(null); // Commune sélectionnée
+  const [currentPosition, setCurrentPosition] = useState(positionDefaut); // Position actuelle
+
+  // ============================================================================
+  // EFFETS ET GESTION D'ÉTAT
+  // ============================================================================
+
+  // Stocker le nombre de ressources globalement pour l'impression
+  useEffect(() => {
+    window.ressourcesCount = ressources ? ressources.filter(ressource => {
+      const coords = obtenirCoordonnees(ressource);
+      return coords && coords[0] !== positionDefaut[0] && coords[1] !== positionDefaut[1];
+    }).length : 0;
+  }, [ressources, positionDefaut]);
 
   // Mettre à jour la position quand formulairePosition change
   useEffect(() => {
@@ -571,27 +670,26 @@ const CarteCommunale = ({
   }, [formulairePosition]);
 
   // Fonction pour obtenir la position actuelle de la carte
-  const getCurrentMapPosition = () => {
+  const getCurrentMapPosition = useCallback(() => {
     if (mapRef.current) {
       const center = mapRef.current.getCenter();
       return { lat: center.lat, lng: center.lng };
     }
     return null;
-  };
+  }, []);
 
   // Gérer les demandes de position depuis le formulaire
   useEffect(() => {
     if (onMapPositionRequest === 'getCurrent') {
       const position = getCurrentMapPosition();
       if (position) {
-        // Émettre un événement avec la position actuelle
         window.dispatchEvent(new CustomEvent('mapPositionResponse', { 
           detail: position 
         }));
         console.log('📍 Position carte envoyée:', position);
       }
     }
-  }, [onMapPositionRequest]);
+  }, [onMapPositionRequest, getCurrentMapPosition]);
 
   // Écouter les événements de position depuis le formulaire
   useEffect(() => {
@@ -611,9 +709,12 @@ const CarteCommunale = ({
     return () => {
       window.removeEventListener('mapPositionRequest', handleMapPositionRequest);
     };
-  }, []);
+  }, [getCurrentMapPosition]);
 
-  const handleCommuneSelect = async (commune) => {
+  // ============================================================================
+  // GESTION DE LA SÉLECTION DES COMMUNES
+  // ============================================================================
+  const handleCommuneSelect = useCallback(async (commune) => {
     console.log('📍 Commune sélectionnée:', commune);
     
     if (!mapRef.current) {
@@ -625,16 +726,18 @@ const CarteCommunale = ({
       let coordinates = parseCoordinates(commune);
       console.log('📍 Coordonnées calculées:', coordinates);
 
-      if (window.communeMarker) {
+      // Nettoyer les marqueurs précédents
+      if (window.communeMarker && mapRef.current.hasLayer(window.communeMarker)) {
         mapRef.current.removeLayer(window.communeMarker);
       }
-      if (window.communeBoundaryLayer) {
+      if (window.communeBoundaryLayer && mapRef.current.hasLayer(window.communeBoundaryLayer)) {
         mapRef.current.removeLayer(window.communeBoundaryLayer);
       }
 
       let boundaries = null;
       let communeData = commune;
 
+      // Récupérer les contours si disponible
       if (communeData.id) {
         const apiData = await fetchCommuneBoundaries(communeData.id);
         if (apiData) {
@@ -647,6 +750,7 @@ const CarteCommunale = ({
         }
       }
 
+      // Afficher les contours si disponibles
       if (boundaries) {
         console.log('🎨 Affichage des contours');
         window.communeBoundaryLayer = L.geoJSON(boundaries, {
@@ -668,6 +772,7 @@ const CarteCommunale = ({
         mapRef.current.setView(coordinates, 12);
       }
 
+      // Ajouter le marqueur de la commune
       window.communeMarker = L.marker(coordinates, {
         icon: L.divIcon({
           html: `<div style="background: #00853f; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">🏛️</div>`,
@@ -689,6 +794,7 @@ const CarteCommunale = ({
         </div>
       `).openPopup();
 
+      setSelectedCommune(communeData);
       console.log('✅ Commune affichée avec succès');
 
     } catch (error) {
@@ -696,27 +802,39 @@ const CarteCommunale = ({
     }
     
     if (onCommuneSelect) onCommuneSelect(commune);
-  };
+  }, [onCommuneSelect]);
 
+  // ============================================================================
+  // NETTOYAGE ET GESTION DU CYCLE DE VIE
+  // ============================================================================
   useEffect(() => {
     window.closeCommunePopup = () => { 
       if (window.communeMarker) {
         window.communeMarker.closePopup();
       }
-      if (window.communeBoundaryLayer) {
+      if (window.communeBoundaryLayer && mapRef.current?.hasLayer(window.communeBoundaryLayer)) {
         mapRef.current.removeLayer(window.communeBoundaryLayer);
         window.communeBoundaryLayer = null;
       }
     };
     
     return () => { 
+      // Nettoyer toutes les références globales
       delete window.closeCommunePopup; 
       delete window.communeBoundaryLayer;
       delete window.communeMarker;
       delete window.formulaireMarker;
+      delete window.drawnItems;
+      delete window.densityLayer;
+      delete window.ressourcesCount;
+      delete window.existingDrawControl;
+      delete window.currentLocationMarker;
     };
   }, []);
 
+  // ============================================================================
+  // FILTRAGE DES RESSOURCES AVEC COORDONNÉES VALIDES
+  // ============================================================================
   const ressourcesAvecCoordonnees = ressources ? ressources.filter(ressource => {
     const coords = obtenirCoordonnees(ressource);
     return coords && coords[0] !== positionDefaut[0] && coords[1] !== positionDefaut[1];
@@ -724,15 +842,20 @@ const CarteCommunale = ({
 
   const currentBasemapData = BASEMAPS[currentBasemap] || BASEMAPS.osm;
 
+  // ============================================================================
+  // RENDU PRINCIPAL
+  // ============================================================================
   return (
     <div className={`carte-container ${isMobile ? 'mobile' : 'desktop'}`} style={{ animation: 'fadeIn 0.8s ease' }}>
       
+      {/* BARRE DE RECHERCHE - Centrée en haut */}
       <SearchBarCommunes 
         onCommuneSelect={handleCommuneSelect} 
         isMobile={isMobile}
         communesData={communes}
       />
       
+      {/* CONTENEUR PRINCIPAL DE LA CARTE LEAFLET */}
       <MapContainer 
         center={positionDefaut} 
         zoom={isMobile ? 10 : 12} 
@@ -745,11 +868,39 @@ const CarteCommunale = ({
         }}
       >
 
-        <AnalysisToolsBar 
-          isMobile={isMobile} 
-          ressources={ressourcesAvecCoordonnees} 
-        />
+        {/* ============================================================================
+            PANEL DES OUTILS À DROITE
+            Modifier les propriétés CSS ici pour ajuster la position des outils
+        ============================================================================ */}
         
+        {/* CONTENEUR PRINCIPAL DES OUTILS À DROITE */}
+        <div style={{
+          position: 'absolute',
+          top: '80px', // ← MODIFIER CETTE VALEUR pour déplacer vers le haut/bas
+          right: '10px', // ← MODIFIER CETTE VALEUR pour déplacer vers la gauche/droite
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '15px' // ← MODIFIER CETTE VALEUR pour ajuster l'espacement entre les groupes d'outils
+        }}>
+          
+          {/* OUTILS D'ANALYSE - Premier groupe en haut */}
+          <AnalysisToolsBar 
+            isMobile={isMobile} 
+            ressources={ressourcesAvecCoordonnees} 
+            mapRef={mapRef}
+          />
+
+          {/* OUTILS DE DESSIN - Deuxième groupe en dessous */}
+          <DrawingAndPrintTools 
+            isMobile={isMobile} 
+            mapRef={mapRef} 
+          />
+        </div>
+        
+        {/* ============================================================================
+            COMPOSANTS LEAFLET ET CONTRÔLES
+        ============================================================================ */}
         <MapController isMobile={isMobile} />
         <BasemapController onBasemapChange={setCurrentBasemap} />
         <LocateControl isMobile={isMobile} />
@@ -763,6 +914,7 @@ const CarteCommunale = ({
         />
         <DynamicTileLayer basemap={currentBasemap} />
 
+        {/* MARQUEURS DES RESSOURCES */}
         {cartePrete && ressourcesAvecCoordonnees.map((ressource) => {
           const coords = obtenirCoordonnees(ressource);
           return (
@@ -773,12 +925,49 @@ const CarteCommunale = ({
         })}
       </MapContainer>
 
+      {/* ============================================================================
+          STYLES CSS PERSONNALISÉS
+          Modifier ces styles pour ajuster l'apparence
+      ============================================================================ */}
       <style>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideInRight { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.2); } 50% { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,0,0,0.3); } 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.2); } }
-        @keyframes ripple { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(3); opacity: 0; } }
+        @keyframes pulse { 
+          0% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.2); } 
+          50% { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,0,0,0.3); } 
+          100% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.2); } 
+        }
+        @keyframes ripple { 
+          0% { transform: scale(1); opacity: 1; } 
+          100% { transform: scale(3); opacity: 0; } 
+        }
+        
+        /* Styles pour les contrôles de dessin Leaflet */
+        .leaflet-draw-section {
+          background: white;
+          border-radius: 8px;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .leaflet-draw-toolbar {
+          margin-top: 0;
+        }
+        
+        .leaflet-draw-toolbar a {
+          background-color: #00853f;
+          border-color: #00853f;
+        }
+        
+        .leaflet-draw-toolbar a:hover {
+          background-color: #006b33;
+          border-color: #006b33;
+        }
+
+        /* Ajustement pour le sélecteur de fond de carte */
+        .leaflet-control-layers {
+          margin-top: 100px !important;
+        }
       `}</style>
     </div>
   );
