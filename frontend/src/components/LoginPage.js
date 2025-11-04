@@ -101,7 +101,7 @@ const LoginPage = ({ onLoginSuccess }) => {
               color: 'var(--on-background)',
               fontSize: '14px'
             }}>
-              Sénégal - {t('territorial_management')}
+              Sénégal - {t('territorial-management')}
             </p>
           </div>
 

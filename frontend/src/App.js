@@ -1,3 +1,4 @@
+// App.js
 import React, { useState, useEffect, useRef } from 'react';
 import { Container } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -5,6 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import './App.css';
 
 import CarteCommunale from './components/CarteCommunale';
+import CarteCommunaleMobile from './components/CarteCommunaleMobile';
 import ListeRessources from './components/ListeRessources';
 import Header from './components/Header';
 import FormulaireRessource from './components/FormulaireRessource';
@@ -24,6 +26,7 @@ import { NotificationProvider, useNotifications } from './components/Notificatio
 import NotificationContainer from './components/Notifications';
 import { TranslationProvider } from './hooks/useTranslation';
 import ANSDPanel from './components/ansd/ANSDPanel';
+import FormulaireRessourceMobile from './components/FormulaireRessourceMobile';
 
 // Composant MobileNavigation
 const MobileNavigation = ({
@@ -304,7 +307,10 @@ const CarteView = ({
   handleSearchChange, 
   handleFilterChange,
   formulairePosition,
-  mapPositionRequest
+  mapPositionRequest,
+  setShowFormulaire,
+  user,
+  onAddDataClick
 }) => {
   return (
     <div className="main-content-wrapper">
@@ -345,7 +351,7 @@ const CarteView = ({
             <ListeRessources
               ressources={ressourcesFiltrees}
               selectedCommune={selectedCommune}
-              onRessourceUpdated={() => {}} // Cette fonction sera passée par le parent
+              onRessourceUpdated={() => {}}
               isMobile={isMobile}
             />
           </div>
@@ -365,14 +371,26 @@ const CarteView = ({
               </div>
             </div>
           ) : (
-            <CarteCommunale
-              ressources={ressourcesFiltrees}
-              communes={communes}
-              onCommuneSelect={setSelectedCommune}
-              isMobile={isMobile}
-              formulairePosition={formulairePosition}
-              onMapPositionRequest={mapPositionRequest}
-            />
+            <>
+              {isMobile ? (
+                <CarteCommunaleMobile
+                  ressources={ressourcesFiltrees}
+                  communes={communes}
+                  onCommuneSelect={setSelectedCommune}
+                  onAddDataClick={onAddDataClick}
+                  formulairePosition={formulairePosition}
+                />
+              ) : (
+                <CarteCommunale
+                  ressources={ressourcesFiltrees}
+                  communes={communes}
+                  onCommuneSelect={setSelectedCommune}
+                  isMobile={isMobile}
+                  formulairePosition={formulairePosition}
+                  onMapPositionRequest={mapPositionRequest}
+                />
+              )}
+            </>
           )}
         </div>
 
@@ -390,14 +408,14 @@ const CarteView = ({
               {/* Section Export */}
               <ExportDonnees
                 ressources={ressourcesFiltrees}
-                onExportComplete={() => {}} // Cette fonction sera passée par le parent
+                onExportComplete={() => {}}
                 isMobile={isMobile}
               />
 
               <ListeRessources
                 ressources={ressourcesFiltrees}
                 selectedCommune={selectedCommune}
-                onRessourceUpdated={() => {}} // Cette fonction sera passée par le parent
+                onRessourceUpdated={() => {}}
                 isMobile={isMobile}
               />
             </div>
@@ -429,6 +447,7 @@ const AppContent = () => {
   // NOUVEAUX ÉTATS POUR LA SYNCHRONISATION
   const [formulairePosition, setFormulairePosition] = useState(null);
   const [mapPositionRequest, setMapPositionRequest] = useState(null);
+  const [selectedPosition, setSelectedPosition] = useState(null);
 
   // Références pour éviter les déclenchements multiples de notifications
   const notificationsShown = useRef({
@@ -538,6 +557,14 @@ const AppContent = () => {
   const handleRessourceAdded = () => {
     success('✅ Ressource ajoutée avec succès !');
     chargerDonnees();
+    setSelectedPosition(null);
+  };
+
+  const handleAddDataClick = (position = null) => {
+    if (position) {
+      setSelectedPosition(position);
+    }
+    setShowFormulaire(true);
   };
 
   const handleLoginSuccess = (userData) => {
@@ -564,6 +591,7 @@ const AppContent = () => {
     setUser(null);
     setRessources([]);
     setCommunes([]);
+    setSelectedPosition(null);
     info('👋 Vous avez été déconnecté');
   };
 
@@ -586,27 +614,23 @@ const AppContent = () => {
   // Gérer le changement de position depuis le formulaire
   const handleFormulairePositionChange = (position) => {
     if (position === 'getCurrent') {
-      // Demander la position actuelle de la carte
       setMapPositionRequest('getCurrent');
       
-      // Écouter la réponse de la carte
       const handlePositionResponse = (event) => {
         setFormulairePosition(event.detail);
         window.removeEventListener('mapPositionResponse', handlePositionResponse);
       };
       window.addEventListener('mapPositionResponse', handlePositionResponse);
       
-      // Émettre l'événement de demande
       window.dispatchEvent(new CustomEvent('mapPositionRequest', { 
         detail: 'getCurrent' 
       }));
     } else {
-      // Mettre à jour la position du formulaire
       setFormulairePosition(position);
     }
   };
 
-  // Fonction renderActiveView CORRIGÉE - sans hooks conditionnels
+  // Fonction renderActiveView
   const renderActiveView = () => {
     console.log('🔄 Vue active:', activeView);
 
@@ -638,6 +662,9 @@ const AppContent = () => {
             handleFilterChange={handleFilterChange}
             formulairePosition={formulairePosition}
             mapPositionRequest={mapPositionRequest}
+            setShowFormulaire={setShowFormulaire}
+            user={user}
+            onAddDataClick={handleAddDataClick}
           />
         );
     }
@@ -697,23 +724,30 @@ const AppContent = () => {
         />
       )}
 
-      {/* Bouton ajouter mobile */}
-      {isMobile && user && user.role !== 'consultant' && (
-        <div className="mobile-add-floating-btn">
-          <button className="floating-add-btn" onClick={() => setShowFormulaire(true)}>
-            ➕
-          </button>
-        </div>
+      {/* Formulaires */}
+      {isMobile ? (
+        <FormulaireRessourceMobile
+          show={showFormulaire}
+          onHide={() => {
+            setShowFormulaire(false);
+            setSelectedPosition(null);
+          }}
+          onRessourceAdded={handleRessourceAdded}
+          positionInitiale={selectedPosition || formulairePosition}
+        />
+      ) : (
+        <FormulaireRessource
+          show={showFormulaire}
+          onHide={() => {
+            setShowFormulaire(false);
+            setSelectedPosition(null);
+          }}
+          onRessourceAdded={handleRessourceAdded}
+          isMobile={isMobile}
+          positionInitiale={selectedPosition || formulairePosition}
+          onPositionChange={handleFormulairePositionChange}
+        />
       )}
-
-      <FormulaireRessource
-        show={showFormulaire}
-        onHide={() => setShowFormulaire(false)}
-        onRessourceAdded={handleRessourceAdded}
-        isMobile={isMobile}
-        positionInitiale={formulairePosition}
-        onPositionChange={handleFormulairePositionChange}
-      />
     </div>
   );
 };
