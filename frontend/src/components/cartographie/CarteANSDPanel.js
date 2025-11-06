@@ -383,7 +383,7 @@ const CarteANSDPanel = () => {
     );
   }
   return (
-    // ⚠️ SUPPRIMEZ Container fluid - C'EST LE PROBLÈME !
+    //  SUPPRIMEZ Container fluid - C'EST LE PROBLÈME !
     <div style={{ width: '100%', margin: 0, padding: 0 }}>
       {/* En-tête avec contrôles avancés */}
       <Card className="flutter-card mb-3">

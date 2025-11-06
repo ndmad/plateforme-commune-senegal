@@ -43,330 +43,9 @@ const fetchCommuneBoundaries = async (communeId) => {
   }
 };
 
-// COMPOSANT BOUTON STYLE FLUTTER
-const FlutterButton = ({ icon, title, onClick, color = '#00853f', isActive = false, badge }) => {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        width: '40px',
-        height: '40px',
-        borderRadius: '10px',
-        background: isActive ? color : 'white',
-        border: `2px solid ${isActive ? color : '#e0e0e0'}`,
-        color: isActive ? 'white' : color,
-        fontSize: '16px',
-        cursor: 'pointer',
-        boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transition: 'all 0.2s ease',
-        marginBottom: '8px',
-        position: 'relative'
-      }}
-      onMouseEnter={(e) => {
-        e.target.style.transform = 'translateY(-1px)';
-        e.target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
-      }}
-      onMouseLeave={(e) => {
-        e.target.style.transform = 'translateY(0)';
-        e.target.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
-      }}
-      title={title}
-    >
-      {icon}
-      {badge && (
-        <span style={{
-          position: 'absolute',
-          top: '-4px',
-          right: '-4px',
-          background: '#ff3b30',
-          color: 'white',
-          borderRadius: '8px',
-          width: '16px',
-          height: '16px',
-          fontSize: '9px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontWeight: 'bold',
-          border: '1px solid white'
-        }}>
-          {badge}
-        </span>
-      )}
-    </button>
-  );
-};
-
-// COMPOSANT CONTROLEUR BOUTONS DROITE STYLE FLUTTER
-const FlutterControls = ({ onAddClick, onLocateClick, onLayersClick, isLocating, isAddingMode }) => {
-  return (
-    <div style={{
-      position: 'absolute',
-      right: '10px',
-      top: '50%',
-      transform: 'translateY(-50%)',
-      zIndex: 1000,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center'
-    }}>
-      {/* BOUTON AJOUTER RESSOURCE */}
-      <FlutterButton
-        icon={isAddingMode ? "❌" : "➕"}
-        title={isAddingMode ? "Annuler l'ajout" : "Ajouter une ressource"}
-        onClick={onAddClick}
-        color={isAddingMode ? "#dc2626" : "#00853f"}
-        isActive={isAddingMode}
-      />
-      
-      {/* BOUTON LOCALISATION */}
-      <FlutterButton
-        icon={isLocating ? "⏳" : "📍"}
-        title="Localiser ma position"
-        onClick={onLocateClick}
-        color="#007AFF"
-        isActive={isLocating}
-      />
-      
-      {/* BOUTON FONDS DE CARTE */}
-      <FlutterButton
-        icon="🗺️"
-        title="Changer le fond de carte"
-        onClick={onLayersClick}
-        color="#5856D6"
-      />
-    </div>
-  );
-};
-
-// COMPOSANT ZOOM PERSONNALISÉ À DROITE
-const CustomZoomControl = () => {
-  const map = useMap();
-
-  return (
-    <div style={{
-      position: 'absolute',
-      right: '10px',
-      top: '100px',
-      zIndex: 1000,
-      display: 'flex',
-      flexDirection: 'column',
-      background: 'white',
-      borderRadius: '10px',
-      boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-      overflow: 'hidden',
-      border: '2px solid #e0e0e0'
-    }}>
-      <button
-        onClick={() => map.zoomIn()}
-        style={{
-          width: '40px',
-          height: '40px',
-          border: 'none',
-          background: 'white',
-          fontSize: '16px',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'all 0.2s ease',
-          color: '#00853f'
-        }}
-        onMouseEnter={(e) => {
-          e.target.style.background = '#f8f9fa';
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.background = 'white';
-        }}
-        title="Zoom avant"
-      >
-        ➕
-      </button>
-      
-      <div style={{
-        height: '1px',
-        background: '#e0e0e0'
-      }} />
-      
-      <button
-        onClick={() => map.zoomOut()}
-        style={{
-          width: '40px',
-          height: '40px',
-          border: 'none',
-          background: 'white',
-          fontSize: '16px',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'all 0.2s ease',
-          color: '#00853f'
-        }}
-        onMouseEnter={(e) => {
-          e.target.style.background = '#f8f9fa';
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.background = 'white';
-        }}
-        title="Zoom arrière"
-      >
-        ➖
-      </button>
-    </div>
-  );
-};
-
-// COMPOSANT LOCALISATION OPTIMISÉ
-const LocateControl = ({ onLocatingChange, onLocate }) => {
-  const map = useMap();
-  const [isLocating, setIsLocating] = useState(false);
-
-  const locateUser = () => {
-    if (!navigator.geolocation) return;
-
-    setIsLocating(true);
-    if (onLocatingChange) onLocatingChange(true);
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        map.setView([latitude, longitude], 16);
-
-        if (window.currentLocationMarker) {
-          map.removeLayer(window.currentLocationMarker);
-        }
-
-        window.currentLocationMarker = L.marker([latitude, longitude], {
-          icon: L.divIcon({
-            html: `<div style="position: relative; width: 20px; height: 20px;">
-              <div style="position: absolute; top: 0; left: 0; width: 20px; height: 20px; background: rgba(0, 122, 255, 0.3); border-radius: 50%; animation: ripple 2s infinite;"></div>
-              <div style="position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; background: #007AFF; border: 2px solid white; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.3);"></div>
-            </div>`,
-            className: 'modern-location-marker',
-            iconSize: [20, 20],
-            iconAnchor: [10, 10],
-          })
-        }).addTo(map).bindPopup(`
-          <div style="text-align: center; padding: 8px;">
-            <strong>📍 Votre position</strong><br>
-            <small>Lat: ${latitude.toFixed(4)}°</small><br>
-            <small>Lng: ${longitude.toFixed(4)}°</small>
-          </div>
-        `).openPopup();
-
-        setIsLocating(false);
-        if (onLocatingChange) onLocatingChange(false);
-      },
-      (error) => {
-        setIsLocating(false);
-        if (onLocatingChange) onLocatingChange(false);
-        
-        L.popup().setLatLng(map.getCenter()).setContent(`
-          <div style="text-align: center; padding: 10px;">
-            <div style="font-size: 18px; margin-bottom: 6px;">❌</div>
-            <strong style="color: #dc2626; font-size: 12px;">Géolocalisation impossible</strong>
-          </div>
-        `).openOn(map);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-    );
-  };
-
-  // Écouter les demandes de localisation
-  useEffect(() => {
-    if (onLocate) {
-      locateUser();
-    }
-  }, [onLocate]);
-
-  return null;
-};
-
-// COMPOSANT SÉLECTEUR DE FOND DE CARTE STYLE FLUTTER
-const FlutterLayersControl = ({ onBasemapChange, isOpen, onClose }) => {
-  const [basemap, setBasemap] = useState('osm');
-  
-  const handleBasemapChange = (newBasemap) => { 
-    setBasemap(newBasemap); 
-    if (onBasemapChange) onBasemapChange(newBasemap); 
-    if (onClose) onClose();
-  };
-
-  const basemapOptions = [
-    { value: 'osm', label: '🗺️', name: 'Carte Standard' },
-    { value: 'satellite', label: '🛰️', name: 'Satellite' }
-  ];
-
-  if (!isOpen) return null;
-
-  return (
-    <>
-      <div style={{
-        position: 'absolute',
-        right: '60px',
-        top: '50%',
-        transform: 'translateY(-50%)',
-        background: 'white',
-        borderRadius: '10px',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
-        zIndex: 1001,
-        overflow: 'hidden',
-        border: '2px solid #e0e0e0',
-        minWidth: '150px'
-      }}>
-        {basemapOptions.map((option) => (
-          <button
-            key={option.value}
-            onClick={() => handleBasemapChange(option.value)}
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              background: basemap === option.value ? '#f0f9f0' : 'white',
-              border: 'none',
-              borderBottom: '1px solid #f0f0f0',
-              fontSize: '13px',
-              textAlign: 'left',
-              cursor: 'pointer',
-              color: '#333',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = '#f8f9fa';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = basemap === option.value ? '#f0f9f0' : 'white';
-            }}
-          >
-            <span style={{ fontSize: '16px' }}>{option.label}</span>
-            <span style={{ fontSize: '12px', color: '#666' }}>{option.name}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Overlay pour fermer le menu */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 1000
-        }}
-        onClick={onClose}
-      />
-    </>
-  );
-};
-
-// FONCTIONS API
+// ============================================================================
+// COMPOSANT RECHERCHE COMMUNES
+// ============================================================================
 const searchCommunesAPI = async (searchTerm) => {
   try {
     const response = await fetch(`${API_BASE_URL}/communes/search/${encodeURIComponent(searchTerm)}`);
@@ -381,7 +60,6 @@ const searchCommunesAPI = async (searchTerm) => {
   }
 };
 
-// COMPOSANT RECHERCHE COMMUNES
 const SearchBarCommunes = ({ onCommuneSelect, communesData = [] }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState([]);
@@ -535,11 +213,403 @@ const SearchBarCommunes = ({ onCommuneSelect, communesData = [] }) => {
   );
 };
 
+// ============================================================================
+// COMPOSANTS BOUTONS STYLE QFIELD MODERNE
+// ============================================================================
+
+// COMPOSANT BOUTON STYLE QFIELD
+const QFieldButton = ({ icon, title, onClick, color = '#00853f', isActive = false, badge, style = {} }) => {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: '38px',
+        height: '38px',
+        borderRadius: '10px',
+        background: isActive ? color : 'white',
+        border: `2px solid ${isActive ? color : '#e0e0e0'}`,
+        color: isActive ? 'white' : color,
+        fontSize: '16px',
+        cursor: 'pointer',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'all 0.2s ease',
+        marginBottom: '5px',
+        position: 'relative',
+        ...style
+      }}
+      onMouseEnter={(e) => {
+        e.target.style.transform = 'translateY(-1px)';
+        e.target.style.boxShadow = '0 4px 10px rgba(0,0,0,0.2)';
+        if (!isActive) {
+          e.target.style.borderColor = color;
+          e.target.style.background = '#f8f9fa';
+        }
+      }}
+      onMouseLeave={(e) => {
+        e.target.style.transform = 'translateY(0)';
+        e.target.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
+        if (!isActive) {
+          e.target.style.borderColor = '#e0e0e0';
+          e.target.style.background = 'white';
+        }
+      }}
+      title={title}
+    >
+      {icon}
+      {badge && (
+        <span style={{
+          position: 'absolute',
+          top: '-4px',
+          right: '-4px',
+          background: '#ff3b30',
+          color: 'white',
+          borderRadius: '8px',
+          width: '14px',
+          height: '14px',
+          fontSize: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontWeight: 'bold',
+          border: '1px solid white'
+        }}>
+          {badge}
+        </span>
+      )}
+    </button>
+  );
+};
+
+// COMPOSANT CONTROLEUR BOUTONS DROITE STYLE QFIELD
+const QFieldControls = ({ onAddClick, onLocateClick, onLayersClick, isLocating, isAddingMode }) => {
+  return (
+    <div style={{
+      position: 'absolute',
+      right: '8px',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      zIndex: 1000,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '5px',
+      background: 'rgba(255, 255, 255, 0.9)',
+      borderRadius: '12px',
+      padding: '6px 4px',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+      border: '1px solid #e0e0e0'
+    }}>
+      {/* BOUTON AJOUTER RESSOURCE - Icône moderne style QField */}
+      <QFieldButton
+        icon={isAddingMode ? "✕" : "＋"}
+        title={isAddingMode ? "Annuler l'ajout" : "Ajouter une ressource"}
+        onClick={onAddClick}
+        color={isAddingMode ? "#dc2626" : "#00853f"}
+        isActive={isAddingMode}
+        style={{ 
+          fontSize: isAddingMode ? '18px' : '20px',
+          fontWeight: isAddingMode ? 'bold' : 'normal'
+        }}
+      />
+      
+      {/* BOUTON LOCALISATION - Icône moderne style QField */}
+      <QFieldButton
+        icon={isLocating ? "⌛" : "📍"}
+        title="Localiser ma position"
+        onClick={onLocateClick}
+        color="#007AFF"
+        isActive={isLocating}
+        style={{ 
+          fontSize: isLocating ? '16px' : '16px'
+        }}
+      />
+      
+      {/* BOUTON FONDS DE CARTE - Icône moderne style QField */}
+      <QFieldButton
+        icon="🌍"
+        title="Changer le fond de carte"
+        onClick={onLayersClick}
+        color="#5856D6"
+        style={{ fontSize: '17px' }}
+      />
+    </div>
+  );
+};
+
+// COMPOSANT ZOOM PERSONNALISÉ STYLE QFIELD
+const CustomZoomControlQField = () => {
+  const map = useMap();
+
+  return (
+    <div style={{
+      position: 'absolute',
+      right: '8px',
+      top: 'calc(50% + 130px)',
+      zIndex: 1000,
+      display: 'flex',
+      flexDirection: 'column',
+      background: 'white',
+      borderRadius: '10px',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+      overflow: 'hidden',
+      border: '1px solid #e0e0e0',
+      gap: '0'
+    }}>
+      <button
+        onClick={() => map.zoomIn()}
+        style={{
+          width: '38px',
+          height: '38px',
+          border: 'none',
+          background: 'white',
+          fontSize: '18px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'all 0.2s ease',
+          color: '#00853f',
+          padding: 0
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.background = '#f8f9fa';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.background = 'white';
+        }}
+        title="Zoom avant"
+      >
+        ＋
+      </button>
+      
+      <div style={{
+        height: '1px',
+        background: '#e0e0e0',
+        margin: '0 5px'
+      }} />
+      
+      <button
+        onClick={() => map.zoomOut()}
+        style={{
+          width: '38px',
+          height: '38px',
+          border: 'none',
+          background: 'white',
+          fontSize: '18px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'all 0.2s ease',
+          color: '#00853f',
+          padding: 0
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.background = '#f8f9fa';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.background = 'white';
+        }}
+        title="Zoom arrière"
+      >
+        −
+      </button>
+    </div>
+  );
+};
+
+// ============================================================================
+// AUTRES COMPOSANTS
+// ============================================================================
+
+// COMPOSANT LOCALISATION OPTIMISÉ
+const LocateControl = ({ onLocatingChange, onLocate }) => {
+  const map = useMap();
+  const [isLocating, setIsLocating] = useState(false);
+
+  const locateUser = () => {
+    if (!navigator.geolocation) return;
+
+    setIsLocating(true);
+    if (onLocatingChange) onLocatingChange(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        map.setView([latitude, longitude], 16);
+
+        if (window.currentLocationMarker) {
+          map.removeLayer(window.currentLocationMarker);
+        }
+
+        window.currentLocationMarker = L.marker([latitude, longitude], {
+          icon: L.divIcon({
+            html: `<div style="position: relative; width: 20px; height: 20px;">
+              <div style="position: absolute; top: 0; left: 0; width: 20px; height: 20px; background: rgba(0, 122, 255, 0.3); border-radius: 50%; animation: ripple 2s infinite;"></div>
+              <div style="position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; background: #007AFF; border: 2px solid white; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.3);"></div>
+            </div>`,
+            className: 'modern-location-marker',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10],
+          })
+        }).addTo(map).bindPopup(`
+          <div style="text-align: center; padding: 8px;">
+            <strong>📍 Votre position</strong><br>
+            <small>Lat: ${latitude.toFixed(4)}°</small><br>
+            <small>Lng: ${longitude.toFixed(4)}°</small>
+          </div>
+        `).openPopup();
+
+        setIsLocating(false);
+        if (onLocatingChange) onLocatingChange(false);
+      },
+      (error) => {
+        setIsLocating(false);
+        if (onLocatingChange) onLocatingChange(false);
+        
+        L.popup().setLatLng(map.getCenter()).setContent(`
+          <div style="text-align: center; padding: 10px;">
+            <div style="font-size: 18px; margin-bottom: 6px;">❌</div>
+            <strong style="color: #dc2626; font-size: 12px;">Géolocalisation impossible</strong>
+          </div>
+        `).openOn(map);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  };
+
+  useEffect(() => {
+    if (onLocate) {
+      locateUser();
+    }
+  }, [onLocate]);
+
+  return null;
+};
+
+// COMPOSANT SÉLECTEUR DE FOND DE CARTE STYLE QFIELD
+const QFieldLayersControl = ({ onBasemapChange, isOpen, onClose }) => {
+  const [basemap, setBasemap] = useState('osm');
+  
+  const handleBasemapChange = (newBasemap) => { 
+    setBasemap(newBasemap); 
+    if (onBasemapChange) onBasemapChange(newBasemap); 
+    if (onClose) onClose();
+  };
+
+  const basemapOptions = [
+    { value: 'osm', label: '🗺️', name: 'Carte Standard' },
+    { value: 'satellite', label: '🛰️', name: 'Satellite' },
+    { value: 'topo', label: '⛰️', name: 'Topographique' }
+  ];
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      <div style={{
+        position: 'absolute',
+        right: '55px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        background: 'white',
+        borderRadius: '12px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+        zIndex: 1001,
+        overflow: 'hidden',
+        border: '1px solid #e0e0e0',
+        minWidth: '170px',
+        backdropFilter: 'blur(10px)'
+      }}>
+        <div style={{
+          padding: '12px 14px',
+          background: 'linear-gradient(135deg, #00853f, #00a651)',
+          color: 'white',
+          fontSize: '13px',
+          fontWeight: '600',
+          textAlign: 'center',
+          borderBottom: '1px solid #e0e0e0'
+        }}>
+          🌍 Fonds de carte
+        </div>
+        
+        {basemapOptions.map((option, index) => (
+          <button
+            key={option.value}
+            onClick={() => handleBasemapChange(option.value)}
+            style={{
+              width: '100%',
+              padding: '12px 14px',
+              background: basemap === option.value ? '#f0f9f0' : 'white',
+              border: 'none',
+              borderBottom: index < basemapOptions.length - 1 ? '1px solid #f0f0f0' : 'none',
+              fontSize: '14px',
+              textAlign: 'left',
+              cursor: 'pointer',
+              color: '#333',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = '#f8f9fa';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = basemap === option.value ? '#f0f9f0' : 'white';
+            }}
+          >
+            <span style={{ 
+              fontSize: '18px',
+              filter: basemap === option.value ? 'none' : 'grayscale(20%)'
+            }}>
+              {option.label}
+            </span>
+            <div style={{ flex: 1 }}>
+              <div style={{ 
+                fontSize: '13px', 
+                fontWeight: basemap === option.value ? '600' : '500',
+                color: basemap === option.value ? '#00853f' : '#333'
+              }}>
+                {option.name}
+              </div>
+            </div>
+            {basemap === option.value && (
+              <span style={{ 
+                fontSize: '16px', 
+                color: '#00853f',
+                fontWeight: 'bold'
+              }}>✓</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Overlay pour fermer le menu */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 1000,
+          background: 'rgba(0,0,0,0.1)'
+        }}
+        onClick={onClose}
+      />
+    </>
+  );
+};
+
 // COMPOSANT CONTRÔLEUR DE CARTE
 const MapController = () => {
   const map = useMap();
   useEffect(() => {
-    console.log('🗺️ Carte mobile style Flutter initialisée');
+    console.log('🗺️ Carte mobile style QField initialisée');
   }, [map]);
   return null;
 };
@@ -557,6 +627,11 @@ const BASEMAPS = {
     name: 'Satellite',
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     attribution: '&copy; ArcGIS'
+  },
+  topo: {
+    name: 'Topographique',
+    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; OpenTopoMap'
   }
 };
 
@@ -671,7 +746,7 @@ const parseCoordinates = (commune) => {
 };
 
 // ============================================================================
-// COMPOSANT PRINCIPAL - VERSION MOBILE STYLE FLUTTER
+// COMPOSANT PRINCIPAL - VERSION STYLE QFIELD
 // ============================================================================
 const CarteCommunaleMobile = ({
   ressources,
@@ -688,25 +763,20 @@ const CarteCommunaleMobile = ({
   const [isLocating, setIsLocating] = useState(false);
   const [showLayersMenu, setShowLayersMenu] = useState(false);
   const [locateTrigger, setLocateTrigger] = useState(0);
-  
-  // NOUVEAUX ÉTATS POUR LE MODE AJOUT
   const [isAddingMode, setIsAddingMode] = useState(false);
   const [temporaryMarker, setTemporaryMarker] = useState(null);
 
   // Gestion du clic sur le bouton Ajouter
   const handleAddButtonClick = () => {
     if (isAddingMode) {
-      // Désactiver le mode ajout
       setIsAddingMode(false);
       if (temporaryMarker && mapRef.current) {
         mapRef.current.removeLayer(temporaryMarker);
       }
       setTemporaryMarker(null);
     } else {
-      // Activer le mode ajout
       setIsAddingMode(true);
       
-      // Afficher un message d'instruction
       L.popup()
         .setLatLng(mapRef.current.getCenter())
         .setContent(`
@@ -727,12 +797,10 @@ const CarteCommunaleMobile = ({
     const handleMapClick = (e) => {
       const { lat, lng } = e.latlng;
       
-      // Supprimer l'ancien marqueur temporaire
       if (temporaryMarker && mapRef.current.hasLayer(temporaryMarker)) {
         mapRef.current.removeLayer(temporaryMarker);
       }
 
-      // Créer un nouveau marqueur temporaire
       const newMarker = L.marker([lat, lng], {
         icon: L.divIcon({
           html: `<div style="background: #ff6b35; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.4); animation: pulse 1.5s infinite;">📌</div>`,
@@ -743,62 +811,21 @@ const CarteCommunaleMobile = ({
 
       setTemporaryMarker(newMarker);
 
-      // Ouvrir le formulaire avec la position sélectionnée
       if (onAddDataClick) {
         onAddDataClick({ lat, lng });
       }
 
-      // Désactiver le mode ajout
       setIsAddingMode(false);
     };
 
-    // Ajouter l'événement de clic
     mapRef.current.on('click', handleMapClick);
 
-    // Nettoyer l'événement
     return () => {
       if (mapRef.current) {
         mapRef.current.off('click', handleMapClick);
       }
     };
   }, [isAddingMode, temporaryMarker, onAddDataClick]);
-
-  // Nettoyage quand le mode ajout est désactivé
-  useEffect(() => {
-    if (!isAddingMode && temporaryMarker && mapRef.current) {
-      if (mapRef.current.hasLayer(temporaryMarker)) {
-        mapRef.current.removeLayer(temporaryMarker);
-      }
-      setTemporaryMarker(null);
-    }
-  }, [isAddingMode, temporaryMarker]);
-
-  // Gestion de la position du formulaire
-  useEffect(() => {
-    if (formulairePosition && mapRef.current) {
-      const { lat, lng } = formulairePosition;
-      const newPosition = [lat, lng];
-      mapRef.current.setView(newPosition, 16);
-
-      if (window.formulaireMarker) {
-        mapRef.current.removeLayer(window.formulaireMarker);
-      }
-
-      window.formulaireMarker = L.marker(newPosition, {
-        icon: L.divIcon({
-          html: `<div style="background: #ff6b35; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); animation: pulse 1.5s infinite;">📌</div>`,
-          iconSize: [28, 28],
-          iconAnchor: [14, 14]
-        })
-      }).addTo(mapRef.current).bindPopup(`
-        <div style="padding: 8px; text-align: center; min-width: 160px;">
-          <strong style="color: #ff6b35; font-size: 12px;">📍 Position du formulaire</strong><br/>
-          <small>Lat: ${lat.toFixed(6)}</small><br/>
-          <small>Lng: ${lng.toFixed(6)}</small>
-        </div>
-      `).openPopup();
-    }
-  }, [formulairePosition]);
 
   // Gestion de la sélection des communes
   const handleCommuneSelect = useCallback(async (commune) => {
@@ -874,16 +901,6 @@ const CarteCommunaleMobile = ({
     if (onCommuneSelect) onCommuneSelect(commune);
   }, [onCommuneSelect]);
 
-  // Nettoyage
-  useEffect(() => {
-    return () => {
-      delete window.communeBoundaryLayer;
-      delete window.communeMarker;
-      delete window.formulaireMarker;
-      delete window.currentLocationMarker;
-    };
-  }, []);
-
   // Filtrage des ressources
   const ressourcesAvecCoordonnees = ressources ? ressources.filter(ressource => {
     const coords = obtenirCoordonnees(ressource);
@@ -898,9 +915,15 @@ const CarteCommunaleMobile = ({
     setShowLayersMenu(true);
   };
 
-  const handleCloseLayersMenu = () => {
-    setShowLayersMenu(false);
-  };
+  // Nettoyage
+  useEffect(() => {
+    return () => {
+      delete window.communeBoundaryLayer;
+      delete window.communeMarker;
+      delete window.formulaireMarker;
+      delete window.currentLocationMarker;
+    };
+  }, []);
 
   return (
     <div className="carte-mobile-container" style={{ 
@@ -953,11 +976,8 @@ const CarteCommunaleMobile = ({
         {/* OUTILS MOBILE */}
         <MapController />
         
-        {/* ZOOM CONTROL PERSONNALISÉ À DROITE */}
-        <CustomZoomControl />
-        
-        {/* BOUTONS DE CONTRÔLE STYLE FLUTTER À DROITE */}
-        <FlutterControls
+        {/* BOUTONS STYLE QFIELD */}
+        <QFieldControls
           onAddClick={handleAddButtonClick}
           onLocateClick={handleLocateClick}
           onLayersClick={handleLayersClick}
@@ -965,17 +985,20 @@ const CarteCommunaleMobile = ({
           isAddingMode={isAddingMode}
         />
         
-        {/* MENU DES FONDS DE CARTE */}
-        <FlutterLayersControl 
-          onBasemapChange={setCurrentBasemap} 
-          isOpen={showLayersMenu}
-          onClose={handleCloseLayersMenu}
-        />
+        {/* ZOOM CONTROL STYLE QFIELD */}
+        <CustomZoomControlQField />
         
         {/* LOCALISATION */}
         <LocateControl 
           onLocatingChange={setIsLocating} 
           onLocate={locateTrigger > 0}
+        />
+        
+        {/* MENU DES FONDS DE CARTE STYLE QFIELD */}
+        <QFieldLayersControl 
+          onBasemapChange={setCurrentBasemap} 
+          isOpen={showLayersMenu}
+          onClose={() => setShowLayersMenu(false)}
         />
         
         {/* FOND DE CARTE */}
