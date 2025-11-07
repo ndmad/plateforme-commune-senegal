@@ -495,3 +495,145 @@
   width: 100% !important;
 }
 
+/* Styles pour la navigation mobile et tablette */
+.flutter-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0;
+  z-index: 1000;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+}
+
+.flutter-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  min-width: 60px;
+}
+
+.flutter-nav-item .icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.flutter-nav-item .label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #666;
+}
+
+.flutter-nav-item.active {
+  background: #f0f9f0;
+}
+
+.flutter-nav-item.active .icon,
+.flutter-nav-item.active .label {
+  color: #00853f;
+}
+
+.flutter-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: #ff3b30;
+  color: white;
+  border-radius: 8px;
+  min-width: 16px;
+  height: 16px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border: 2px solid white;
+}
+
+/* Styles spécifiques tablette */
+.flutter-bottom-nav.tablet-navigation {
+  padding: 12px 0;
+}
+
+.flutter-bottom-nav.tablet-navigation .flutter-nav-item {
+  padding: 12px 16px;
+  min-width: 80px;
+}
+
+.flutter-bottom-nav.tablet-navigation .flutter-nav-item .icon {
+  font-size: 24px;
+}
+
+.flutter-bottom-nav.tablet-navigation .flutter-nav-item .label {
+  font-size: 12px;
+}
+
+/* Panels mobile et tablette */
+.mobile-filters-panel,
+.mobile-list-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 80px; /* Au-dessus de la navigation */
+  background: white;
+  z-index: 999;
+  overflow-y: auto;
+  box-shadow: 0 -2px 20px rgba(0,0,0,0.15);
+}
+
+.mobile-filters-panel.tablet-filters,
+.mobile-list-panel.tablet-list {
+  bottom: 90px; /* Légèrement plus haut pour tablette */
+}
+
+.mobile-filters-header,
+.mobile-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.mobile-filters-header h6,
+.mobile-list-header h6 {
+  margin: 0;
+  color: #00853f;
+}
+
+.mobile-list-content {
+  padding: 16px;
+}
+
+/* Ajustements pour tablette */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .main-container {
+    height: calc(100vh - 90px); /* Prend en compte la navigation tablette */
+  }
+  
+  .carte-section.full-width {
+    height: 100%;
+  }
+}
+
+/* Pour les tablettes en mode paysage */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .mobile-filters-panel.tablet-filters,
+  .mobile-list-panel.tablet-list {
+    bottom: 80px;
+    max-height: 70vh;
+  }
+}

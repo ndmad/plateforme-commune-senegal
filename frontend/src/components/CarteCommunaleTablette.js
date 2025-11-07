@@ -1,4 +1,4 @@
-// components/CarteCommunaleMobile.js
+// components/CarteCommunaleTablette.js
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
 import L from 'leaflet';
@@ -76,7 +76,7 @@ const fetchCommuneBoundaries = async (communeId) => {
 };
 
 // ============================================================================
-// COMPOSANT RECHERCHE COMMUNES
+// COMPOSANT RECHERCHE COMMUNES OPTIMISÉ TABLETTE
 // ============================================================================
 const searchCommunesAPI = async (searchTerm) => {
   try {
@@ -112,7 +112,7 @@ const SearchBarCommunes = ({ onCommuneSelect, communesData = [] }) => {
       const localResults = communesData.filter(commune =>
         commune.nom.toLowerCase().includes(term.toLowerCase()) ||
         (commune.region && commune.region.toLowerCase().includes(term.toLowerCase()))
-      ).slice(0, 6);
+      ).slice(0, 8); // Plus de résultats sur tablette
 
       setResults(localResults);
       setShowResults(true);
@@ -152,11 +152,12 @@ const SearchBarCommunes = ({ onCommuneSelect, communesData = [] }) => {
   return (
     <div style={{
       position: 'absolute',
-      top: '10px',
+      top: '15px', // Plus d'espace en haut sur tablette
       left: '50%',
       transform: 'translateX(-50%)',
       zIndex: 1000,
-      width: '90%'
+      width: '85%', // Légèrement plus large sur tablette
+      maxWidth: '500px' // Maximum pour tablette
     }}>
       <input
         type="text"
@@ -167,11 +168,11 @@ const SearchBarCommunes = ({ onCommuneSelect, communesData = [] }) => {
         onBlur={() => setTimeout(() => setIsFocused(false), 200)}
         style={{
           width: '100%',
-          padding: '12px 16px',
-          borderRadius: '20px',
-          border: `2px solid ${isFocused ? '#00a651' : '#00853f'}`,
-          fontSize: '14px',
-          boxShadow: isFocused ? '0 4px 15px rgba(0,133,63,0.3)' : '0 2px 8px rgba(0,0,0,0.1)',
+          padding: '14px 18px', // Plus grand padding sur tablette
+          borderRadius: '25px', // Bordures plus arrondies
+          border: `3px solid ${isFocused ? '#00a651' : '#00853f'}`, // Bordure plus épaisse
+          fontSize: '16px', // Texte plus grand
+          boxShadow: isFocused ? '0 6px 20px rgba(0,133,63,0.4)' : '0 4px 12px rgba(0,0,0,0.15)',
           outline: 'none',
           background: 'white',
           transition: 'all 0.3s ease',
@@ -182,9 +183,10 @@ const SearchBarCommunes = ({ onCommuneSelect, communesData = [] }) => {
         <div style={{
           position: 'absolute',
           top: '50%',
-          right: '15px',
+          right: '18px', // Ajusté pour le padding plus grand
           transform: 'translateY(-50%)',
-          color: '#00853f'
+          color: '#00853f',
+          fontSize: '16px' // Plus grand
         }}>
           ⏳
         </div>
@@ -193,25 +195,25 @@ const SearchBarCommunes = ({ onCommuneSelect, communesData = [] }) => {
       {showResults && results.length > 0 && (
         <div style={{
           background: 'white',
-          borderRadius: '10px',
-          marginTop: '6px',
-          boxShadow: '0 6px 20px rgba(0,0,0,0.15)',
-          maxHeight: '200px',
+          borderRadius: '15px', // Plus arrondi
+          marginTop: '8px',
+          boxShadow: '0 8px 25px rgba(0,0,0,0.2)',
+          maxHeight: '300px', // Plus haut sur tablette
           overflowY: 'auto',
-          border: '1px solid #e0e0e0'
+          border: '2px solid #e0e0e0'
         }}>
           {results.map((commune, index) => (
             <div
               key={commune.id || index}
               onClick={() => handleSelectCommune(commune)}
               style={{
-                padding: '12px 14px',
+                padding: '14px 16px', // Plus d'espace
                 borderBottom: '1px solid #f0f0f0',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px'
+                gap: '12px' // Plus d'espace entre les éléments
               }}
               onMouseEnter={(e) => {
                 e.target.style.background = '#f8f9fa';
@@ -221,21 +223,21 @@ const SearchBarCommunes = ({ onCommuneSelect, communesData = [] }) => {
               }}
             >
               <div style={{
-                width: '32px',
-                height: '32px',
+                width: '40px', // Plus grand
+                height: '40px',
                 borderRadius: '50%',
                 background: 'linear-gradient(135deg, #00853f, #00a651)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '14px',
+                fontSize: '16px', // Plus grand
                 color: 'white'
               }}>
                 🏛️
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: '600', fontSize: '14px', color: '#333' }}>{commune.nom}</div>
-                <div style={{ fontSize: '12px', color: '#666' }}>{commune.region}</div>
+                <div style={{ fontWeight: '600', fontSize: '15px', color: '#333' }}>{commune.nom}</div>
+                <div style={{ fontSize: '13px', color: '#666' }}>{commune.region}</div>
               </div>
             </div>
           ))}
@@ -246,7 +248,7 @@ const SearchBarCommunes = ({ onCommuneSelect, communesData = [] }) => {
 };
 
 // ============================================================================
-// SYSTÈME DE TRACKING GPS
+// SYSTÈME DE TRACKING GPS (identique au mobile)
 // ============================================================================
 
 // Service de tracking GPS
@@ -385,7 +387,7 @@ class GPSTrackingService {
 const gpsTrackingService = new GPSTrackingService();
 
 // ============================================================================
-// SELECTEUR DE MODE DE TRANSPORT
+// SELECTEUR DE MODE DE TRANSPORT OPTIMISÉ TABLETTE
 // ============================================================================
 
 const TransportModeSelector = ({ selectedMode, onModeChange, isTracking }) => {
@@ -402,22 +404,22 @@ const TransportModeSelector = ({ selectedMode, onModeChange, isTracking }) => {
   return (
     <div style={{
       position: 'absolute',
-      top: '70px',
+      top: '85px', // Ajusté pour la barre de recherche plus grande
       left: '50%',
       transform: 'translateX(-50%)',
       zIndex: 1000,
-      background: 'rgba(255, 255, 255, 0.95)',
-      borderRadius: '15px',
-      padding: '10px 15px',
-      boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+      background: 'rgba(255, 255, 255, 0.98)', // Plus opaque
+      borderRadius: '20px', // Plus arrondi
+      padding: '12px 18px', // Plus d'espace
+      boxShadow: '0 6px 25px rgba(0,0,0,0.25)',
       border: '2px solid #e0e0e0',
-      backdropFilter: 'blur(10px)'
+      backdropFilter: 'blur(15px)'
     }}>
       <div style={{
-        fontSize: '12px',
-        fontWeight: '600',
+        fontSize: '14px', // Plus grand
+        fontWeight: '700',
         color: '#00853f',
-        marginBottom: '8px',
+        marginBottom: '10px',
         textAlign: 'center'
       }}>
         🎯 Mode de déplacement
@@ -425,7 +427,7 @@ const TransportModeSelector = ({ selectedMode, onModeChange, isTracking }) => {
 
       <div style={{
         display: 'flex',
-        gap: '8px',
+        gap: '10px', // Plus d'espace
         justifyContent: 'center',
         alignItems: 'center'
       }}>
@@ -434,13 +436,13 @@ const TransportModeSelector = ({ selectedMode, onModeChange, isTracking }) => {
             key={mode.id}
             onClick={() => onModeChange(mode.id)}
             style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '10px',
+              width: '50px', // Plus grand
+              height: '50px',
+              borderRadius: '12px', // Plus arrondi
               background: selectedMode === mode.id ? mode.color : 'white',
-              border: `2px solid ${selectedMode === mode.id ? mode.color : '#e0e0e0'}`,
+              border: `3px solid ${selectedMode === mode.id ? mode.color : '#e0e0e0'}`,
               color: selectedMode === mode.id ? 'white' : mode.color,
-              fontSize: '16px',
+              fontSize: '18px', // Plus grand
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -453,9 +455,10 @@ const TransportModeSelector = ({ selectedMode, onModeChange, isTracking }) => {
           >
             {mode.icon}
             <div style={{
-              fontSize: '8px',
-              marginTop: '2px',
-              opacity: selectedMode === mode.id ? 1 : 0.7
+              fontSize: '10px', // Plus grand
+              marginTop: '3px',
+              opacity: selectedMode === mode.id ? 1 : 0.7,
+              fontWeight: 'bold'
             }}>
               {selectedMode === mode.id ? '✓' : ''}
             </div>
@@ -467,7 +470,7 @@ const TransportModeSelector = ({ selectedMode, onModeChange, isTracking }) => {
 };
 
 // ============================================================================
-// COMPOSANT TRACKING GPS OPTIMISÉ POUR AGENTS MUNICIPAUX
+// COMPOSANT TRACKING GPS OPTIMISÉ TABLETTE
 // ============================================================================
 
 const GPSTrackingControl = ({ onTrackingUpdate, onTrackSaved }) => {
@@ -552,10 +555,10 @@ const GPSTrackingControl = ({ onTrackingUpdate, onTrackSaved }) => {
         L.popup()
           .setLatLng(map.getCenter())
           .setContent(`
-            <div style="text-align: center; padding: 10px; min-width: 200px;">
-              <div style="font-size: 24px; margin-bottom: 5px;">✅</div>
-              <strong style="color: #00853f; font-size: 12px;">Trajet sauvegardé</strong><br/>
-              <small>Prêt pour le rapport</small>
+            <div style="text-align: center; padding: 12px; min-width: 250px;">
+              <div style="font-size: 28px; margin-bottom: 8px;">✅</div>
+              <strong style="color: #00853f; font-size: 16px;">Trajet sauvegardé</strong><br/>
+              <small style="font-size: 13px;">Prêt pour le rapport</small>
             </div>
           `)
           .openOn(map);
@@ -568,10 +571,10 @@ const GPSTrackingControl = ({ onTrackingUpdate, onTrackSaved }) => {
       L.popup()
         .setLatLng(map.getCenter())
         .setContent(`
-          <div style="text-align: center; padding: 10px; min-width: 200px;">
-            <div style="font-size: 24px; margin-bottom: 5px;">📱</div>
-            <strong style="color: #00853f; font-size: 12px;">Sauvegardé localement</strong><br/>
-            <small>Sync au prochain réseau</small>
+          <div style="text-align: center; padding: 12px; min-width: 250px;">
+            <div style="font-size: 28px; margin-bottom: 8px;">📱</div>
+            <strong style="color: #00853f; font-size: 16px;">Sauvegardé localement</strong><br/>
+            <small style="font-size: 13px;">Sync au prochain réseau</small>
           </div>
         `)
         .openOn(map);
@@ -580,29 +583,29 @@ const GPSTrackingControl = ({ onTrackingUpdate, onTrackSaved }) => {
 
   return (
     <>
-      {/* Indicateur de tracking compact */}
+      {/* Indicateur de tracking compact - optimisé tablette */}
       {trackingState.isTracking && (
         <div style={{
           position: 'absolute',
-          top: '10px',
-          left: '10px',
+          top: '15px',
+          left: '15px',
           zIndex: 1000,
-          background: 'rgba(255, 107, 53, 0.95)',
+          background: 'rgba(255, 107, 53, 0.98)',
           color: 'white',
-          padding: '8px 12px',
-          borderRadius: '20px',
-          fontSize: '12px',
-          fontWeight: '600',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+          padding: '10px 16px',
+          borderRadius: '25px',
+          fontSize: '14px',
+          fontWeight: '700',
+          boxShadow: '0 4px 15px rgba(0,0,0,0.4)',
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
-          backdropFilter: 'blur(10px)',
+          gap: '10px',
+          backdropFilter: 'blur(15px)',
           border: '2px solid #FF6B35'
         }}>
           <div style={{
-            width: '8px',
-            height: '8px',
+            width: '10px',
+            height: '10px',
             borderRadius: '50%',
             background: '#00ff00',
             animation: 'pulse 1s infinite'
@@ -611,17 +614,18 @@ const GPSTrackingControl = ({ onTrackingUpdate, onTrackSaved }) => {
           <button
             onClick={toggleStats}
             style={{
-              background: 'rgba(255,255,255,0.2)',
+              background: 'rgba(255,255,255,0.3)',
               border: 'none',
               color: 'white',
-              borderRadius: '12px',
-              width: '20px',
-              height: '20px',
-              fontSize: '10px',
+              borderRadius: '15px',
+              width: '24px',
+              height: '24px',
+              fontSize: '12px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              fontWeight: 'bold'
             }}
             title={trackingState.showStats ? "Masquer les stats" : "Afficher les stats"}
           >
@@ -630,28 +634,28 @@ const GPSTrackingControl = ({ onTrackingUpdate, onTrackSaved }) => {
         </div>
       )}
 
-      {/* Statistiques de tracking (masquables) */}
+      {/* Statistiques de tracking (masquables) - optimisé tablette */}
       {trackingState.isTracking && trackingState.showStats && trackingState.positions.length > 0 && (
         <div style={{
           position: 'absolute',
-          bottom: '80px',
-          left: '10px',
-          right: '10px',
-          background: 'rgba(255, 255, 255, 0.95)',
-          borderRadius: '12px',
-          padding: '12px',
+          bottom: '100px',
+          left: '15px',
+          right: '15px',
+          background: 'rgba(255, 255, 255, 0.98)',
+          borderRadius: '15px',
+          padding: '15px',
           zIndex: 1000,
-          boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+          boxShadow: '0 6px 25px rgba(0,0,0,0.3)',
           border: '2px solid #FF6B35',
-          backdropFilter: 'blur(10px)'
+          backdropFilter: 'blur(15px)'
         }}>
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: '8px'
+            marginBottom: '12px'
           }}>
-            <strong style={{ color: '#FF6B35', fontSize: '13px' }}>
+            <strong style={{ color: '#FF6B35', fontSize: '15px' }}>
               📊 Statistiques Trajet
             </strong>
             <button
@@ -660,11 +664,12 @@ const GPSTrackingControl = ({ onTrackingUpdate, onTrackSaved }) => {
                 background: 'none',
                 border: 'none',
                 color: '#666',
-                fontSize: '16px',
+                fontSize: '18px',
                 cursor: 'pointer',
                 padding: '0',
-                width: '20px',
-                height: '20px'
+                width: '24px',
+                height: '24px',
+                fontWeight: 'bold'
               }}
               title="Masquer"
             >
@@ -675,8 +680,8 @@ const GPSTrackingControl = ({ onTrackingUpdate, onTrackSaved }) => {
           <div style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
-            gap: '6px',
-            fontSize: '11px'
+            gap: '8px',
+            fontSize: '13px'
           }}>
             <div>
               <strong>Distance:</strong> {(trackingState.positions.reduce((total, pos, i, arr) => {
@@ -698,32 +703,32 @@ const GPSTrackingControl = ({ onTrackingUpdate, onTrackSaved }) => {
         </div>
       )}
 
-      {/* Popup de sauvegarde optimisé */}
+      {/* Popup de sauvegarde optimisé tablette */}
       {trackingState.currentTrack && !trackingState.isTracking && (
         <div style={{
           position: 'absolute',
-          bottom: '80px',
-          left: '10px',
-          right: '10px',
+          bottom: '100px',
+          left: '15px',
+          right: '15px',
           background: 'white',
-          borderRadius: '12px',
-          padding: '12px',
+          borderRadius: '15px',
+          padding: '15px',
           zIndex: 1000,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
-          border: '2px solid #00853f'
+          boxShadow: '0 8px 30px rgba(0,0,0,0.35)',
+          border: '3px solid #00853f'
         }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            marginBottom: '10px'
+            gap: '10px',
+            marginBottom: '12px'
           }}>
-            <span style={{ fontSize: '20px' }}>✅</span>
+            <span style={{ fontSize: '24px' }}>✅</span>
             <div>
-              <h4 style={{ margin: 0, color: '#00853f', fontSize: '14px' }}>
+              <h4 style={{ margin: 0, color: '#00853f', fontSize: '16px' }}>
                 Trajet Enregistré
               </h4>
-              <div style={{ fontSize: '11px', color: '#666' }}>
+              <div style={{ fontSize: '13px', color: '#666' }}>
                 Prêt pour le rapport terrain
               </div>
             </div>
@@ -732,12 +737,12 @@ const GPSTrackingControl = ({ onTrackingUpdate, onTrackSaved }) => {
           <div style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
-            gap: '5px',
-            marginBottom: '10px',
-            fontSize: '11px',
+            gap: '8px',
+            marginBottom: '12px',
+            fontSize: '13px',
             background: '#f8f9fa',
-            padding: '8px',
-            borderRadius: '6px'
+            padding: '12px',
+            borderRadius: '10px'
           }}>
             <div><strong>📏</strong> {trackingState.currentTrack.totalDistance.toFixed(2)} km</div>
             <div><strong>⏱️</strong> {Math.floor(trackingState.currentTrack.duration / 60)}min</div>
@@ -745,18 +750,18 @@ const GPSTrackingControl = ({ onTrackingUpdate, onTrackSaved }) => {
             <div><strong>📈</strong> {trackingState.currentTrack.maxSpeed.toFixed(1)} km/h</div>
           </div>
 
-          <div style={{ display: 'flex', gap: '6px' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
             <button
               onClick={() => saveTrack('walking')}
               style={{
                 flex: 1,
-                padding: '8px',
+                padding: '12px',
                 background: '#00853f',
                 color: 'white',
                 border: 'none',
-                borderRadius: '8px',
-                fontSize: '12px',
-                fontWeight: '600',
+                borderRadius: '10px',
+                fontSize: '14px',
+                fontWeight: '700',
                 cursor: 'pointer'
               }}
             >
@@ -765,13 +770,13 @@ const GPSTrackingControl = ({ onTrackingUpdate, onTrackSaved }) => {
             <button
               onClick={() => setTrackingState(prev => ({ ...prev, currentTrack: null }))}
               style={{
-                padding: '8px 12px',
+                padding: '12px 16px',
                 background: '#dc2626',
                 color: 'white',
                 border: 'none',
-                borderRadius: '8px',
-                fontSize: '12px',
-                fontWeight: '600',
+                borderRadius: '10px',
+                fontSize: '14px',
+                fontWeight: '700',
                 cursor: 'pointer'
               }}
             >
@@ -785,7 +790,7 @@ const GPSTrackingControl = ({ onTrackingUpdate, onTrackSaved }) => {
 };
 
 // ============================================================================
-// COMPOSANT POUR AFFICHER LES TRAJETS SAUVEGARDÉS
+// COMPOSANT POUR AFFICHER LES TRAJETS SAUVEGARDÉS OPTIMISÉ TABLETTE
 // ============================================================================
 
 const SavedTracksControl = ({ isOpen, onClose }) => {
@@ -828,56 +833,57 @@ const SavedTracksControl = ({ isOpen, onClose }) => {
         left: '50%',
         transform: 'translate(-50%, -50%)',
         background: 'white',
-        borderRadius: '15px',
-        boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
+        borderRadius: '20px',
+        boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
         zIndex: 1002,
         width: '90%',
-        maxWidth: '400px',
+        maxWidth: '500px', // Plus large sur tablette
         maxHeight: '80vh',
         overflow: 'hidden'
       }}>
         <div style={{
-          padding: '15px 20px',
+          padding: '20px 24px',
           background: 'linear-gradient(135deg, #00853f, #00a651)',
           color: 'white',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center'
         }}>
-          <h3 style={{ margin: 0, fontSize: '16px' }}>📁 Mes Trajets Sauvegardés</h3>
+          <h3 style={{ margin: 0, fontSize: '18px' }}>📁 Mes Trajets Sauvegardés</h3>
           <button
             onClick={onClose}
             style={{
               background: 'none',
               border: 'none',
               color: 'white',
-              fontSize: '18px',
-              cursor: 'pointer'
+              fontSize: '20px',
+              cursor: 'pointer',
+              padding: '5px'
             }}
           >
             ✕
           </button>
         </div>
 
-        <div style={{ maxHeight: '60vh', overflowY: 'auto', padding: '10px' }}>
+        <div style={{ maxHeight: '60vh', overflowY: 'auto', padding: '15px' }}>
           {savedTracks.length === 0 ? (
             <div style={{
               textAlign: 'center',
-              padding: '40px 20px',
+              padding: '50px 20px',
               color: '#666'
             }}>
-              <div style={{ fontSize: '48px', marginBottom: '10px' }}>📁</div>
-              <div style={{ fontSize: '14px' }}>Aucun trajet sauvegardé</div>
+              <div style={{ fontSize: '60px', marginBottom: '15px' }}>📁</div>
+              <div style={{ fontSize: '16px' }}>Aucun trajet sauvegardé</div>
             </div>
           ) : (
             savedTracks.map((track, index) => (
               <div
                 key={index}
                 style={{
-                  padding: '12px',
-                  border: '1px solid #e0e0e0',
-                  borderRadius: '10px',
-                  marginBottom: '8px',
+                  padding: '16px',
+                  border: '2px solid #e0e0e0',
+                  borderRadius: '12px',
+                  marginBottom: '12px',
                   background: selectedTrack === index ? '#f0f9f0' : 'white',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease'
@@ -887,17 +893,17 @@ const SavedTracksControl = ({ isOpen, onClose }) => {
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '10px',
-                  marginBottom: '8px'
+                  gap: '12px',
+                  marginBottom: '10px'
                 }}>
-                  <span style={{ fontSize: '20px' }}>
+                  <span style={{ fontSize: '24px' }}>
                     {getActivityIcon(track.type)}
                   </span>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: '600', fontSize: '14px' }}>
+                    <div style={{ fontWeight: '700', fontSize: '16px' }}>
                       {track.name}
                     </div>
-                    <div style={{ fontSize: '12px', color: '#666' }}>
+                    <div style={{ fontSize: '14px', color: '#666' }}>
                       {new Date(track.savedAt).toLocaleDateString()}
                     </div>
                   </div>
@@ -905,13 +911,13 @@ const SavedTracksControl = ({ isOpen, onClose }) => {
 
                 {selectedTrack === index && (
                   <div style={{
-                    fontSize: '12px',
+                    fontSize: '14px',
                     background: '#f8f9fa',
-                    padding: '8px',
-                    borderRadius: '6px',
-                    marginTop: '8px'
+                    padding: '12px',
+                    borderRadius: '8px',
+                    marginTop: '10px'
                   }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                       <div>📏 {track.totalDistance.toFixed(2)} km</div>
                       <div>⏱️ {Math.floor(track.duration / 60)}min</div>
                       <div>🚀 {track.avgSpeed.toFixed(1)} km/h</div>
@@ -924,14 +930,15 @@ const SavedTracksControl = ({ isOpen, onClose }) => {
                       }}
                       style={{
                         width: '100%',
-                        marginTop: '8px',
-                        padding: '6px',
+                        marginTop: '12px',
+                        padding: '10px',
                         background: '#dc2626',
                         color: 'white',
                         border: 'none',
-                        borderRadius: '6px',
-                        fontSize: '11px',
-                        cursor: 'pointer'
+                        borderRadius: '8px',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        fontWeight: '600'
                       }}
                     >
                       🗑️ Supprimer
@@ -952,7 +959,7 @@ const SavedTracksControl = ({ isOpen, onClose }) => {
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
+          background: 'rgba(0,0,0,0.6)',
           zIndex: 1001
         }}
         onClick={onClose}
@@ -962,35 +969,35 @@ const SavedTracksControl = ({ isOpen, onClose }) => {
 };
 
 // ============================================================================
-// COMPOSANTS BOUTONS STYLE QFIELD AVEC TRACKING
+// COMPOSANTS BOUTONS STYLE QFIELD OPTIMISÉS TABLETTE
 // ============================================================================
 
-// COMPOSANT BOUTON STYLE QFIELD
+// COMPOSANT BOUTON STYLE QFIELD - OPTIMISÉ TABLETTE
 const QFieldButton = ({ icon, title, onClick, color = '#00853f', isActive = false, badge, style = {} }) => {
   return (
     <button
       onClick={onClick}
       style={{
-        width: '38px',
-        height: '38px',
-        borderRadius: '10px',
+        width: '50px', // Plus grand sur tablette
+        height: '50px',
+        borderRadius: '12px', // Plus arrondi
         background: isActive ? color : 'white',
-        border: `2px solid ${isActive ? color : '#e0e0e0'}`,
+        border: `3px solid ${isActive ? color : '#e0e0e0'}`, // Bordure plus épaisse
         color: isActive ? 'white' : color,
-        fontSize: '16px',
+        fontSize: '18px', // Plus grand
         cursor: 'pointer',
-        boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         transition: 'all 0.2s ease',
-        marginBottom: '5px',
+        marginBottom: '8px', // Plus d'espace
         position: 'relative',
         ...style
       }}
       onMouseEnter={(e) => {
-        e.target.style.transform = 'translateY(-1px)';
-        e.target.style.boxShadow = '0 4px 10px rgba(0,0,0,0.2)';
+        e.target.style.transform = 'translateY(-2px)';
+        e.target.style.boxShadow = '0 6px 15px rgba(0,0,0,0.3)';
         if (!isActive) {
           e.target.style.borderColor = color;
           e.target.style.background = '#f8f9fa';
@@ -998,7 +1005,7 @@ const QFieldButton = ({ icon, title, onClick, color = '#00853f', isActive = fals
       }}
       onMouseLeave={(e) => {
         e.target.style.transform = 'translateY(0)';
-        e.target.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
+        e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
         if (!isActive) {
           e.target.style.borderColor = '#e0e0e0';
           e.target.style.background = 'white';
@@ -1010,19 +1017,19 @@ const QFieldButton = ({ icon, title, onClick, color = '#00853f', isActive = fals
       {badge && (
         <span style={{
           position: 'absolute',
-          top: '-4px',
-          right: '-4px',
+          top: '-6px',
+          right: '-6px',
           background: '#ff3b30',
           color: 'white',
-          borderRadius: '8px',
-          width: '14px',
-          height: '14px',
-          fontSize: '8px',
+          borderRadius: '10px',
+          width: '18px',
+          height: '18px',
+          fontSize: '10px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           fontWeight: 'bold',
-          border: '1px solid white'
+          border: '2px solid white'
         }}>
           {badge}
         </span>
@@ -1031,7 +1038,7 @@ const QFieldButton = ({ icon, title, onClick, color = '#00853f', isActive = fals
   );
 };
 
-// COMPOSANT CONTROLEUR BOUTONS DROITE STYLE QFIELD AVEC TRACKING
+// COMPOSANT CONTROLEUR BOUTONS DROITE STYLE QFIELD OPTIMISÉ TABLETTE
 const QFieldControls = ({
   onAddClick,
   onLocateClick,
@@ -1045,19 +1052,20 @@ const QFieldControls = ({
   return (
     <div style={{
       position: 'absolute',
-      right: '8px',
+      right: '12px', // Plus d'espace sur les bords
       top: '50%',
       transform: 'translateY(-50%)',
       zIndex: 1000,
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      gap: '5px',
-      background: 'rgba(255, 255, 255, 0.9)',
-      borderRadius: '12px',
-      padding: '6px 4px',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
-      border: '1px solid #e0e0e0'
+      gap: '8px', // Plus d'espace entre les boutons
+      background: 'rgba(255, 255, 255, 0.95)',
+      borderRadius: '15px', // Plus arrondi
+      padding: '10px 6px', // Plus de padding
+      boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+      border: '2px solid #e0e0e0',
+      backdropFilter: 'blur(10px)'
     }}>
       {/* BOUTON TRACKING GPS */}
       <QFieldButton
@@ -1067,7 +1075,7 @@ const QFieldControls = ({
         color={isTracking ? "#dc2626" : "#FF6B35"}
         isActive={isTracking}
         style={{
-          fontSize: isTracking ? '16px' : '18px'
+          fontSize: isTracking ? '18px' : '20px'
         }}
       />
 
@@ -1079,7 +1087,7 @@ const QFieldControls = ({
         color={isAddingMode ? "#dc2626" : "#00853f"}
         isActive={isAddingMode}
         style={{
-          fontSize: isAddingMode ? '18px' : '20px',
+          fontSize: isAddingMode ? '20px' : '22px',
           fontWeight: isAddingMode ? 'bold' : 'normal'
         }}
       />
@@ -1092,7 +1100,7 @@ const QFieldControls = ({
         color="#007AFF"
         isActive={isLocating}
         style={{
-          fontSize: isLocating ? '16px' : '16px'
+          fontSize: isLocating ? '18px' : '18px'
         }}
       />
 
@@ -1102,7 +1110,7 @@ const QFieldControls = ({
         title="Mes trajets sauvegardés"
         onClick={onTracksClick}
         color="#5856D6"
-        style={{ fontSize: '16px' }}
+        style={{ fontSize: '18px' }}
       />
 
       {/* BOUTON FONDS DE CARTE */}
@@ -1111,39 +1119,39 @@ const QFieldControls = ({
         title="Changer le fond de carte"
         onClick={onLayersClick}
         color="#5856D6"
-        style={{ fontSize: '17px' }}
+        style={{ fontSize: '19px' }}
       />
     </div>
   );
 };
 
-// COMPOSANT ZOOM PERSONNALISÉ STYLE QFIELD
+// COMPOSANT ZOOM PERSONNALISÉ STYLE QFIELD OPTIMISÉ TABLETTE
 const CustomZoomControlQField = () => {
   const map = useMap();
 
   return (
     <div style={{
       position: 'absolute',
-      right: '8px',
-      top: 'calc(50% + 140px)',
+      right: '12px',
+      top: 'calc(50% + 180px)', // Ajusté pour les boutons plus grands
       zIndex: 1000,
       display: 'flex',
       flexDirection: 'column',
       background: 'white',
-      borderRadius: '10px',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+      borderRadius: '12px', // Plus arrondi
+      boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
       overflow: 'hidden',
-      border: '1px solid #e0e0e0',
+      border: '2px solid #e0e0e0', // Bordure plus épaisse
       gap: '0'
     }}>
       <button
         onClick={() => map.zoomIn()}
         style={{
-          width: '38px',
-          height: '38px',
+          width: '50px', // Plus grand
+          height: '50px',
           border: 'none',
           background: 'white',
-          fontSize: '18px',
+          fontSize: '20px', // Plus grand
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -1164,19 +1172,19 @@ const CustomZoomControlQField = () => {
       </button>
 
       <div style={{
-        height: '1px',
+        height: '2px', // Plus épais
         background: '#e0e0e0',
-        margin: '0 5px'
+        margin: '0 8px'
       }} />
 
       <button
         onClick={() => map.zoomOut()}
         style={{
-          width: '38px',
-          height: '38px',
+          width: '50px',
+          height: '50px',
           border: 'none',
           background: 'white',
-          fontSize: '18px',
+          fontSize: '20px',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -1200,27 +1208,26 @@ const CustomZoomControlQField = () => {
 };
 
 // ============================================================================
-// AUTRES COMPOSANTS
+// AUTRES COMPOSANTS OPTIMISÉS TABLETTE
 // ============================================================================
 
-// COMPOSANT LOCALISATION OPTIMISÉ POUR MOBILE RÉEL
-// COMPOSANT LOCALISATION OPTIMISÉ POUR MOBILE RÉEL - CORRIGÉ
+// COMPOSANT LOCALISATION OPTIMISÉ TABLETTE
 const LocateControl = ({ onLocatingChange, onLocate }) => {
   const map = useMap();
   const [isLocating, setIsLocating] = useState(false);
 
   const locateUser = () => {
-    console.log('📍 Début de la géolocalisation mobile...');
+    console.log('📍 Début de la géolocalisation tablette...');
 
     if (!navigator.geolocation) {
       console.error('❌ Géolocalisation non supportée par le navigateur');
       L.popup()
         .setLatLng(map.getCenter())
         .setContent(`
-          <div style="text-align: center; padding: 12px;">
-            <div style="font-size: 20px; margin-bottom: 8px;">❌</div>
-            <strong style="color: #dc2626; font-size: 14px;">Géolocalisation non supportée</strong><br/>
-            <small>Votre navigateur ne supporte pas la géolocalisation</small>
+          <div style="text-align: center; padding: 15px; min-width: 280px;">
+            <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
+            <strong style="color: #dc2626; font-size: 16px;">Géolocalisation non supportée</strong><br/>
+            <small style="font-size: 13px;">Votre navigateur ne supporte pas la géolocalisation</small>
           </div>
         `).openOn(map);
       return;
@@ -1229,11 +1236,11 @@ const LocateControl = ({ onLocatingChange, onLocate }) => {
     setIsLocating(true);
     if (onLocatingChange) onLocatingChange(true);
 
-    // Options optimisées pour mobile
+    // Options optimisées pour tablette
     const options = {
       enableHighAccuracy: true,
-      timeout: 10000, // Réduit à 10 secondes
-      maximumAge: 30000 // Cache de 30 secondes
+      timeout: 15000, // Un peu plus long sur tablette
+      maximumAge: 60000
     };
 
     console.log('📍 Demande de position avec options:', options);
@@ -1251,45 +1258,45 @@ const LocateControl = ({ onLocatingChange, onLocate }) => {
           map.removeLayer(window.currentLocationMarker);
         }
 
-        // Créer un marqueur de position avec précision
+        // Créer un marqueur de position avec précision - optimisé tablette
         window.currentLocationMarker = L.marker([latitude, longitude], {
           icon: L.divIcon({
             html: `
-              <div style="position: relative; width: 24px; height: 24px;">
+              <div style="position: relative; width: 28px; height: 28px;">
                 <div style="
                   position: absolute;
                   top: 0;
                   left: 0;
-                  width: 24px;
-                  height: 24px;
-                  background: rgba(0, 122, 255, 0.3);
-                  border: 2px solid #007AFF;
+                  width: 28px;
+                  height: 28px;
+                  background: rgba(0, 122, 255, 0.4);
+                  border: 3px solid #007AFF;
                   border-radius: 50%;
                   animation: ripple 2s infinite;
                 "></div>
                 <div style="
                   position: absolute;
-                  top: 4px;
-                  left: 4px;
-                  width: 16px;
-                  height: 16px;
+                  top: 5px;
+                  left: 5px;
+                  width: 18px;
+                  height: 18px;
                   background: #007AFF;
-                  border: 2px solid white;
+                  border: 3px solid white;
                   border-radius: 50%;
-                  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                  box-shadow: 0 3px 8px rgba(0,0,0,0.4);
                 "></div>
               </div>
             `,
-            className: 'modern-location-marker',
-            iconSize: [24, 24],
-            iconAnchor: [12, 12],
+            className: 'tablet-location-marker',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
           })
         }).addTo(map).bindPopup(`
-          <div style="text-align: center; padding: 10px; min-width: 200px;">
-            <strong>📍 Votre position</strong><br>
-            <small>Lat: ${latitude.toFixed(6)}°</small><br>
-            <small>Lng: ${longitude.toFixed(6)}°</small><br>
-            <small>Précision: ±${accuracy ? Math.round(accuracy) : '?'}m</small>
+          <div style="text-align: center; padding: 12px; min-width: 250px;">
+            <strong style="font-size: 16px;">📍 Votre position</strong><br>
+            <small style="font-size: 13px;">Lat: ${latitude.toFixed(6)}°</small><br>
+            <small style="font-size: 13px;">Lng: ${longitude.toFixed(6)}°</small><br>
+            <small style="font-size: 13px;">Précision: ±${accuracy ? Math.round(accuracy) : '?'}m</small>
           </div>
         `).openPopup();
 
@@ -1308,7 +1315,7 @@ const LocateControl = ({ onLocatingChange, onLocate }) => {
           case error.PERMISSION_DENIED:
             errorMessage = 'Permission de géolocalisation refusée';
             errorDetails = `
-              <div style="text-align: left; margin-top: 8px; font-size: 11px;">
+              <div style="text-align: left; margin-top: 10px; font-size: 13px;">
                 <strong>Pour résoudre :</strong><br>
                 • Vérifiez les permissions de votre navigateur<br>
                 • Utilisez HTTPS (obligatoire pour la géolocalisation)<br>
@@ -1329,10 +1336,12 @@ const LocateControl = ({ onLocatingChange, onLocate }) => {
         L.popup()
           .setLatLng(map.getCenter())
           .setContent(`
-            <div style="text-align: center; padding: 12px; max-width: 280px;">
-              <div style="font-size: 20px; margin-bottom: 8px;">❌</div>
-              <strong style="color: #dc2626; font-size: 14px;">${errorMessage}</strong><br/>
-              <small style="color: #666;">${errorDetails}</small>
+            <div style="text-align: center; padding: 15px; max-width: 320px;">
+              <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
+              <strong style="color: #dc2626; font-size: 16px;">${errorMessage}</strong><br/>
+              <div style="margin-top: 10px; font-size: 13px; color: #666; text-align: left;">
+                ${errorDetails}
+              </div>
             </div>
           `).openOn(map);
       },
@@ -1350,7 +1359,7 @@ const LocateControl = ({ onLocatingChange, onLocate }) => {
   return null;
 };
 
-// COMPOSANT SÉLECTEUR DE FOND DE CARTE STYLE QFIELD
+// COMPOSANT SÉLECTEUR DE FOND DE CARTE STYLE QFIELD OPTIMISÉ TABLETTE
 const QFieldLayersControl = ({ onBasemapChange, isOpen, onClose }) => {
   const [basemap, setBasemap] = useState('osm');
 
@@ -1372,26 +1381,26 @@ const QFieldLayersControl = ({ onBasemapChange, isOpen, onClose }) => {
     <>
       <div style={{
         position: 'absolute',
-        right: '55px',
+        right: '70px', // Ajusté pour les boutons plus grands
         top: '50%',
         transform: 'translateY(-50%)',
         background: 'white',
-        borderRadius: '12px',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+        borderRadius: '15px',
+        boxShadow: '0 6px 25px rgba(0,0,0,0.3)',
         zIndex: 1001,
         overflow: 'hidden',
-        border: '1px solid #e0e0e0',
-        minWidth: '170px',
-        backdropFilter: 'blur(10px)'
+        border: '2px solid #e0e0e0',
+        minWidth: '200px', // Plus large
+        backdropFilter: 'blur(15px)'
       }}>
         <div style={{
-          padding: '12px 14px',
+          padding: '15px 18px',
           background: 'linear-gradient(135deg, #00853f, #00a651)',
           color: 'white',
-          fontSize: '13px',
-          fontWeight: '600',
+          fontSize: '15px',
+          fontWeight: '700',
           textAlign: 'center',
-          borderBottom: '1px solid #e0e0e0'
+          borderBottom: '2px solid #e0e0e0'
         }}>
           🌍 Fonds de carte
         </div>
@@ -1402,17 +1411,17 @@ const QFieldLayersControl = ({ onBasemapChange, isOpen, onClose }) => {
             onClick={() => handleBasemapChange(option.value)}
             style={{
               width: '100%',
-              padding: '12px 14px',
+              padding: '15px 18px',
               background: basemap === option.value ? '#f0f9f0' : 'white',
               border: 'none',
-              borderBottom: index < basemapOptions.length - 1 ? '1px solid #f0f0f0' : 'none',
-              fontSize: '14px',
+              borderBottom: index < basemapOptions.length - 1 ? '2px solid #f0f0f0' : 'none',
+              fontSize: '15px',
               textAlign: 'left',
               cursor: 'pointer',
               color: '#333',
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
+              gap: '15px',
               transition: 'all 0.2s ease'
             }}
             onMouseEnter={(e) => {
@@ -1423,15 +1432,15 @@ const QFieldLayersControl = ({ onBasemapChange, isOpen, onClose }) => {
             }}
           >
             <span style={{
-              fontSize: '18px',
+              fontSize: '20px',
               filter: basemap === option.value ? 'none' : 'grayscale(20%)'
             }}>
               {option.label}
             </span>
             <div style={{ flex: 1 }}>
               <div style={{
-                fontSize: '13px',
-                fontWeight: basemap === option.value ? '600' : '500',
+                fontSize: '14px',
+                fontWeight: basemap === option.value ? '700' : '600',
                 color: basemap === option.value ? '#00853f' : '#333'
               }}>
                 {option.name}
@@ -1439,7 +1448,7 @@ const QFieldLayersControl = ({ onBasemapChange, isOpen, onClose }) => {
             </div>
             {basemap === option.value && (
               <span style={{
-                fontSize: '16px',
+                fontSize: '18px',
                 color: '#00853f',
                 fontWeight: 'bold'
               }}>✓</span>
@@ -1457,7 +1466,7 @@ const QFieldLayersControl = ({ onBasemapChange, isOpen, onClose }) => {
           right: 0,
           bottom: 0,
           zIndex: 1000,
-          background: 'rgba(0,0,0,0.1)'
+          background: 'rgba(0,0,0,0.2)'
         }}
         onClick={onClose}
       />
@@ -1469,7 +1478,7 @@ const QFieldLayersControl = ({ onBasemapChange, isOpen, onClose }) => {
 const MapController = () => {
   const map = useMap();
   useEffect(() => {
-    console.log('🗺️ Carte mobile avec tracking GPS initialisée');
+    console.log('📱 Carte tablette avec tracking GPS initialisée');
   }, [map]);
   return null;
 };
@@ -1507,15 +1516,15 @@ const DynamicTileLayer = ({ basemap }) => {
 };
 
 // ============================================================================
-// CONFIGURATION DES ICÔNES ET POPUPS MOBILE
+// CONFIGURATION DES ICÔNES ET POPUPS TABLETTE
 // ============================================================================
 const creerIcone = (couleur) => new L.Icon({
   iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${couleur}.png`,
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
+  iconSize: [30, 48], // Plus grand sur tablette
+  iconAnchor: [15, 48],
+  popupAnchor: [1, -40],
+  shadowSize: [48, 48]
 });
 
 const icones = {
@@ -1528,21 +1537,21 @@ const icones = {
   'default': creerIcone('grey')
 };
 
-// Popup mobile optimisée
-const MobilePopup = ({ ressource }) => (
-  <div style={{ padding: '10px', maxWidth: '220px' }}>
-    <h6 style={{ margin: '0 0 6px 0', color: '#00853f', fontSize: '14px' }}>{ressource.nom}</h6>
-    <div style={{ marginBottom: '4px', fontSize: '12px' }}>
+// Popup tablette optimisée
+const TabletPopup = ({ ressource }) => (
+  <div style={{ padding: '12px', maxWidth: '280px' }}>
+    <h6 style={{ margin: '0 0 8px 0', color: '#00853f', fontSize: '16px' }}>{ressource.nom}</h6>
+    <div style={{ marginBottom: '6px', fontSize: '14px' }}>
       <strong>Type:</strong> {ressource.type}
     </div>
-    <div style={{ marginBottom: '4px', fontSize: '12px' }}>
+    <div style={{ marginBottom: '6px', fontSize: '14px' }}>
       <strong>Potentiel:</strong>
       <span style={{
         display: 'inline-block',
-        padding: '1px 6px',
-        borderRadius: '10px',
-        fontSize: '11px',
-        marginLeft: '4px',
+        padding: '2px 8px',
+        borderRadius: '12px',
+        fontSize: '12px',
+        marginLeft: '6px',
         background: ressource.potentiel === 'élevé' ? '#dcfce7' :
           (ressource.potentiel === 'moyen' ? '#fef9c3' : '#f3f4f6'),
         color: ressource.potentiel === 'élevé' ? '#166534' :
@@ -1551,18 +1560,18 @@ const MobilePopup = ({ ressource }) => (
         {ressource.potentiel}
       </span>
     </div>
-    <div style={{ marginBottom: '6px', fontSize: '12px' }}>
+    <div style={{ marginBottom: '8px', fontSize: '14px' }}>
       <strong>État:</strong> {ressource.etat_utilisation}
     </div>
     {ressource.description && (
       <div style={{
-        marginTop: '6px',
+        marginTop: '8px',
         color: '#666',
-        fontSize: '11px',
-        borderTop: '1px solid #f0f0f0',
-        paddingTop: '6px'
+        fontSize: '13px',
+        borderTop: '2px solid #f0f0f0',
+        paddingTop: '8px'
       }}>
-        {ressource.description.substring(0, 100)}...
+        {ressource.description.substring(0, 120)}...
       </div>
     )}
   </div>
@@ -1606,9 +1615,9 @@ const parseCoordinates = (commune) => {
 };
 
 // ============================================================================
-// COMPOSANT PRINCIPAL AVEC SYSTÈME DE TRACKING
+// COMPOSANT PRINCIPAL TABLETTE AVEC SYSTÈME DE TRACKING
 // ============================================================================
-const CarteCommunaleMobile = ({
+const CarteCommunaleTablette = ({
   ressources,
   communes,
   onCommuneSelect,
@@ -1690,7 +1699,7 @@ const CarteCommunaleMobile = ({
           window.communeBoundaryLayer = L.geoJSON(boundaries, {
             style: {
               color: '#00853f',
-              weight: 3,
+              weight: 4, // Plus épais sur tablette
               opacity: 0.8,
               fillColor: '#00853f',
               fillOpacity: 0.15,
@@ -1702,7 +1711,7 @@ const CarteCommunaleMobile = ({
                 layer.bindTooltip(feature.properties.nom, {
                   permanent: false,
                   direction: 'center',
-                  className: 'commune-tooltip'
+                  className: 'commune-tooltip-tablette'
                 });
               }
             }
@@ -1710,7 +1719,7 @@ const CarteCommunaleMobile = ({
   
           const bounds = window.communeBoundaryLayer.getBounds();
           if (bounds.isValid()) {
-            mapRef.current.fitBounds(bounds, { padding: [20, 20] });
+            mapRef.current.fitBounds(bounds, { padding: [25, 25] }); // Plus de padding
             console.log('🎯 Vue ajustée aux contours');
           } else {
             console.warn('⚠️ Bounds invalides, centrage sur coordonnées');
@@ -1725,22 +1734,22 @@ const CarteCommunaleMobile = ({
         mapRef.current.setView(coordinates, 12);
       }
   
-      // Ajouter le marqueur de la commune
+      // Ajouter le marqueur de la commune - optimisé tablette
       window.communeMarker = L.marker(coordinates, {
         icon: L.divIcon({
-          html: `<div style="background: #00853f; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">🏛️</div>`,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16]
+          html: `<div style="background: #00853f; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; border: 4px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4);">🏛️</div>`,
+          iconSize: [40, 40],
+          iconAnchor: [20, 20]
         })
       }).addTo(mapRef.current).bindPopup(`
-        <div style="padding: 12px; text-align: center; min-width: 240px;">
-          <strong style="color: #00853f; font-size: 16px;">🏛️ ${communeData.nom}</strong><br/>
-          <div style="margin-top: 8px; text-align: left; font-size: 12px;">
+        <div style="padding: 15px; text-align: center; min-width: 280px;">
+          <strong style="color: #00853f; font-size: 18px;">🏛️ ${communeData.nom}</strong><br/>
+          <div style="margin-top: 10px; text-align: left; font-size: 14px;">
             <small><strong>Région:</strong> ${communeData.region || 'Non spécifiée'}</small><br/>
             ${communeData.departement ? `<small><strong>Département:</strong> ${communeData.departement}</small><br/>` : ''}
             ${boundaries ? 
-              '<small style="color: #00853f;"><strong>✅ Contours administratifs disponibles</strong></small>' : 
-              '<small style="color: #dc2626;"><strong>❌ Contours non disponibles</strong></small>'
+              '<small style="color: #00853f; font-size: 13px;"><strong>✅ Contours administratifs disponibles</strong></small>' : 
+              '<small style="color: #dc2626; font-size: 13px;"><strong>❌ Contours non disponibles</strong></small>'
             }
           </div>
         </div>
@@ -1756,10 +1765,10 @@ const CarteCommunaleMobile = ({
       L.popup()
         .setLatLng(mapRef.current.getCenter())
         .setContent(`
-          <div style="text-align: center; padding: 12px;">
-            <div style="font-size: 20px; margin-bottom: 8px;">❌</div>
-            <strong style="color: #dc2626; font-size: 14px;">Erreur d'affichage</strong><br/>
-            <small>Impossible d'afficher les données de la commune: ${error.message}</small>
+          <div style="text-align: center; padding: 15px; min-width: 280px;">
+            <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
+            <strong style="color: #dc2626; font-size: 16px;">Erreur d'affichage</strong><br/>
+            <small style="font-size: 13px;">Impossible d'afficher les données de la commune: ${error.message}</small>
           </div>
         `).openOn(mapRef.current);
     }
@@ -1803,10 +1812,10 @@ const CarteCommunaleMobile = ({
       L.popup()
         .setLatLng(mapRef.current.getCenter())
         .setContent(`
-          <div style="text-align: center; padding: 15px;">
-            <div style="font-size: 24px; margin-bottom: 10px;">📍</div>
-            <strong style="color: #00853f;">Mode Ajout Activé</strong><br/>
-            <small>Cliquez sur la carte pour placer la ressource</small>
+          <div style="text-align: center; padding: 18px; min-width: 280px;">
+            <div style="font-size: 28px; margin-bottom: 12px;">📍</div>
+            <strong style="color: #00853f; font-size: 18px;">Mode Ajout Activé</strong><br/>
+            <small style="font-size: 14px;">Cliquez sur la carte pour placer la ressource</small>
           </div>
         `)
         .openOn(mapRef.current);
@@ -1824,11 +1833,12 @@ const CarteCommunaleMobile = ({
         mapRef.current.removeLayer(temporaryMarker);
       }
 
+      // Marqueur temporaire optimisé tablette
       const newMarker = L.marker([lat, lng], {
         icon: L.divIcon({
-          html: `<div style="background: #ff6b35; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.4); animation: pulse 1.5s infinite;">📌</div>`,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16]
+          html: `<div style="background: #ff6b35; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; border: 4px solid white; box-shadow: 0 3px 12px rgba(0,0,0,0.5); animation: pulse 1.5s infinite;">📌</div>`,
+          iconSize: [40, 40],
+          iconAnchor: [20, 20]
         })
       }).addTo(mapRef.current);
 
@@ -1879,45 +1889,45 @@ const CarteCommunaleMobile = ({
   }, []);
 
   return (
-    <div className="carte-mobile-container" style={{
+    <div className="carte-tablette-container" style={{
       height: '100%',
       width: '100%',
       position: 'relative'
     }}>
 
-      {/* BARRE DE RECHERCHE */}
+      {/* BARRE DE RECHERCHE OPTIMISÉE TABLETTE */}
       <SearchBarCommunes
         onCommuneSelect={handleCommuneSelect}
         communesData={communes}
       />
 
-      {/* SELECTEUR DE MODE DE TRANSPORT */}
+      {/* SELECTEUR DE MODE DE TRANSPORT OPTIMISÉ TABLETTE */}
       <TransportModeSelector
         selectedMode={trackingMode}
         onModeChange={handleModeChange}
         isTracking={isTracking}
       />
 
-      {/* INDICATEUR DE MODE AJOUT */}
+      {/* INDICATEUR DE MODE AJOUT OPTIMISÉ TABLETTE */}
       {isAddingMode && (
         <div style={{
           position: 'absolute',
-          top: '70px',
+          top: '85px',
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 1000,
           background: '#00853f',
           color: 'white',
-          padding: '8px 16px',
-          borderRadius: '20px',
-          fontSize: '13px',
-          fontWeight: '600',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          padding: '12px 20px',
+          borderRadius: '25px',
+          fontSize: '15px',
+          fontWeight: '700',
+          boxShadow: '0 6px 20px rgba(0,0,0,0.4)',
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
+          gap: '10px',
           animation: 'pulse 2s infinite',
-          backdropFilter: 'blur(10px)'
+          backdropFilter: 'blur(15px)'
         }}>
           <span>📍</span>
           Mode collecte activé - Cliquez sur la carte
@@ -1934,10 +1944,10 @@ const CarteCommunaleMobile = ({
         whenReady={() => setCartePrete(true)}
       >
 
-        {/* OUTILS MOBILE */}
+        {/* OUTILS TABLETTE */}
         <MapController />
 
-        {/* BOUTONS AVEC TRACKING */}
+        {/* BOUTONS AVEC TRACKING OPTIMISÉS TABLETTE */}
         <QFieldControls
           onAddClick={handleAddButtonClick}
           onLocateClick={handleLocateClick}
@@ -1949,16 +1959,16 @@ const CarteCommunaleMobile = ({
           isTracking={isTracking}
         />
 
-        {/* ZOOM CONTROL */}
+        {/* ZOOM CONTROL OPTIMISÉ TABLETTE */}
         <CustomZoomControlQField />
 
-        {/* LOCALISATION */}
+        {/* LOCALISATION OPTIMISÉE TABLETTE */}
         <LocateControl
           onLocatingChange={setIsLocating}
           onLocate={locateTrigger > 0}
         />
 
-        {/* TRACKING GPS OPTIMISÉ */}
+        {/* TRACKING GPS OPTIMISÉ TABLETTE */}
         <GPSTrackingControl
           onTrackingUpdate={handleTrackingUpdate}
           onTrackSaved={handleTrackSaved}
@@ -1974,20 +1984,20 @@ const CarteCommunaleMobile = ({
                   trackingMode === 'driving' ? '#FF6B35' :
                     trackingMode === 'motorcycle' ? '#5856D6' : '#FF9500'
             }
-            weight={5}
+            weight={6} // Plus épais sur tablette
             opacity={0.8}
             lineCap="round"
           />
         )}
 
-        {/* MENU DES FONDS DE CARTE */}
+        {/* MENU DES FONDS DE CARTE OPTIMISÉ TABLETTE */}
         <QFieldLayersControl
           onBasemapChange={setCurrentBasemap}
           isOpen={showLayersMenu}
           onClose={() => setShowLayersMenu(false)}
         />
 
-        {/* MENU DES TRAJETS SAUVEGARDÉS */}
+        {/* MENU DES TRAJETS SAUVEGARDÉS OPTIMISÉ TABLETTE */}
         <SavedTracksControl
           isOpen={showTracksMenu}
           onClose={() => setShowTracksMenu(false)}
@@ -1996,20 +2006,20 @@ const CarteCommunaleMobile = ({
         {/* FOND DE CARTE */}
         <DynamicTileLayer basemap={currentBasemap} />
 
-        {/* MARQUEURS DES RESSOURCES */}
+        {/* MARQUEURS DES RESSOURCES AVEC POPUP TABLETTE */}
         {cartePrete && ressourcesAvecCoordonnees.map((ressource) => {
           const coords = obtenirCoordonnees(ressource);
           return (
             <Marker key={ressource.id} position={coords} icon={getIconForRessource(ressource.type)}>
               <Popup>
-                <MobilePopup ressource={ressource} />
+                <TabletPopup ressource={ressource} />
               </Popup>
             </Marker>
           );
         })}
       </MapContainer>
 
-      {/* STYLES */}
+      {/* STYLES OPTIMISÉS TABLETTE */}
       <style>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes pulse { 
@@ -2022,12 +2032,32 @@ const CarteCommunaleMobile = ({
           100% { transform: scale(3); opacity: 0; } 
         }
         
-        .carte-mobile-container {
+        .carte-tablette-container {
           animation: fadeIn 0.5s ease;
+        }
+        
+        .commune-tooltip-tablette {
+          background: rgba(0, 133, 63, 0.95);
+          border: 2px solid #00853f;
+          border-radius: 6px;
+          color: white;
+          padding: 6px 10px;
+          font-size: 13px;
+          font-weight: bold;
+        }
+        
+        .leaflet-tooltip.commune-tooltip-tablette {
+          background: rgba(0, 133, 63, 0.95);
+          border: 2px solid #00853f;
+          color: white;
+        }
+        
+        .tablet-location-marker {
+          z-index: 1000;
         }
       `}</style>
     </div>
   );
 };
 
-export default CarteCommunaleMobile;
+export default CarteCommunaleTablette;

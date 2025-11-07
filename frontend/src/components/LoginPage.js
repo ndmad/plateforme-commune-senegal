@@ -1,7 +1,9 @@
+// components/LoginPage.js
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import './LoginPage.css';
 import { useTranslation } from '../hooks/useTranslation';
+import { API_BASE_URL } from '../config'; // Import de la configuration
 
 const LoginPage = ({ onLoginSuccess }) => {
   const { t } = useTranslation();
@@ -25,7 +27,9 @@ const LoginPage = ({ onLoginSuccess }) => {
     setMessage('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      console.log('🔗 Tentative de connexion vers:', `${API_BASE_URL}/auth/login`);
+      
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -33,7 +37,14 @@ const LoginPage = ({ onLoginSuccess }) => {
         body: JSON.stringify(formData)
       });
 
+      console.log('📡 Statut HTTP:', response.status, response.statusText);
+
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
+      }
+
       const result = await response.json();
+      console.log('📨 Données reçues:', result);
 
       if (result.success) {
         setMessage(`✅ ${t('login_success')}`);
@@ -50,13 +61,14 @@ const LoginPage = ({ onLoginSuccess }) => {
         setMessage('❌ ' + (result.error || t('login_error')));
       }
     } catch (error) {
-      setMessage('❌ ' + t('connection_error'));
-      console.error('Erreur:', error);
+      console.error('💥 Erreur complète:', error);
+      setMessage(`❌ ${t('connection_error')}: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // [Le reste du code JSX reste identique...]
   return (
     <div className="login-page-flutter" style={{
       minHeight: '100vh',
@@ -119,6 +131,19 @@ const LoginPage = ({ onLoginSuccess }) => {
               {message}
             </div>
           )}
+
+          {/* Information de débogage */}
+          <div style={{
+            padding: '8px 12px',
+            background: '#f0f9ff',
+            border: '1px solid #bae6fd',
+            borderRadius: '8px',
+            marginBottom: '16px',
+            fontSize: '12px',
+            color: '#0369a1'
+          }}>
+            🔗 API: {API_BASE_URL}
+          </div>
 
           {/* Formulaire */}
           <form onSubmit={handleSubmit}>

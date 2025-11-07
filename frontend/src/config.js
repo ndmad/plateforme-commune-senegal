@@ -10,7 +10,6 @@ const getApiBaseUrl = () => {
     }
     
     // Si on est sur mobile, utilise l'IP du PC
-    // ⚠️ REMPLACEZ 192.168.1.50 par VOTRE IP RÉELLE !
     return 'http://192.168.43.103:5000/api';
   };
   

@@ -1,0 +1,74 @@
+/* === CORRECTIONS SPÉCIFIQUES POUR LE DASHBOARD === */
+
+/* Container principal du dashboard */
+.dashboard-container {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  
+  .dashboard-container .container {
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+    padding: 20px !important;
+    width: 100% !important;
+  }
+  
+  /* Centrage des cartes de statistiques */
+  .dashboard-container .row {
+    justify-content: center !important;
+    margin: 0 -10px !important;
+  }
+  
+  .dashboard-container .col,
+  .dashboard-container [class*="col-"] {
+    display: flex !important;
+    justify-content: center !important;
+    padding: 10px !important;
+  }
+  
+  /* Cartes de statistiques centrées */
+  .dashboard-container .flutter-card.elevated {
+    width: 100% !important;
+    max-width: 280px !important;
+    min-height: 120px !important;
+    margin: 0 auto !important;
+  }
+  
+  /* Grille responsive pour les indicateurs */
+  @media (max-width: 768px) {
+    .dashboard-container .flutter-card.elevated {
+      max-width: 100% !important;
+      min-height: 100px !important;
+    }
+  }
+  
+  /* Correction pour le wrapper scrollable */
+  .dashboard-container .tab-content {
+    width: 100% !important;
+    max-width: none !important;
+  }
+  
+  /* Graphiques centrés */
+  .dashboard-container .chart-container {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+  }
+  
+  /* Onglets centrés */
+  .dashboard-container .nav-tabs {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+  }
+  
+  /* Export section centrée */
+  .dashboard-container .export-section {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+    margin-top: 30px !important;
+  }

@@ -7,13 +7,14 @@ import './App.css';
 
 import CarteCommunale from './components/CarteCommunale';
 import CarteCommunaleMobile from './components/CarteCommunaleMobile';
+import CarteCommunaleTablette from './components/CarteCommunaleTablette';
 import ListeRessources from './components/ListeRessources';
 import Header from './components/Header';
 import FormulaireRessource from './components/FormulaireRessource';
 import LoginPage from './components/LoginPage';
 import RechercheFiltres from './components/RechercheFiltres';
 import Dashboard from './components/Dashboard';
-import useMobile from './hooks/useMobile';
+import useDevice from './hooks/useDevice';
 import { API_BASE_URL } from './config';
 import ExportDonnees from './components/ExportDonnees';
 
@@ -28,7 +29,7 @@ import { TranslationProvider } from './hooks/useTranslation';
 import ANSDPanel from './components/ansd/ANSDPanel';
 import FormulaireRessourceMobile from './components/FormulaireRessourceMobile';
 
-// Composant MobileNavigation
+// Composant MobileNavigation - UTILISÉ POUR MOBILE ET TABLETTE
 const MobileNavigation = ({
   activeView,
   setActiveView,
@@ -39,7 +40,8 @@ const MobileNavigation = ({
   filters,
   ressourcesFiltrees,
   onLogout,
-  user
+  user,
+  isTablet = false // Nouvelle prop pour adapter les styles tablette
 }) => {
 
   const handleCartePress = () => {
@@ -73,7 +75,7 @@ const MobileNavigation = ({
   };
 
   return (
-    <div className="flutter-bottom-nav">
+    <div className={`flutter-bottom-nav ${isTablet ? 'tablet-navigation' : ''}`}>
       <button
         className={`flutter-nav-item ${activeView === 'carte' ? 'active' : ''}`}
         onClick={handleCartePress}
@@ -299,7 +301,10 @@ const CarteView = ({
   communes, 
   selectedCommune, 
   setSelectedCommune, 
+  deviceType,
   isMobile, 
+  isTablet,
+  isDesktop,
   showFilters, 
   setShowFilters, 
   showList, 
@@ -314,9 +319,9 @@ const CarteView = ({
 }) => {
   return (
     <div className="main-content-wrapper">
-      {/* Filtres mobiles */}
-      {isMobile && showFilters && (
-        <div className="mobile-filters-panel">
+      {/* Filtres pour mobile et tablette */}
+      {(isMobile || isTablet) && showFilters && (
+        <div className={`mobile-filters-panel ${isTablet ? 'tablet-filters' : ''}`}>
           <div className="mobile-filters-header">
             <h6>🔍 Recherche et Filtres</h6>
             <button
@@ -331,13 +336,14 @@ const CarteView = ({
             onFilterChange={handleFilterChange}
             communes={communes}
             isMobile={isMobile}
+            isTablet={isTablet}
           />
         </div>
       )}
 
-      {/* Liste mobile */}
-      {isMobile && showList && (
-        <div className="mobile-list-panel">
+      {/* Liste pour mobile et tablette */}
+      {(isMobile || isTablet) && showList && (
+        <div className={`mobile-list-panel ${isTablet ? 'tablet-list' : ''}`}>
           <div className="mobile-list-header">
             <h6>📋 Ressources ({ressourcesFiltrees.length})</h6>
             <button
@@ -353,6 +359,7 @@ const CarteView = ({
               selectedCommune={selectedCommune}
               onRessourceUpdated={() => {}}
               isMobile={isMobile}
+              isTablet={isTablet}
             />
           </div>
         </div>
@@ -360,7 +367,9 @@ const CarteView = ({
 
       {/* Layout principal */}
       <div className="main-layout-container">
-        <div className={`carte-section ${!isMobile ? 'with-sidebar' : 'full-width'}`}>
+        <div className={`carte-section ${
+          isDesktop ? 'with-sidebar' : 'full-width'
+        }`}>
           {loading ? (
             <div className="loading-container">
               <div className="text-center">
@@ -380,12 +389,21 @@ const CarteView = ({
                   onAddDataClick={onAddDataClick}
                   formulairePosition={formulairePosition}
                 />
+              ) : isTablet ? (
+                <CarteCommunaleTablette
+                  ressources={ressourcesFiltrees}
+                  communes={communes}
+                  onCommuneSelect={setSelectedCommune}
+                  onAddDataClick={onAddDataClick}
+                  formulairePosition={formulairePosition}
+                />
               ) : (
                 <CarteCommunale
                   ressources={ressourcesFiltrees}
                   communes={communes}
                   onCommuneSelect={setSelectedCommune}
                   isMobile={isMobile}
+                  isTablet={isTablet}
                   formulairePosition={formulairePosition}
                   onMapPositionRequest={mapPositionRequest}
                 />
@@ -394,8 +412,8 @@ const CarteView = ({
           )}
         </div>
 
-        {/* Sidebar desktop */}
-        {!isMobile && (
+        {/* Sidebar desktop seulement */}
+        {isDesktop && (
           <div className="sidebar-section">
             <div className="sidebar-inner">
               <RechercheFiltres
@@ -403,6 +421,7 @@ const CarteView = ({
                 onFilterChange={handleFilterChange}
                 communes={communes}
                 isMobile={isMobile}
+                isTablet={isTablet}
               />
 
               {/* Section Export */}
@@ -410,6 +429,7 @@ const CarteView = ({
                 ressources={ressourcesFiltrees}
                 onExportComplete={() => {}}
                 isMobile={isMobile}
+                isTablet={isTablet}
               />
 
               <ListeRessources
@@ -417,6 +437,7 @@ const CarteView = ({
                 selectedCommune={selectedCommune}
                 onRessourceUpdated={() => {}}
                 isMobile={isMobile}
+                isTablet={isTablet}
               />
             </div>
           </div>
@@ -428,7 +449,10 @@ const CarteView = ({
 
 // Composant App principal
 const AppContent = () => {
-  const isMobile = useMobile();
+  const deviceType = useDevice();
+  const isMobile = deviceType === 'mobile';
+  const isTablet = deviceType === 'tablet';
+  const isDesktop = deviceType === 'desktop';
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -632,7 +656,7 @@ const AppContent = () => {
 
   // Fonction renderActiveView
   const renderActiveView = () => {
-    console.log('🔄 Vue active:', activeView);
+    console.log('🔄 Vue active:', activeView, '| Device:', deviceType);
 
     switch (activeView) {
       case 'dashboard':
@@ -653,7 +677,10 @@ const AppContent = () => {
             communes={communes}
             selectedCommune={selectedCommune}
             setSelectedCommune={setSelectedCommune}
+            deviceType={deviceType}
             isMobile={isMobile}
+            isTablet={isTablet}
+            isDesktop={isDesktop}
             showFilters={showFilters}
             setShowFilters={setShowFilters}
             showList={showList}
@@ -691,14 +718,15 @@ const AppContent = () => {
 
   return (
     <div className="App">
-      {/* Header - caché en mobile */}
-      {!isMobile && (
+      {/* Header - AFFICHÉ UNIQUEMENT EN MODE DESKTOP */}
+      {isDesktop && (
         <Header
           onViewChange={setActiveView}
           activeView={activeView}
           user={user}
           onLogout={handleLogout}
           isMobile={isMobile}
+          isTablet={isTablet}
           onShowFormulaire={() => setShowFormulaire(true)}
         />
       )}
@@ -708,8 +736,8 @@ const AppContent = () => {
         {renderActiveView()}
       </div>
 
-      {/* Navigation mobile */}
-      {isMobile && (
+      {/* Navigation mobile et tablette - MÊME INTERFACE */}
+      {(isMobile || isTablet) && (
         <MobileNavigation
           activeView={activeView}
           setActiveView={setActiveView}
@@ -721,11 +749,12 @@ const AppContent = () => {
           ressourcesFiltrees={ressourcesFiltrees}
           onLogout={handleLogout}
           user={user}
+          isTablet={isTablet} // Passer la prop pour adapter les styles
         />
       )}
 
       {/* Formulaires */}
-      {isMobile ? (
+      {(isMobile || isTablet) ? (
         <FormulaireRessourceMobile
           show={showFormulaire}
           onHide={() => {
@@ -734,6 +763,7 @@ const AppContent = () => {
           }}
           onRessourceAdded={handleRessourceAdded}
           positionInitiale={selectedPosition || formulairePosition}
+          isTablet={isTablet} // Adapter le formulaire pour tablette
         />
       ) : (
         <FormulaireRessource
@@ -744,6 +774,7 @@ const AppContent = () => {
           }}
           onRessourceAdded={handleRessourceAdded}
           isMobile={isMobile}
+          isTablet={isTablet}
           positionInitiale={selectedPosition || formulairePosition}
           onPositionChange={handleFormulairePositionChange}
         />
