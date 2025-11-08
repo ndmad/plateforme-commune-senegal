@@ -1,4 +1,4 @@
-// App.js
+// App.js - VERSION COMPLÈTE AVEC IA
 import React, { useState, useEffect, useRef } from 'react';
 import { Container } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -29,7 +29,11 @@ import { TranslationProvider } from './hooks/useTranslation';
 import ANSDPanel from './components/ansd/ANSDPanel';
 import FormulaireRessourceMobile from './components/FormulaireRessourceMobile';
 
-// Composant MobileNavigation - UTILISÉ POUR MOBILE ET TABLETTE
+// Import de l'IA
+import AIPanel from './components/ai/AIPanel';
+import AIRecommendations from './components/ai/AIRecommendations';
+
+// Composant MobileNavigation - AVEC IA
 const MobileNavigation = ({
   activeView,
   setActiveView,
@@ -41,7 +45,7 @@ const MobileNavigation = ({
   ressourcesFiltrees,
   onLogout,
   user,
-  isTablet = false // Nouvelle prop pour adapter les styles tablette
+  isTablet = false
 }) => {
 
   const handleCartePress = () => {
@@ -52,6 +56,12 @@ const MobileNavigation = ({
 
   const handleDashboardPress = () => {
     setActiveView('dashboard');
+    setShowFilters(false);
+    setShowList(false);
+  };
+
+  const handleAIPress = () => {
+    setActiveView('ia');
     setShowFilters(false);
     setShowList(false);
   };
@@ -90,6 +100,14 @@ const MobileNavigation = ({
       >
         <span className="icon">📊</span>
         <span className="label">Stats</span>
+      </button>
+
+      <button
+        className={`flutter-nav-item ${activeView === 'ia' ? 'active' : ''}`}
+        onClick={handleAIPress}
+      >
+        <span className="icon">🤖</span>
+        <span className="label">IA</span>
       </button>
 
       <button
@@ -468,10 +486,13 @@ const AppContent = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showList, setShowList] = useState(false);
 
-  // NOUVEAUX ÉTATS POUR LA SYNCHRONISATION
+  // États pour la synchronisation
   const [formulairePosition, setFormulairePosition] = useState(null);
   const [mapPositionRequest, setMapPositionRequest] = useState(null);
   const [selectedPosition, setSelectedPosition] = useState(null);
+
+  // État pour les recommandations IA
+  const [aiRecommendations, setAiRecommendations] = useState([]);
 
   // Références pour éviter les déclenchements multiples de notifications
   const notificationsShown = useRef({
@@ -516,6 +537,73 @@ const AppContent = () => {
       filtrerRessources();
     }
   }, [ressources, searchTerm, filters, user]);
+
+  // Charger les recommandations IA
+  useEffect(() => {
+    if (ressources.length > 0 && communes.length > 0) {
+      chargerRecommandationsIA();
+    }
+  }, [ressources, communes]);
+
+  const chargerRecommandationsIA = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/ai/analyze-commune`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          ressources: ressources,
+          commune: selectedCommune || { nom: 'Toutes les communes' }
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          // Transformer l'analyse en recommandations
+          const recommendations = data.data.recommendations?.map((rec, index) => ({
+            id: index,
+            title: `Recommandation ${index + 1}`,
+            description: rec,
+            type: 'high_impact',
+            impact: 'Élevé'
+          })) || [];
+          
+          setAiRecommendations(recommendations);
+          console.log('✅ Recommandations IA chargées');
+        }
+      }
+    } catch (error) {
+      console.log('IA non disponible - utilisation des recommandations par défaut');
+      // Recommandations par défaut
+      setAiRecommendations([
+        {
+          id: 1,
+          title: "Diversifier les ressources",
+          description: "Envisagez de développer différents types de ressources pour équilibrer le développement",
+          type: "growth",
+          impact: "Moyen"
+        },
+        {
+          id: 2,
+          title: "Optimiser les ressources existantes",
+          description: "Améliorez l'utilisation des ressources à haut potentiel",
+          type: "high_impact",
+          impact: "Élevé"
+        },
+        {
+          id: 3,
+          title: "Renforcer la collecte de données",
+          description: "Améliorez la qualité et la quantité des données collectées",
+          type: "urgent",
+          impact: "Élevé"
+        }
+      ]);
+    }
+  };
 
   const chargerDonnees = async () => {
     try {
@@ -616,6 +704,7 @@ const AppContent = () => {
     setRessources([]);
     setCommunes([]);
     setSelectedPosition(null);
+    setAiRecommendations([]);
     info('👋 Vous avez été déconnecté');
   };
 
@@ -654,19 +743,34 @@ const AppContent = () => {
     }
   };
 
-  // Fonction renderActiveView
+  // Fonction renderActiveView avec IA
   const renderActiveView = () => {
     console.log('🔄 Vue active:', activeView, '| Device:', deviceType);
 
     switch (activeView) {
       case 'dashboard':
-        return <Dashboard ressources={ressources} communes={communes} />;
+        return (
+          <Dashboard 
+            ressources={ressources} 
+            communes={communes} 
+            aiRecommendations={aiRecommendations}
+          />
+        );
       
       case 'admin':
         return <AdminPanel />;
       
       case 'ansd':
         return <ANSDPanel />;
+      
+      case 'ia':
+        return (
+          <AIPanel 
+            commune={selectedCommune || { nom: 'Analyse globale' }} 
+            ressources={ressourcesFiltrees}
+            isMobile={isMobile}
+          />
+        );
       
       case 'carte':
       default:
@@ -736,7 +840,7 @@ const AppContent = () => {
         {renderActiveView()}
       </div>
 
-      {/* Navigation mobile et tablette - MÊME INTERFACE */}
+      {/* Navigation mobile et tablette - AVEC IA */}
       {(isMobile || isTablet) && (
         <MobileNavigation
           activeView={activeView}
@@ -749,7 +853,7 @@ const AppContent = () => {
           ressourcesFiltrees={ressourcesFiltrees}
           onLogout={handleLogout}
           user={user}
-          isTablet={isTablet} // Passer la prop pour adapter les styles
+          isTablet={isTablet}
         />
       )}
 
@@ -763,7 +867,7 @@ const AppContent = () => {
           }}
           onRessourceAdded={handleRessourceAdded}
           positionInitiale={selectedPosition || formulairePosition}
-          isTablet={isTablet} // Adapter le formulaire pour tablette
+          isTablet={isTablet}
         />
       ) : (
         <FormulaireRessource

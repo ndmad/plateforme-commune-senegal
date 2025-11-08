@@ -1,3 +1,4 @@
+// translations.js - VERSION COMPLÈTE AVEC IA
 export const translations = {
   fr: {
     // Navigation
@@ -8,6 +9,7 @@ export const translations = {
     'menu.resources': 'Ressources',
     'menu.export': 'Exporter',
     'menu.logout': 'Déconnexion',
+    'menu.ai': 'Intelligence Artificielle',
     
     // Dashboard
     'dashboard.title': 'Tableau de Bord',
@@ -16,12 +18,33 @@ export const translations = {
     'dashboard.communesCovered': 'Communes couvertes',
     'dashboard.contributors': 'Contributeurs',
     'dashboard.optimizationRate': 'Taux d\'optimisation',
+    'dashboard.highPotential': 'Haut potentiel',
+    'dashboard.resourceDistribution': 'Répartition des ressources',
+    'dashboard.byType': 'Par type',
+    'dashboard.byPotential': 'Par potentiel',
+    'dashboard.monthlyEvolution': 'Évolution mensuelle',
+    'dashboard.municipalities': 'Communes',
+    'dashboard.advancedAnalytics': 'Analyses avancées',
+    'dashboard.aiAnalysis': 'Analyse IA',
+    'dashboard.general': 'Général',
+    'dashboard.detailsByType': 'Détails par type',
+    'dashboard.highPotentialResources': 'Ressources à haut potentiel',
+    'dashboard.municipalityRanking': 'Classement des communes',
+    'dashboard.position': 'Position',
+    'dashboard.municipality': 'Commune',
+    'dashboard.resources': 'Ressources',
+    'dashboard.score': 'Score',
+    'dashboard.loading': 'Chargement...',
     
     // Types de ressources
     'resource.types.agricultural': 'Ressources Agricoles',
     'resource.types.water': 'Ressources Hydriques',
     'resource.types.economic': 'Ressources Économiques',
     'resource.types.human': 'Ressources Humaines',
+    'resource.types.commercial': 'Ressources Commerciales',
+    'resource.types.artisanal': 'Ressources Artisanales',
+    'resource.types.touristic': 'Ressources Touristiques',
+    'resource.types.mineral': 'Ressources Minérales',
     
     // États
     'state.unexploited': 'Inexploité',
@@ -32,6 +55,109 @@ export const translations = {
     'potential.low': 'Faible',
     'potential.medium': 'Moyen',
     'potential.high': 'Élevé',
+    
+    // Intelligence Artificielle
+    'ai.analysis': 'Analyse IA',
+    'ai.recommendations': 'Recommandations IA',
+    'ai.assistant': 'Assistant IA',
+    'ai.patternsDetected': 'Patterns détectés',
+    'ai.developmentPredictions': 'Prévisions de développement',
+    'ai.anomalyDetection': 'Détection d\'anomalies',
+    'ai.startAnalysis': 'Lancer l\'analyse',
+    'ai.analysisInProgress': 'Analyse IA en cours...',
+    'ai.askAssistant': 'Posez une question à l\'assistant IA...',
+    'ai.send': 'Envoyer',
+    'ai.highImpact': 'Impact élevé',
+    'ai.growthOpportunity': 'Opportunité de croissance',
+    'ai.urgentAttention': 'Attention urgente',
+    'ai.confidence': 'Confiance',
+    'ai.shortTerm': 'Court terme',
+    'ai.mediumTerm': 'Moyen terme',
+    'ai.longTerm': 'Long terme',
+    'ai.intelligentAnalysis': 'Analyse Intelligente',
+    'ai.launchAnalysis': 'Lancer l\'analyse',
+    'ai.analyzingData': 'Analyse des données en cours...',
+    'ai.analysisComplete': 'Analyse terminée',
+    'ai.recommendationsTitle': 'Recommandations Intelligentes',
+    'ai.diversifyResources': 'Diversifier les ressources',
+    'ai.optimizeExisting': 'Optimiser les ressources existantes',
+    'ai.improveDataCollection': 'Améliorer la collecte de données',
+    'ai.developEcotourism': 'Développer l\'écotourisme',
+    'ai.strengthenInfrastructure': 'Renforcer les infrastructures',
+    'ai.patternsTitle': 'Patterns détectés',
+    'ai.recommendationsTitle': 'Recommandations',
+    'ai.predictionsTitle': 'Prévisions',
+    'ai.riskAreasTitle': 'Zones de vigilance',
+    
+    // Messages IA
+    'ai.welcomeMessage': 'Bienvenue dans l\'analyse IA ! Cliquez sur "Lancer l\'analyse" pour obtenir des insights intelligents sur vos données communales.',
+    'ai.analysisSuccess': 'Analyse IA terminée avec succès !',
+    'ai.analysisError': 'Erreur lors de l\'analyse IA. Utilisation des données par défaut.',
+    'ai.chatWelcome': 'Posez-moi des questions sur le développement de votre commune !',
+    'ai.chatError': 'Je rencontre des difficultés techniques. Pouvez-vous reformuler votre question ?',
+    'ai.fallbackMessage': 'L\'IA n\'est pas disponible pour le moment. Affichage des recommandations par défaut.',
+    
+    // Recommandations IA
+    'ai.recommendation1': 'Diversifiez les types de ressources pour un développement équilibré',
+    'ai.recommendation2': 'Optimisez l\'utilisation des ressources à haut potentiel',
+    'ai.recommendation3': 'Renforcez la collecte et la qualité des données',
+    'ai.recommendation4': 'Développez les infrastructures de base',
+    'ai.recommendation5': 'Mettez en valeur le potentiel touristique',
+    'ai.recommendation6': 'Améliorez la gestion des ressources hydriques',
+    
+    // Patterns IA
+    'ai.pattern1': 'Distribution équilibrée des ressources sur le territoire',
+    'ai.pattern2': 'Potentiel touristique sous-exploité',
+    'ai.pattern3': 'Concentration des ressources dans certaines zones',
+    'ai.pattern4': 'Croissance modérée du secteur économique',
+    
+    // Prédictions IA
+    'ai.predictionShortTerm': 'Croissance modérée du secteur touristique',
+    'ai.predictionMediumTerm': 'Diversification économique significative',
+    'ai.predictionLongTerm': 'Développement durable des infrastructures',
+    
+    // Zones de risque
+    'ai.risk1': 'Sécheresse saisonnière',
+    'ai.risk2': 'Déficit infrastructurel',
+    'ai.risk3': 'Dépendance aux ressources principales',
+    
+    // Interface utilisateur
+    'ui.export': 'Exporter',
+    'ui.filter': 'Filtrer',
+    'ui.search': 'Rechercher',
+    'ui.clear': 'Effacer',
+    'ui.apply': 'Appliquer',
+    'ui.cancel': 'Annuler',
+    'ui.save': 'Sauvegarder',
+    'ui.edit': 'Modifier',
+    'ui.delete': 'Supprimer',
+    'ui.add': 'Ajouter',
+    'ui.view': 'Voir',
+    'ui.more': 'Plus',
+    'ui.less': 'Moins',
+    'ui.yes': 'Oui',
+    'ui.no': 'Non',
+    'ui.ok': 'OK',
+    'ui.close': 'Fermer',
+    'ui.next': 'Suivant',
+    'ui.previous': 'Précédent',
+    'ui.first': 'Premier',
+    'ui.last': 'Dernier',
+    'ui.loading': 'Chargement...',
+    'ui.error': 'Erreur',
+    'ui.success': 'Succès',
+    'ui.warning': 'Avertissement',
+    'ui.info': 'Information',
+    'ui.help': 'Aide',
+    'ui.settings': 'Paramètres',
+    'ui.profile': 'Profil',
+    
+    // Autres
+    'unspecified': 'Non spécifié',
+    'all': 'Tous',
+    'none': 'Aucun',
+    'unknown': 'Inconnu',
+    'other': 'Autre'
   },
   
   wo: {
@@ -43,6 +169,7 @@ export const translations = {
     'menu.resources': 'Jëfandikoo',
     'menu.export': 'Yóbbalu',
     'menu.logout': 'Bàyyi',
+    'menu.ai': 'Xam-Xam Artificial',
     
     // Dashboard
     'dashboard.title': 'Tabloo Buur',
@@ -51,12 +178,33 @@ export const translations = {
     'dashboard.communesCovered': 'Dëkk yu am',
     'dashboard.contributors': 'Njiitu',
     'dashboard.optimizationRate': 'Taux optimise',
+    'dashboard.highPotential': 'Potentiel kawe',
+    'dashboard.resourceDistribution': 'Séddale jëfandikoo',
+    'dashboard.byType': 'Ci mbooloo',
+    'dashboard.byPotential': 'Ci potentiel',
+    'dashboard.monthlyEvolution': 'Yewwute weer',
+    'dashboard.municipalities': 'Dëkk',
+    'dashboard.advancedAnalytics': 'Xoolal yu yaatu',
+    'dashboard.aiAnalysis': 'Xoolal AI',
+    'dashboard.general': 'General',
+    'dashboard.detailsByType': 'Firi ci mbooloo',
+    'dashboard.highPotentialResources': 'Jëfandikoo yu kawe',
+    'dashboard.municipalityRanking': 'Tukkii dëkk',
+    'dashboard.position': 'Nekku',
+    'dashboard.municipality': 'Dëkk',
+    'dashboard.resources': 'Jëfandikoo',
+    'dashboard.score': 'Peeñ',
+    'dashboard.loading': 'Yebbul...',
     
     // Types de ressources
     'resource.types.agricultural': 'Jëfandikoo Ngënn',
     'resource.types.water': 'Jëfandikoo Ndox',
     'resource.types.economic': 'Jëfandikoo Koom',
     'resource.types.human': 'Jëfandikoo Nit',
+    'resource.types.commercial': 'Jëfandikoo Jaay',
+    'resource.types.artisanal': 'Jëfandikoo Jëng',
+    'resource.types.touristic': 'Jëfandikoo Tursit',
+    'resource.types.mineral': 'Jëfandikoo Doj',
     
     // États
     'state.unexploited': 'Jëfandikul',
@@ -67,5 +215,108 @@ export const translations = {
     'potential.low': 'Suuf',
     'potential.medium': 'Gennaw',
     'potential.high': 'Kawe',
+    
+    // Intelligence Artificielle
+    'ai.analysis': 'Xoolal AI',
+    'ai.recommendations': 'Njàngum AI',
+    'ai.assistant': 'Dimbali AI',
+    'ai.patternsDetected': 'Mbay yi gis',
+    'ai.developmentPredictions': 'Miinug yewwute',
+    'ai.anomalyDetection': 'Gis yoon yu bon',
+    'ai.startAnalysis': 'Tàmbali xoolal',
+    'ai.analysisInProgress': 'Xoolal AI di wàcc',
+    'ai.askAssistant': 'Laaj Dimbali AI...',
+    'ai.send': 'Yónnee',
+    'ai.highImpact': 'Impact kawe',
+    'ai.growthOpportunity': 'Jàppale yokku',
+    'ai.urgentAttention': 'Xoolal yàgg',
+    'ai.confidence': 'Yite',
+    'ai.shortTerm': 'Waxtu gàtt',
+    'ai.mediumTerm': 'Waxtu genn',
+    'ai.longTerm': 'Waxtu ndaw',
+    'ai.intelligentAnalysis': 'Xoolal Xam-Xam',
+    'ai.launchAnalysis': 'Tàmbali xoolal',
+    'ai.analyzingData': 'Xoolal xibaar di wàcc',
+    'ai.analysisComplete': 'Xoolal mujj',
+    'ai.recommendationsTitle': 'Njàngum Xam-Xam',
+    'ai.diversifyResources': 'Wàyy jëfandikoo',
+    'ai.optimizeExisting': 'Yokku jëfandikoo am',
+    'ai.improveDataCollection': 'Yokku wutte xibaar',
+    'ai.developEcotourism': 'Yokku tursit àdduna',
+    'ai.strengthenInfrastructure': 'Yokku ndimbalu',
+    'ai.patternsTitle': 'Mbay yi gis',
+    'ai.recommendationsTitle': 'Njàngum',
+    'ai.predictionsTitle': 'Miinug',
+    'ai.riskAreasTitle': 'Biiram yu metti',
+    
+    // Messages IA
+    'ai.welcomeMessage': 'Dalal ci xoolal AI! Taxawal "Tàmbali xoolal" ngir gis xam-xam ci xibaar dëkk yi.',
+    'ai.analysisSuccess': 'Xoolal AI mujj na bu baax!',
+    'ai.analysisError': 'Jàpp ci xoolal AI. Jëfandikoo xibaar bu am.',
+    'ai.chatWelcome': 'Laaj ma ci yewwute dëkkam!',
+    'ai.chatError': 'Am naa jàpp. Mën nga waxaat baat bi?',
+    'ai.fallbackMessage': 'AI amul léegi. Wone naa njàngum yu am.',
+    
+    // Recommandations IA
+    'ai.recommendation1': 'Wàyy mbooloo jëfandikoo ngir yokku teew',
+    'ai.recommendation2': 'Yokku jëfandiku jëfandikoo yu kawe',
+    'ai.recommendation3': 'Yokku wutte ak baaxaayu xibaar',
+    'ai.recommendation4': 'Yokku ndimbalu as',
+    'ai.recommendation5': 'Wone potensyel tursit',
+    'ai.recommendation6': 'Yokku toppandoo jëfandikoo ndox',
+    
+    // Patterns IA
+    'ai.pattern1': 'Séddale teew jëfandikoo ci réew',
+    'ai.pattern2': 'Potensyel tursit jëfandiku diir',
+    'ai.pattern3': 'Dajale jëfandikoo ci ay dex',
+    'ai.pattern4': 'Yokku genn ci koom',
+    
+    // Prédictions IA
+    'ai.predictionShortTerm': 'Yokku genn ci tursit',
+    'ai.predictionMediumTerm': 'Wàyy koom bu metti',
+    'ai.predictionLongTerm': 'Yokku ndimbalu dund',
+    
+    // Zones de risque
+    'ai.risk1': 'Óom weer',
+    'ai.risk2': 'Soxla ndimbalu',
+    'ai.risk3': 'Yëg jëfandikoo jëkk',
+    
+    // Interface utilisateur
+    'ui.export': 'Yóbbalu',
+    'ui.filter': 'Filtar',
+    'ui.search': 'Wut',
+    'ui.clear': 'Fàyyi',
+    'ui.apply': 'Jëfandikoo',
+    'ui.cancel': 'Bàyyi',
+    'ui.save': 'Yebbit',
+    'ui.edit': 'Soppi',
+    'ui.delete': 'Fàyyi',
+    'ui.add': 'Yokk',
+    'ui.view': 'Gis',
+    'ui.more': 'Déedéet',
+    'ui.less': 'Tuuti',
+    'ui.yes': 'Waaw',
+    'ui.no': 'Déedet',
+    'ui.ok': 'Waaw',
+    'ui.close': 'Fàyyi',
+    'ui.next': 'Ci des',
+    'ui.previous': 'Ci biir',
+    'ui.first': 'Jëkk',
+    'ui.last': 'Mujj',
+    'ui.loading': 'Yebbul...',
+    'ui.error': 'Jàpp',
+    'ui.success': 'Mujj',
+    'ui.warning': 'Wàccaat',
+    'ui.info': 'Xibaar',
+    'ui.help': 'Dimbali',
+    'ui.settings': 'Tey',
+    'ui.profile': 'Profil',
+    
+    // Autres
+    'unspecified': 'Bàmtaa',
+    'all': 'Yep',
+    'none': 'Dara',
+    'unknown': 'Xamul',
+    'other': 'Yeneen'
   }
 };

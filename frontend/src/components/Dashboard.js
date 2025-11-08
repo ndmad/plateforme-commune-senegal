@@ -1,4 +1,4 @@
-// Dashboard.js - VERSION COMPLÈTE AVEC MARGES
+// Dashboard.js - VERSION COMPLÈTE AVEC IA
 import { useTranslation } from '../hooks/useTranslation';
 import React, { useState, useEffect } from 'react';
 import { Container } from 'react-bootstrap';
@@ -24,6 +24,10 @@ import { API_BASE_URL } from '../config';
 import GraphiquesInteractifs from './GraphiquesInteractifs';
 import CarteThermique from './CarteThermique';
 
+// Import des composants IA
+import AIPanel from './ai/AIPanel';
+import AIRecommendations from './ai/AIRecommendations';
+
 // Enregistrer les composants Chart.js
 ChartJS.register(
   CategoryScale,
@@ -37,7 +41,7 @@ ChartJS.register(
   PointElement
 );
 
-const Dashboard = ({ ressources, communes }) => {
+const Dashboard = ({ ressources, communes, aiRecommendations = [] }) => {
   const { t, language, changeLanguage } = useTranslation();
   const [stats, setStats] = useState(null);
   const [indicateurs, setIndicateurs] = useState(null);
@@ -452,6 +456,16 @@ const Dashboard = ({ ressources, communes }) => {
           </p>
         </div>
 
+        {/* Recommandations IA */}
+        {aiRecommendations && aiRecommendations.length > 0 && (
+          <div style={{ marginBottom: '32px', maxWidth: '1200px', margin: '0 auto' }}>
+            <AIRecommendations 
+              recommendations={aiRecommendations} 
+              isMobile={false}
+            />
+          </div>
+        )}
+
         {/* Indicateurs généraux - CENTRÉS */}
         <div style={{
           display: 'grid',
@@ -548,7 +562,7 @@ const Dashboard = ({ ressources, communes }) => {
           </div>
         </div>
 
-        {/* Navigation par onglets - CENTRÉE */}
+        {/* Navigation par onglets - AVEC IA */}
         <div style={{
           display: 'flex',
           gap: '8px',
@@ -598,6 +612,13 @@ const Dashboard = ({ ressources, communes }) => {
             style={{ fontSize: '14px', padding: '10px 16px' }}
           >
             🔍 {t('advanced_analytics')}
+          </button>
+          <button
+            className={`flutter-btn ${activeTab === 'ia' ? 'primary' : 'secondary'}`}
+            onClick={() => setActiveTab('ia')}
+            style={{ fontSize: '14px', padding: '10px 16px' }}
+          >
+            🤖 {t('ai_analysis')}
           </button>
         </div>
 
@@ -995,6 +1016,20 @@ const Dashboard = ({ ressources, communes }) => {
               <CarteThermique
                 ressources={ressources}
                 communes={communes}
+              />
+            </div>
+          )}
+
+          {/* ONGLET IA */}
+          {activeTab === 'ia' && (
+            <div style={{
+              marginBottom: '32px',
+              overflow: 'visible'
+            }}>
+              <AIPanel 
+                commune={{ nom: 'Analyse globale des données' }}
+                ressources={ressources}
+                isMobile={false}
               />
             </div>
           )}
