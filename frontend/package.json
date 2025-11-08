@@ -17,6 +17,7 @@
     "leaflet-draw": "^1.0.4",
     "leaflet-easybutton": "^2.4.0",
     "leaflet-easyprint": "^2.1.9",
+    "lucide-react": "^0.553.0",
     "react": "^18.2.0",
     "react-bootstrap": "^2.9.1",
     "react-chartjs-2": "^5.3.1",

@@ -3,6 +3,9 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 
+// IMPORT DES ICÔNES LUCIDE
+import Icons, { IconWrapper } from './Icons';
+
 // ============================================================================
 // CONFIGURATION DES ICÔNES LEAFLET
 // ============================================================================
@@ -969,47 +972,46 @@ const SavedTracksControl = ({ isOpen, onClose }) => {
 };
 
 // ============================================================================
-// COMPOSANTS BOUTONS STYLE QFIELD OPTIMISÉS TABLETTE
+// COMPOSANTS BOUTONS FLOTTANTS TABLETTE
 // ============================================================================
 
-// COMPOSANT BOUTON STYLE QFIELD - OPTIMISÉ TABLETTE
-const QFieldButton = ({ icon, title, onClick, color = '#00853f', isActive = false, badge, style = {} }) => {
+// COMPOSANT BOUTON FLOTTANT TABLETTE
+const FloatingButton = ({ 
+  icon, 
+  title, 
+  onClick, 
+  color = '#00853f', 
+  isActive = false, 
+  badge, 
+  style = {} 
+}) => {
   return (
     <button
       onClick={onClick}
       style={{
-        width: '50px', // Plus grand sur tablette
+        width: '50px',
         height: '50px',
-        borderRadius: '12px', // Plus arrondi
+        borderRadius: '12px',
         background: isActive ? color : 'white',
-        border: `3px solid ${isActive ? color : '#e0e0e0'}`, // Bordure plus épaisse
+        border: `3px solid ${isActive ? color : '#e0e0e0'}`,
         color: isActive ? 'white' : color,
-        fontSize: '18px', // Plus grand
         cursor: 'pointer',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.25)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         transition: 'all 0.2s ease',
-        marginBottom: '8px', // Plus d'espace
-        position: 'relative',
+        position: 'absolute',
+        zIndex: 1000,
         ...style
       }}
       onMouseEnter={(e) => {
         e.target.style.transform = 'translateY(-2px)';
-        e.target.style.boxShadow = '0 6px 15px rgba(0,0,0,0.3)';
-        if (!isActive) {
-          e.target.style.borderColor = color;
-          e.target.style.background = '#f8f9fa';
-        }
+        e.target.style.boxShadow = '0 6px 20px rgba(0,0,0,0.35)';
       }}
       onMouseLeave={(e) => {
         e.target.style.transform = 'translateY(0)';
-        e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-        if (!isActive) {
-          e.target.style.borderColor = '#e0e0e0';
-          e.target.style.background = 'white';
-        }
+        e.target.style.boxShadow = '0 4px 15px rgba(0,0,0,0.25)';
       }}
       title={title}
     >
@@ -1038,120 +1040,33 @@ const QFieldButton = ({ icon, title, onClick, color = '#00853f', isActive = fals
   );
 };
 
-// COMPOSANT CONTROLEUR BOUTONS DROITE STYLE QFIELD OPTIMISÉ TABLETTE
-const QFieldControls = ({
-  onAddClick,
-  onLocateClick,
-  onLayersClick,
-  onTrackingClick,
-  onTracksClick,
-  isLocating,
-  isAddingMode,
-  isTracking
-}) => {
-  return (
-    <div style={{
-      position: 'absolute',
-      right: '12px', // Plus d'espace sur les bords
-      top: '50%',
-      transform: 'translateY(-50%)',
-      zIndex: 1000,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: '8px', // Plus d'espace entre les boutons
-      background: 'rgba(255, 255, 255, 0.95)',
-      borderRadius: '15px', // Plus arrondi
-      padding: '10px 6px', // Plus de padding
-      boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-      border: '2px solid #e0e0e0',
-      backdropFilter: 'blur(10px)'
-    }}>
-      {/* BOUTON TRACKING GPS */}
-      <QFieldButton
-        icon={isTracking ? "⏹️" : "🎯"}
-        title={isTracking ? "Arrêter le tracking" : "Démarrer le tracking GPS"}
-        onClick={onTrackingClick}
-        color={isTracking ? "#dc2626" : "#FF6B35"}
-        isActive={isTracking}
-        style={{
-          fontSize: isTracking ? '18px' : '20px'
-        }}
-      />
-
-      {/* BOUTON AJOUTER RESSOURCE */}
-      <QFieldButton
-        icon={isAddingMode ? "✕" : "＋"}
-        title={isAddingMode ? "Annuler l'ajout" : "Ajouter une ressource"}
-        onClick={onAddClick}
-        color={isAddingMode ? "#dc2626" : "#00853f"}
-        isActive={isAddingMode}
-        style={{
-          fontSize: isAddingMode ? '20px' : '22px',
-          fontWeight: isAddingMode ? 'bold' : 'normal'
-        }}
-      />
-
-      {/* BOUTON LOCALISATION */}
-      <QFieldButton
-        icon={isLocating ? "⌛" : "📍"}
-        title="Localiser ma position"
-        onClick={onLocateClick}
-        color="#007AFF"
-        isActive={isLocating}
-        style={{
-          fontSize: isLocating ? '18px' : '18px'
-        }}
-      />
-
-      {/* BOUTON TRAJETS SAUVEGARDÉS */}
-      <QFieldButton
-        icon="📁"
-        title="Mes trajets sauvegardés"
-        onClick={onTracksClick}
-        color="#5856D6"
-        style={{ fontSize: '18px' }}
-      />
-
-      {/* BOUTON FONDS DE CARTE */}
-      <QFieldButton
-        icon="🌍"
-        title="Changer le fond de carte"
-        onClick={onLayersClick}
-        color="#5856D6"
-        style={{ fontSize: '19px' }}
-      />
-    </div>
-  );
-};
-
-// COMPOSANT ZOOM PERSONNALISÉ STYLE QFIELD OPTIMISÉ TABLETTE
+// COMPOSANT ZOOM PERSONNALISÉ STYLE QFIELD OPTIMISÉ TABLETTE - CORRIGÉ
 const CustomZoomControlQField = () => {
   const map = useMap();
 
   return (
     <div style={{
       position: 'absolute',
-      right: '12px',
-      top: 'calc(50% + 180px)', // Ajusté pour les boutons plus grands
+      right: '15px',
+      top: '50%',
+      transform: 'translateY(-50%)',
       zIndex: 1000,
       display: 'flex',
       flexDirection: 'column',
       background: 'white',
-      borderRadius: '12px', // Plus arrondi
-      boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+      borderRadius: '12px',
+      boxShadow: '0 4px 15px rgba(0,0,0,0.25)',
       overflow: 'hidden',
-      border: '2px solid #e0e0e0', // Bordure plus épaisse
+      border: '2px solid #e0e0e0',
       gap: '0'
     }}>
       <button
         onClick={() => map.zoomIn()}
         style={{
-          width: '50px', // Plus grand
+          width: '50px',
           height: '50px',
           border: 'none',
           background: 'white',
-          fontSize: '20px', // Plus grand
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -1168,11 +1083,11 @@ const CustomZoomControlQField = () => {
         }}
         title="Zoom avant"
       >
-        ＋
+        <IconWrapper icon={Icons.zoomIn} />
       </button>
 
       <div style={{
-        height: '2px', // Plus épais
+        height: '2px',
         background: '#e0e0e0',
         margin: '0 8px'
       }} />
@@ -1184,7 +1099,6 @@ const CustomZoomControlQField = () => {
           height: '50px',
           border: 'none',
           background: 'white',
-          fontSize: '20px',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -1201,7 +1115,7 @@ const CustomZoomControlQField = () => {
         }}
         title="Zoom arrière"
       >
-        −
+        <IconWrapper icon={Icons.zoomOut} />
       </button>
     </div>
   );
@@ -1370,8 +1284,8 @@ const QFieldLayersControl = ({ onBasemapChange, isOpen, onClose }) => {
   };
 
   const basemapOptions = [
-    { value: 'osm', label: '🗺️', name: 'Carte Standard' },
-    { value: 'satellite', label: '🛰️', name: 'Satellite' },
+    { value: 'osm', label: <IconWrapper icon={Icons.map} />, name: 'Carte Standard' },
+    { value: 'satellite', label: <IconWrapper icon={Icons.satellite} />, name: 'Satellite' },
     { value: 'topo', label: '⛰️', name: 'Topographique' }
   ];
 
@@ -1381,9 +1295,8 @@ const QFieldLayersControl = ({ onBasemapChange, isOpen, onClose }) => {
     <>
       <div style={{
         position: 'absolute',
-        right: '70px', // Ajusté pour les boutons plus grands
-        top: '50%',
-        transform: 'translateY(-50%)',
+        right: '15px',
+        top: '85px',
         background: 'white',
         borderRadius: '15px',
         boxShadow: '0 6px 25px rgba(0,0,0,0.3)',
@@ -1402,7 +1315,8 @@ const QFieldLayersControl = ({ onBasemapChange, isOpen, onClose }) => {
           textAlign: 'center',
           borderBottom: '2px solid #e0e0e0'
         }}>
-          🌍 Fonds de carte
+          <IconWrapper icon={Icons.layers} style={{ marginRight: '8px' }} />
+          Fonds de carte
         </div>
 
         {basemapOptions.map((option, index) => (
@@ -1908,26 +1822,93 @@ const CarteCommunaleTablette = ({
         isTracking={isTracking}
       />
 
+      {/* BOUTONS GAUCHE - Sous la barre de recherche */}
+      {/* BOUTON TRACKING GPS */}
+      <FloatingButton
+        icon={<IconWrapper icon={isTracking ? Icons.x : Icons.locate} />}
+        title={isTracking ? "Arrêter le tracking" : "Démarrer le tracking GPS"}
+        onClick={handleTrackingClick}
+        color={isTracking ? "#dc2626" : "#FF6B35"}
+        isActive={isTracking}
+        style={{
+          top: '85px',
+          left: '15px'
+        }}
+      />
+
+      {/* BOUTON AJOUTER RESSOURCE */}
+      <FloatingButton
+        icon={isAddingMode ? 
+          <IconWrapper icon={Icons.x} /> : 
+          <IconWrapper icon={Icons.circlePlus} />
+        }
+        title={isAddingMode ? "Annuler l'ajout" : "Ajouter une ressource"}
+        onClick={handleAddButtonClick}
+        color={isAddingMode ? "#dc2626" : "#00853f"}
+        isActive={isAddingMode}
+        style={{
+          top: '145px', // 85px + 50px + 10px d'espace
+          left: '15px'
+        }}
+      />
+
+      {/* BOUTON LOCALISATION */}
+      <FloatingButton
+        icon={<IconWrapper icon={Icons.locateFixed} />}
+        title="Localiser ma position"
+        onClick={handleLocateClick}
+        color="#007AFF"
+        isActive={isLocating}
+        style={{
+          top: '205px', // 145px + 50px + 10px d'espace
+          left: '15px'
+        }}
+      />
+
+      {/* BOUTON DROITE HAUT - Basemap */}
+      <FloatingButton
+        icon={<IconWrapper icon={Icons.layers} />}
+        title="Changer le fond de carte"
+        onClick={handleLayersClick}
+        color="#5856D6"
+        style={{
+          top: '85px',
+          right: '15px'
+        }}
+      />
+
+      {/* BOUTON DROITE BAS - Trajets sauvegardés */}
+      <FloatingButton
+        icon={<IconWrapper icon={Icons.download} />}
+        title="Mes trajets sauvegardés"
+        onClick={handleTracksClick}
+        color="#5856D6"
+        style={{
+          bottom: '200px',
+          right: '15px'
+        }}
+      />
+
       {/* INDICATEUR DE MODE AJOUT OPTIMISÉ TABLETTE */}
       {isAddingMode && (
         <div style={{
           position: 'absolute',
           top: '85px',
-          left: '50%',
-          transform: 'translateX(-50%)',
+          left: '75px', // Ajusté pour être à côté du bouton d'ajout
           zIndex: 1000,
           background: '#00853f',
           color: 'white',
-          padding: '12px 20px',
+          padding: '10px 16px',
           borderRadius: '25px',
-          fontSize: '15px',
+          fontSize: '14px',
           fontWeight: '700',
           boxShadow: '0 6px 20px rgba(0,0,0,0.4)',
           display: 'flex',
           alignItems: 'center',
-          gap: '10px',
+          gap: '8px',
           animation: 'pulse 2s infinite',
-          backdropFilter: 'blur(15px)'
+          backdropFilter: 'blur(15px)',
+          maxWidth: '250px'
         }}>
           <span>📍</span>
           Mode collecte activé - Cliquez sur la carte
@@ -1944,35 +1925,17 @@ const CarteCommunaleTablette = ({
         whenReady={() => setCartePrete(true)}
       >
 
-        {/* OUTILS TABLETTE */}
+        {/* OUTILS TABLETTE - TOUS LES COMPOSANTS AVEC useMap() DOIVENT ÊTRE ICI */}
         <MapController />
-
-        {/* BOUTONS AVEC TRACKING OPTIMISÉS TABLETTE */}
-        <QFieldControls
-          onAddClick={handleAddButtonClick}
-          onLocateClick={handleLocateClick}
-          onLayersClick={handleLayersClick}
-          onTrackingClick={handleTrackingClick}
-          onTracksClick={handleTracksClick}
-          isLocating={isLocating}
-          isAddingMode={isAddingMode}
-          isTracking={isTracking}
-        />
-
-        {/* ZOOM CONTROL OPTIMISÉ TABLETTE */}
-        <CustomZoomControlQField />
-
-        {/* LOCALISATION OPTIMISÉE TABLETTE */}
         <LocateControl
           onLocatingChange={setIsLocating}
           onLocate={locateTrigger > 0}
         />
-
-        {/* TRACKING GPS OPTIMISÉ TABLETTE */}
         <GPSTrackingControl
           onTrackingUpdate={handleTrackingUpdate}
           onTrackSaved={handleTrackSaved}
         />
+        <CustomZoomControlQField />
 
         {/* LIGNE DU TRACKING EN TEMPS RÉEL */}
         {trackingPositions.length > 1 && (
@@ -1997,12 +1960,6 @@ const CarteCommunaleTablette = ({
           onClose={() => setShowLayersMenu(false)}
         />
 
-        {/* MENU DES TRAJETS SAUVEGARDÉS OPTIMISÉ TABLETTE */}
-        <SavedTracksControl
-          isOpen={showTracksMenu}
-          onClose={() => setShowTracksMenu(false)}
-        />
-
         {/* FOND DE CARTE */}
         <DynamicTileLayer basemap={currentBasemap} />
 
@@ -2018,6 +1975,12 @@ const CarteCommunaleTablette = ({
           );
         })}
       </MapContainer>
+
+      {/* MENU DES TRAJETS SAUVEGARDÉS OPTIMISÉ TABLETTE (en dehors de MapContainer car n'utilise pas useMap) */}
+      <SavedTracksControl
+        isOpen={showTracksMenu}
+        onClose={() => setShowTracksMenu(false)}
+      />
 
       {/* STYLES OPTIMISÉS TABLETTE */}
       <style>{`
