@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import L from 'leaflet';
+import { FolderUp, Trash2, Printer } from 'lucide-react';
 
-// Fonction utilitaire pour calculer la surface d'un polygone
 const calculatePolygonArea = (latLngs) => {
     if (!latLngs || latLngs.length < 3) return 0;
     
@@ -14,7 +14,7 @@ const calculatePolygonArea = (latLngs) => {
       area += (p2.lng - p1.lng) * (2 + Math.sin(p1.lat * Math.PI / 180) + Math.sin(p2.lat * Math.PI / 180));
     }
     
-    return Math.abs(area * 6378137 * 6378137 / (2 * 1000000)); // en km²
+    return Math.abs(area * 6378137 * 6378137 / (2 * 1000000));
 };
 
 const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
@@ -22,14 +22,9 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawControl, setDrawControl] = useState(null);
 
-  // ============================================================================
-  // FONCTIONS POUR LE FORMULAIRE (déclarées avec useCallback)
-  // ============================================================================
-  
   const saveFormData = React.useCallback((elementId) => {
     console.log('🔄 Tentative de sauvegarde pour:', elementId);
     
-    // Récupérer les valeurs du formulaire
     const nomInput = document.getElementById(`nom-${elementId}`);
     const typeSelect = document.getElementById(`type-${elementId}`);
     const descriptionTextarea = document.getElementById(`description-${elementId}`);
@@ -45,7 +40,6 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
     
     console.log('📝 Données à sauvegarder:', { nom, type, description });
     
-    // Trouver le layer correspondant
     const layerId = parseInt(elementId.split('_')[1]);
     const layer = Array.from(window.drawnItems?.getLayers() || []).find(l => 
       l._leaflet_id === layerId
@@ -54,7 +48,6 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
     if (layer) {
       console.log('✅ Layer trouvé:', layer);
       
-      // Calculer les propriétés géométriques selon le type
       let proprietesGeometriques = {};
       
       switch (layer.options.layerType) {
@@ -104,9 +97,7 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
           break;
       }
       
-      // Stocker les données dans le layer
       layer.formData = {
-        // Données du formulaire
         id: elementId,
         nom: nom,
         type: type,
@@ -114,24 +105,19 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
         dateCreation: new Date().toISOString(),
         dateModification: new Date().toISOString(),
         
-        // Propriétés géométriques
         ...proprietesGeometriques,
         
-        // Métadonnées
         layer_type: layer.options.layerType,
         leaflet_id: layer._leaflet_id
       };
       
-      // Mettre à jour le popup avec les nouvelles informations
       const infoContent = generateInfoContent(layer, layer.options.layerType);
       layer.bindPopup(infoContent);
       
       console.log('✅ Données sauvegardées avec propriétés géométriques:', layer.formData);
       
-      // Fermer le popup du formulaire
       layer.closePopup();
       
-      // Afficher un message de confirmation
       setTimeout(() => {
         L.popup()
           .setLatLng(layer.getCenter ? layer.getCenter() : layer.getLatLng())
@@ -170,11 +156,9 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
     if (layer && layer.formData) {
       const formHtml = createFormPopup(layer, layer.options.layerType);
       
-      // Créer un élément temporaire pour manipuler le HTML
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = formHtml;
       
-      // Pré-remplir les champs avec les données existantes
       const nomInput = tempDiv.querySelector(`#nom-${elementId}`);
       const typeSelect = tempDiv.querySelector(`#type-${elementId}`);
       const descriptionTextarea = tempDiv.querySelector(`#description-${elementId}`);
@@ -183,16 +167,11 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
       if (typeSelect) typeSelect.value = layer.formData.type;
       if (descriptionTextarea) descriptionTextarea.value = layer.formData.description;
       
-      // Ouvrir le popup de formulaire
       layer.bindPopup(tempDiv.innerHTML).openPopup();
     }
   }, []);
 
-  // ============================================================================
-  // FONCTION POUR GÉNÉRER LE FORMULAIRE
-  // ============================================================================
   const createFormPopup = (layer, layerType) => {
-    // Générer un ID unique basé sur l'ID Leaflet du layer
     const elementId = `dessin_${layer._leaflet_id}`;
     
     const formHtml = `
@@ -283,9 +262,6 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
     return formHtml;
   };
 
-  // ============================================================================
-  // FONCTION POUR GÉNÉRER LE CONTENU INFORMATIF
-  // ============================================================================
   const generateInfoContent = (layer, layerType) => {
     const formData = layer.formData;
     
@@ -315,13 +291,9 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
       `;
     }
     
-    // Retourner le contenu technique si pas de données de formulaire
     return generateTechnicalContent(layer, layerType);
   };
 
-  // ============================================================================
-  // FONCTION POUR GÉNÉRER LE CONTENU TECHNIQUE
-  // ============================================================================
   const generateTechnicalContent = (layer, layerType) => {
     let content = '';
     
@@ -411,9 +383,6 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
     return content;
   };
 
-  // ============================================================================
-  // FONCTION POUR EXPORTER LES DESSINS AVEC DONNÉES ATTRIBUTAIRES
-  // ============================================================================
   const handleExportDrawings = () => {
     if (!drawnItems || drawnItems.getLayers().length === 0) {
       alert('Aucun élément dessiné à exporter');
@@ -421,14 +390,11 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
     }
 
     try {
-      // Convertir en GeoJSON
       const geoJSON = drawnItems.toGeoJSON();
       
       console.log('📊 Export GeoJSON - Features avant traitement:', geoJSON.features.length);
       
-      // Ajouter les données attributaires à chaque feature
       geoJSON.features.forEach((feature, index) => {
-        // Trouver le layer correspondant
         const layer = Array.from(drawnItems.getLayers())[index];
         
         console.log(`🔍 Traitement feature ${index}:`, {
@@ -437,21 +403,17 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
           formData: layer?.formData
         });
         
-        // Initialiser les propriétés si elles n'existent pas
         if (!feature.properties) {
           feature.properties = {};
         }
         
-        // Ajouter les données de base du dessin
         feature.properties.layer_type = layer?.options?.layerType || 'unknown';
         feature.properties.leaflet_id = layer?._leaflet_id || 'unknown';
         feature.properties.export_date = new Date().toISOString();
         
-        // Ajouter les données du formulaire si elles existent
         if (layer && layer.formData) {
           feature.properties = {
             ...feature.properties,
-            // Données du formulaire
             id_form: layer.formData.id || '',
             nom_form: layer.formData.nom || '',
             type_form: layer.formData.type || '',
@@ -459,7 +421,6 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
             date_creation: layer.formData.dateCreation || '',
             date_modification: layer.formData.dateModification || '',
             
-            // Propriétés géométriques
             ...(layer.formData.surface_km2 && { surface_km2: layer.formData.surface_km2 }),
             ...(layer.formData.perimetre_km && { perimetre_km: layer.formData.perimetre_km }),
             ...(layer.formData.longueur_km && { longueur_km: layer.formData.longueur_km }),
@@ -471,7 +432,6 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
             ...(layer.formData.nombre_points && { nombre_points: layer.formData.nombre_points })
           };
         } else {
-          // Si pas de données de formulaire, ajouter des propriétés par défaut
           feature.properties.etat_formulaire = 'non_rempli';
           feature.properties.nom_form = 'Element sans nom';
           feature.properties.type_form = 'non_specifie';
@@ -480,7 +440,6 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
       
       console.log('📊 GeoJSON final:', JSON.stringify(geoJSON, null, 2));
       
-      // Créer le fichier à télécharger
       const dataStr = JSON.stringify(geoJSON, null, 2);
       const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
       
@@ -493,7 +452,6 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
       
       console.log('✅ Dessins exportés en GeoJSON avec données attributaires');
       
-      // Afficher un récapitulatif
       const elementsAvecFormulaire = Array.from(drawnItems.getLayers()).filter(l => l.formData).length;
       
       L.popup()
@@ -521,25 +479,19 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
     }
   };
 
-  // ============================================================================
-  // INITIALISATION DES OUTILS DE DESSIN LEAFLET
-  // ============================================================================
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Initialiser le groupe pour les éléments dessinés
     const drawnItemsGroup = new L.FeatureGroup();
     setDrawnItems(drawnItemsGroup);
     mapRef.current.addLayer(drawnItemsGroup);
 
-    // Exposer les fonctions globales avec des noms uniques
     window.drawingSaveFormData = saveFormData;
     window.drawingCloseFormPopup = closeFormPopup;
     window.drawingEditFormData = editFormData;
 
     console.log('✅ Fonctions globales exposées');
 
-    // Charger leaflet-draw depuis CDN si pas disponible
     if (!L.Control.Draw) {
       console.log('📦 Chargement de Leaflet.Draw depuis CDN...');
       
@@ -618,27 +570,22 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
       window.existingDrawControl = control;
       mapRef.current.addControl(control);
 
-      // Gérer les événements de dessin
       mapRef.current.on(L.Draw.Event.CREATED, (e) => {
         const layer = e.layer;
         drawnItemsGroup.addLayer(layer);
         window.drawnItems = drawnItemsGroup;
         
-        // Stocker le type de layer
         layer.options.layerType = e.layerType;
         
-        // Attacher le popup initial
         const initialContent = generateTechnicalContent(layer, e.layerType);
         layer.bindPopup(initialContent);
         
-        // Ajouter l'événement de double-clic
         layer.on('dblclick', function() {
           console.log('🖱️ Double-clic sur le layer:', layer._leaflet_id);
           const formHtml = createFormPopup(layer, e.layerType);
           layer.bindPopup(formHtml).openPopup();
         });
         
-        // Ouvrir le popup automatiquement
         layer.openPopup();
         
         console.log('✅ Élément dessiné ajouté:', e.layerType, 'ID:', layer._leaflet_id);
@@ -676,17 +623,12 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
       if (drawnItemsGroup && mapRef.current?.hasLayer(drawnItemsGroup)) {
         mapRef.current.removeLayer(drawnItemsGroup);
       }
-      // Nettoyer les fonctions globales
       delete window.drawingSaveFormData;
       delete window.drawingCloseFormPopup;
       delete window.drawingEditFormData;
       delete window.drawnItems;
     };
   }, [mapRef, saveFormData, closeFormPopup, editFormData]);
-
-  // ============================================================================
-  // FONCTIONS DE GESTION DES DESSINS
-  // ============================================================================
 
   const handleClearDrawings = () => {
     if (drawnItems && drawnItems.getLayers().length > 0) {
@@ -776,9 +718,6 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
     }
   };
 
-  // ============================================================================
-  // STYLES DES BOUTONS
-  // ============================================================================
   const buttonStyle = {
     width: isMobile ? '50px' : '45px',
     height: isMobile ? '50px' : '45px',
@@ -794,9 +733,6 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
     transition: 'all 0.3s ease'
   };
 
-  // ============================================================================
-  // RENDU DU COMPOSANT
-  // ============================================================================
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <button 
@@ -812,7 +748,7 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
           e.target.style.background = '#17a2b8';
         }}
       >
-        💾
+        <FolderUp size={isMobile ? 20 : 18} />
       </button>
 
       <button 
@@ -828,7 +764,7 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
           e.target.style.background = '#dc3545';
         }}
       >
-        🗑️
+        <Trash2 size={isMobile ? 20 : 18} />
       </button>
 
       <button 
@@ -844,7 +780,7 @@ const DrawingAndPrintTools = ({ isMobile, mapRef }) => {
           e.target.style.background = '#00853f';
         }}
       >
-        🖨️
+        <Printer size={isMobile ? 20 : 18} />
       </button>
     </div>
   );

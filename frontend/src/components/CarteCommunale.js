@@ -149,7 +149,113 @@ const StatusInfo = ({ ressourcesCount, selectedCommune, currentBasemap, isMobile
   );
 };
 
-// COMPOSANT LOCALISATION - Bouton de géolocalisation
+// COMPOSANT ZOOM PERSONNALISÉ
+// COMPOSANT ZOOM PERSONNALISÉ
+const CustomZoomControl = ({ isMobile }) => {
+  const map = useMap();
+  const [zoomControl, setZoomControl] = useState(null);
+
+  useEffect(() => {
+    const ZoomControl = L.Control.extend({
+      onAdd: function (map) {
+        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+        container.style.marginTop = '10px';
+
+        // Bouton Zoom In
+        const zoomInButton = L.DomUtil.create('a', 'leaflet-control-zoom-in', container);
+        zoomInButton.href = '#';
+        zoomInButton.title = 'Zoom in';
+        zoomInButton.innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        `;
+        zoomInButton.style.cssText = `
+          width: ${isMobile ? '34px' : '30px'};
+          height: ${isMobile ? '34px' : '30px'};
+          line-height: ${isMobile ? '34px' : '30px'};
+          background: #00853f;
+          border: 2px solid white;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-decoration: none;
+          border-radius: 4px;
+        `;
+
+        // Bouton Zoom Out
+        const zoomOutButton = L.DomUtil.create('a', 'leaflet-control-zoom-out', container);
+        zoomOutButton.href = '#';
+        zoomOutButton.title = 'Zoom out';
+        zoomOutButton.innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        `;
+        zoomOutButton.style.cssText = `
+          width: ${isMobile ? '34px' : '30px'};
+          height: ${isMobile ? '34px' : '30px'};
+          line-height: ${isMobile ? '34px' : '30px'};
+          background: #00853f;
+          border: 2px solid white;
+          border-top: none;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-decoration: none;
+          border-radius: 4px;
+          margin-top: 1px;
+        `;
+
+        // Événements
+        L.DomEvent.on(zoomInButton, 'click', L.DomEvent.stop)
+                  .on(zoomInButton, 'click', function() {
+                    map.zoomIn();
+                  });
+
+        L.DomEvent.on(zoomOutButton, 'click', L.DomEvent.stop)
+                  .on(zoomOutButton, 'click', function() {
+                    map.zoomOut();
+                  });
+
+        // Effets hover
+        [zoomInButton, zoomOutButton].forEach(button => {
+          L.DomEvent.on(button, 'mouseenter', function() {
+            this.style.background = '#006b33';
+          });
+          L.DomEvent.on(button, 'mouseleave', function() {
+            this.style.background = '#00853f';
+          });
+        });
+
+        return container;
+      }
+    });
+
+    const customZoomControl = new ZoomControl({ position: 'topleft' });
+    setZoomControl(customZoomControl);
+    map.addControl(customZoomControl);
+
+    // Supprimer le contrôle de zoom par défaut de manière sécurisée
+    setTimeout(() => {
+      if (map.zoomControl) {
+        map.removeControl(map.zoomControl);
+      }
+    }, 100);
+
+    return () => {
+      if (customZoomControl && map) {
+        map.removeControl(customZoomControl);
+      }
+    };
+  }, [map, isMobile]);
+
+  return null;
+};
+
 // COMPOSANT LOCALISATION - Bouton de géolocalisation
 const LocateControl = ({ isMobile }) => {
   const map = useMap();
@@ -204,9 +310,19 @@ const LocateControl = ({ isMobile }) => {
       onAdd: function (map) {
         const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
 
-        // MÊMES DIMENSIONS QUE LES BOUTONS DE ZOOM
-        const buttonSize = isMobile ? '34px' : '30px'; // ← Mêmes dimensions que zoom
-        const fontSize = isMobile ? '16px' : '14px';   // ← Même taille de police
+        const buttonSize = isMobile ? '34px' : '30px';
+
+        // Icône Lucide pour la localisation
+        const locateIcon = `
+          <svg width="${isMobile ? '16' : '14'}" height="${isMobile ? '16' : '14'}" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="2" y1="12" x2="5" y2="12"></line>
+            <line x1="19" y1="12" x2="22" y2="12"></line>
+            <line x1="12" y1="2" x2="12" y2="5"></line>
+            <line x1="12" y1="19" x2="12" y2="22"></line>
+            <circle cx="12" cy="12" r="7"></circle>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        `;
 
         container.innerHTML = `
           <button 
@@ -214,7 +330,6 @@ const LocateControl = ({ isMobile }) => {
             style="
               width: ${buttonSize}; 
               height: ${buttonSize}; 
-              font-size: ${fontSize}; 
               background: ${isLocating ? '#f59e0b' : '#00853f'}; 
               border: 2px solid white; 
               color: white; 
@@ -230,13 +345,12 @@ const LocateControl = ({ isMobile }) => {
               line-height: 1;
             "
           >
-            ${isLocating ? '⏳' : '📍'}
+            ${isLocating ? '⏳' : locateIcon}
           </button>
         `;
 
         const button = container.querySelector('button');
 
-        // Effets hover identiques aux boutons de zoom
         button.addEventListener('mouseenter', function () {
           this.style.background = isLocating ? '#d97706' : '#006b33';
         });
@@ -498,7 +612,6 @@ const BASEMAPS = {
 };
 
 // COMPOSANT SÉLECTEUR DE FOND DE CARTE
-// COMPOSANT SÉLECTEUR DE FOND DE CARTE
 const BasemapController = ({ onBasemapChange }) => {
   const [basemap, setBasemap] = useState('osm');
   const [isOpen, setIsOpen] = useState(false);
@@ -509,7 +622,15 @@ const BasemapController = ({ onBasemapChange }) => {
     setIsOpen(false);
   };
 
-  // Liste des fonds de carte
+  // Icône Layers pour le bouton Basemaps
+  const layersIcon = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+      <polyline points="2 17 12 22 22 17"></polyline>
+      <polyline points="2 12 12 17 22 12"></polyline>
+    </svg>
+  `;
+
   const basemapOptions = [
     { value: 'osm', label: '🗺️ OpenStreetMap', name: 'OpenStreetMap' },
     { value: 'satellite', label: '🛰️ Satellite', name: 'Satellite' },
@@ -526,7 +647,6 @@ const BasemapController = ({ onBasemapChange }) => {
       right: '10px', 
       zIndex: 1000,
     }}>
-      {/* Sélecteur personnalisé */}
       <div style={{ position: 'relative' }}>
         <button
           onClick={() => setIsOpen(!isOpen)}
@@ -544,10 +664,14 @@ const BasemapController = ({ onBasemapChange }) => {
             textAlign: 'left',
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'center'
+            alignItems: 'center',
+            gap: '8px'
           }}
         >
-          <span>{currentBasemap?.label || '🗺️ Fond de carte'}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div dangerouslySetInnerHTML={{ __html: layersIcon }} />
+            <span>{currentBasemap?.name || 'Fond de carte'}</span>
+          </span>
           <span style={{ fontSize: '12px', marginLeft: '8px' }}>▼</span>
         </button>
 
@@ -597,7 +721,6 @@ const BasemapController = ({ onBasemapChange }) => {
         )}
       </div>
 
-      {/* Fermer le menu si on clique ailleurs */}
       {isOpen && (
         <div
           style={{
@@ -630,7 +753,6 @@ const DynamicTileLayer = ({ basemap }) => {
 // CONFIGURATION DES ICÔNES ET POPUPS
 // ============================================================================
 
-// Création des icônes personnalisées
 const creerIcone = (couleur) => new L.Icon({
   iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${couleur}.png`,
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -650,7 +772,6 @@ const icones = {
   'default': creerIcone('grey')
 };
 
-// Popup pour mobile
 const MobilePopup = ({ ressource }) => (
   <div className="mobile-popup">
     <h6 className="mb-2">{ressource.nom}</h6>
@@ -661,7 +782,6 @@ const MobilePopup = ({ ressource }) => (
   </div>
 );
 
-// Popup pour desktop
 const DesktopPopup = ({ ressource }) => (
   <div>
     <h6>{ressource.nom}</h6>
@@ -677,7 +797,6 @@ const DesktopPopup = ({ ressource }) => (
 // FONCTIONS UTILITAIRES
 // ============================================================================
 
-// Fonction pour obtenir les coordonnées d'une ressource
 const obtenirCoordonnees = (ressource) => {
   if (ressource.localisation && ressource.localisation.coordinates) {
     const [lng, lat] = ressource.localisation.coordinates;
@@ -688,13 +807,11 @@ const obtenirCoordonnees = (ressource) => {
     const lng = parseFloat(ressource.longitude);
     if (!isNaN(lat) && !isNaN(lng)) return [lat, lng];
   }
-  return [14.7167, -17.4677]; // Position par défaut (Dakar)
+  return [14.7167, -17.4677];
 };
 
-// Fonction pour obtenir l'icône selon le type de ressource
 const getIconForRessource = (typeRessource) => icones[typeRessource] || icones.default;
 
-// Fonction pour valider et parser les coordonnées d'une commune
 const parseCoordinates = (commune) => {
   console.log('📍 Parsing coordinates for commune:', commune);
 
@@ -731,21 +848,13 @@ const CarteCommunale = ({
   formulairePosition,
   onMapPositionRequest
 }) => {
-  // ============================================================================
-  // DÉCLARATION DES STATES ET RÉFÉRENCES
-  // ============================================================================
-  const positionDefaut = [14.7167, -17.4677]; // Position par défaut: Dakar
-  const mapRef = useRef(); // Référence vers la carte Leaflet
-  const [cartePrete, setCartePrete] = useState(false); // État de chargement de la carte
-  const [currentBasemap, setCurrentBasemap] = useState('osm'); // Fond de carte actuel
-  const [selectedCommune, setSelectedCommune] = useState(null); // Commune sélectionnée
-  const [currentPosition, setCurrentPosition] = useState(positionDefaut); // Position actuelle
+  const positionDefaut = [14.7167, -17.4677];
+  const mapRef = useRef();
+  const [cartePrete, setCartePrete] = useState(false);
+  const [currentBasemap, setCurrentBasemap] = useState('osm');
+  const [selectedCommune, setSelectedCommune] = useState(null);
+  const [currentPosition, setCurrentPosition] = useState(positionDefaut);
 
-  // ============================================================================
-  // EFFETS ET GESTION D'ÉTAT
-  // ============================================================================
-
-  // Stocker le nombre de ressources globalement pour l'impression
   useEffect(() => {
     window.ressourcesCount = ressources ? ressources.filter(ressource => {
       const coords = obtenirCoordonnees(ressource);
@@ -753,7 +862,6 @@ const CarteCommunale = ({
     }).length : 0;
   }, [ressources, positionDefaut]);
 
-  // Mettre à jour la position quand formulairePosition change
   useEffect(() => {
     if (formulairePosition && mapRef.current) {
       const { lat, lng } = formulairePosition;
@@ -761,7 +869,6 @@ const CarteCommunale = ({
       setCurrentPosition(newPosition);
       mapRef.current.setView(newPosition, 15);
 
-      // Ajouter un marqueur temporaire pour la position du formulaire
       if (window.formulaireMarker) {
         mapRef.current.removeLayer(window.formulaireMarker);
       }
@@ -782,7 +889,6 @@ const CarteCommunale = ({
     }
   }, [formulairePosition]);
 
-  // Fonction pour obtenir la position actuelle de la carte
   const getCurrentMapPosition = useCallback(() => {
     if (mapRef.current) {
       const center = mapRef.current.getCenter();
@@ -791,7 +897,6 @@ const CarteCommunale = ({
     return null;
   }, []);
 
-  // Gérer les demandes de position depuis le formulaire
   useEffect(() => {
     if (onMapPositionRequest === 'getCurrent') {
       const position = getCurrentMapPosition();
@@ -804,7 +909,6 @@ const CarteCommunale = ({
     }
   }, [onMapPositionRequest, getCurrentMapPosition]);
 
-  // Écouter les événements de position depuis le formulaire
   useEffect(() => {
     const handleMapPositionRequest = (event) => {
       if (event.detail === 'getCurrent') {
@@ -824,9 +928,6 @@ const CarteCommunale = ({
     };
   }, [getCurrentMapPosition]);
 
-  // ============================================================================
-  // GESTION DE LA SÉLECTION DES COMMUNES
-  // ============================================================================
   const handleCommuneSelect = useCallback(async (commune) => {
     console.log('📍 Commune sélectionnée:', commune);
 
@@ -839,7 +940,6 @@ const CarteCommunale = ({
       let coordinates = parseCoordinates(commune);
       console.log('📍 Coordonnées calculées:', coordinates);
 
-      // Nettoyer les marqueurs précédents
       if (window.communeMarker && mapRef.current.hasLayer(window.communeMarker)) {
         mapRef.current.removeLayer(window.communeMarker);
       }
@@ -850,7 +950,6 @@ const CarteCommunale = ({
       let boundaries = null;
       let communeData = commune;
 
-      // Récupérer les contours si disponible
       if (communeData.id) {
         const apiData = await fetchCommuneBoundaries(communeData.id);
         if (apiData) {
@@ -863,7 +962,6 @@ const CarteCommunale = ({
         }
       }
 
-      // Afficher les contours si disponibles
       if (boundaries) {
         console.log('🎨 Affichage des contours');
         window.communeBoundaryLayer = L.geoJSON(boundaries, {
@@ -885,7 +983,6 @@ const CarteCommunale = ({
         mapRef.current.setView(coordinates, 12);
       }
 
-      // Ajouter le marqueur de la commune
       window.communeMarker = L.marker(coordinates, {
         icon: L.divIcon({
           html: `<div style="background: #00853f; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">🏛️</div>`,
@@ -917,9 +1014,6 @@ const CarteCommunale = ({
     if (onCommuneSelect) onCommuneSelect(commune);
   }, [onCommuneSelect]);
 
-  // ============================================================================
-  // NETTOYAGE ET GESTION DU CYCLE DE VIE
-  // ============================================================================
   useEffect(() => {
     window.closeCommunePopup = () => {
       if (window.communeMarker) {
@@ -932,7 +1026,6 @@ const CarteCommunale = ({
     };
 
     return () => {
-      // Nettoyer toutes les références globales
       delete window.closeCommunePopup;
       delete window.communeBoundaryLayer;
       delete window.communeMarker;
@@ -945,9 +1038,6 @@ const CarteCommunale = ({
     };
   }, []);
 
-  // ============================================================================
-  // FILTRAGE DES RESSOURCES AVEC COORDONNÉES VALIDES
-  // ============================================================================
   const ressourcesAvecCoordonnees = ressources ? ressources.filter(ressource => {
     const coords = obtenirCoordonnees(ressource);
     return coords && coords[0] !== positionDefaut[0] && coords[1] !== positionDefaut[1];
@@ -955,65 +1045,53 @@ const CarteCommunale = ({
 
   const currentBasemapData = BASEMAPS[currentBasemap] || BASEMAPS.osm;
 
-  // ============================================================================
-  // RENDU PRINCIPAL
-  // ============================================================================
   return (
     <div className={`carte-container ${isMobile ? 'mobile' : 'desktop'}`} style={{ animation: 'fadeIn 0.8s ease' }}>
 
-      {/* BARRE DE RECHERCHE - Centrée en haut */}
       <SearchBarCommunes
         onCommuneSelect={handleCommuneSelect}
         isMobile={isMobile}
         communesData={communes}
       />
 
-      {/* CONTENEUR PRINCIPAL DE LA CARTE LEAFLET */}
       <MapContainer
         center={positionDefaut}
         zoom={isMobile ? 10 : 12}
         style={{ height: '100%', width: '100%' }}
-        zoomControl={!isMobile}
+        zoomControl={false} // Désactiver le zoom control par défaut
         ref={mapRef}
         whenReady={() => {
           console.log('✅ Carte Leaflet prête !');
           setCartePrete(true);
         }}
       >
+      
+        {/* Ajoutez le contrôle de zoom personnalisé */}
+        <CustomZoomControl isMobile={isMobile} />
+      
 
-        {/* ============================================================================
-            PANEL DES OUTILS À DROITE
-            Modifier les propriétés CSS ici pour ajuster la position des outils
-        ============================================================================ */}
-
-        {/* CONTENEUR PRINCIPAL DES OUTILS À DROITE */}
         <div style={{
           position: 'absolute',
-          top: '80px', // ← MODIFIER CETTE VALEUR pour déplacer vers le haut/bas
-          right: '10px', // ← MODIFIER CETTE VALEUR pour déplacer vers la gauche/droite
+          top: '80px',
+          right: '10px',
           zIndex: 1000,
           display: 'flex',
           flexDirection: 'column',
-          gap: '15px' // ← MODIFIER CETTE VALEUR pour ajuster l'espacement entre les groupes d'outils
+          gap: '15px'
         }}>
 
-          {/* OUTILS D'ANALYSE - Premier groupe en haut */}
           <AnalysisToolsBar
             isMobile={isMobile}
             ressources={ressourcesAvecCoordonnees}
             mapRef={mapRef}
           />
 
-          {/* OUTILS DE DESSIN - Deuxième groupe en dessous */}
           <DrawingAndPrintTools
             isMobile={isMobile}
             mapRef={mapRef}
           />
         </div>
 
-        {/* ============================================================================
-            COMPOSANTS LEAFLET ET CONTRÔLES
-        ============================================================================ */}
         <MapController isMobile={isMobile} />
         <BasemapController onBasemapChange={setCurrentBasemap} />
         <LocateControl isMobile={isMobile} />
@@ -1027,7 +1105,6 @@ const CarteCommunale = ({
         />
         <DynamicTileLayer basemap={currentBasemap} />
 
-        {/* MARQUEURS DES RESSOURCES */}
         {cartePrete && ressourcesAvecCoordonnees.map((ressource) => {
           const coords = obtenirCoordonnees(ressource);
           return (
@@ -1038,10 +1115,6 @@ const CarteCommunale = ({
         })}
       </MapContainer>
 
-      {/* ============================================================================
-          STYLES CSS PERSONNALISÉS
-          Modifier ces styles pour ajuster l'apparence
-      ============================================================================ */}
       <style>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideInRight { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -1056,7 +1129,6 @@ const CarteCommunale = ({
           100% { transform: scale(3); opacity: 0; } 
         }
         
-        /* Styles pour les contrôles de dessin Leaflet */
         .leaflet-draw-section {
           background: white;
           border-radius: 8px;
@@ -1077,7 +1149,6 @@ const CarteCommunale = ({
           border-color: #006b33;
         }
 
-        /* Ajustement pour le sélecteur de fond de carte */
         .leaflet-control-layers {
           margin-top: 100px !important;
         }

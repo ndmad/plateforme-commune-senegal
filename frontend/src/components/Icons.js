@@ -15,7 +15,12 @@ import {
   Map,
   Navigation,
   Compass,
-  X
+  X,
+  FolderUp,
+  Trash2,
+  Printer,
+  Fingerprint,
+  SquaresIntersect
 } from 'lucide-react';
 
 export const Icons = {
@@ -37,6 +42,13 @@ export const Icons = {
   folderOpen: (props) => <FolderOpen {...props} />,
   square: (props) => <Square {...props} />,
   x: (props) => <X {...props} />,
+  
+  // Nouvelles icônes pour les outils
+  folderUp: (props) => <FolderUp {...props} />,
+  trash2: (props) => <Trash2 {...props} />,
+  printerCheck: (props) => <Printer {...props} />,
+  fingerprint: (props) => <Fingerprint {...props} />,
+  squaresIntersect: (props) => <SquaresIntersect {...props} />,
 };
 
 // Configuration par défaut pour mobile/tablette
